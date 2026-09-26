@@ -18,24 +18,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function Dashboard() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, isRefetching } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
   const [customerState, setCustomerState] = useState<CustomerState | null>(null);
   {{/if}}
 
   {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions({ enabled: Boolean(session) }));
   {{/if}}
   {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions());
+  const privateData = useQuery(trpc.privateData.queryOptions(undefined, { enabled: Boolean(session) }));
   {{/if}}
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (!session && !isPending && !isRefetching) {
       navigate("/login");
     }
-  }, [session, isPending, navigate]);
+  }, [session, isPending, isRefetching, navigate]);
 
   {{#if (eq payments "polar")}}
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function Dashboard() {
   }, [session]);
   {{/if}}
 
-  if (isPending) {
+  if (isPending || isRefetching || !session) {
     return <div>Loading...</div>;
   }
 

@@ -123,11 +123,8 @@ function writeEnvFile(
   vfs.writeFile(envPath, newContent);
 }
 
-function buildClientVars(
-  frontend: string[],
-  backend: ProjectConfig["backend"],
-  auth: ProjectConfig["auth"],
-): EnvVariable[] {
+function buildClientVars(config: ProjectConfig): EnvVariable[] {
+  const { frontend, backend, auth, webDeploy, serverDeploy } = config;
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
@@ -135,7 +132,10 @@ function buildClientVars(
 
   const baseVar = getClientServerVar(frontend, backend);
   const envVarName = backend === "convex" ? getConvexVar(frontend) : baseVar.key;
-  const serverUrl = backend === "convex" ? CONVEX_URL_PLACEHOLDER : baseVar.value;
+  const serverUrl =
+    backend === "convex"
+      ? CONVEX_URL_PLACEHOLDER
+      : `${baseVar.value}${webDeploy === "vercel" && serverDeploy === "vercel" ? "/api" : ""}`;
 
   const vars: EnvVariable[] = [
     {
@@ -194,16 +194,13 @@ function buildClientVars(
   return vars;
 }
 
-function buildNativeVars(
-  frontend: string[],
-  backend: ProjectConfig["backend"],
-  auth: ProjectConfig["auth"],
-): EnvVariable[] {
+function buildNativeVars(config: ProjectConfig): EnvVariable[] {
+  const { frontend, backend, auth, webDeploy, serverDeploy } = config;
   const hasAstro = frontend.includes("astro");
   const hasSvelte = frontend.includes("svelte");
 
   let envVarName = "EXPO_PUBLIC_SERVER_URL";
-  let serverUrl = "http://localhost:3000";
+  let serverUrl = `http://localhost:3000${webDeploy === "vercel" && serverDeploy === "vercel" && backend !== "self" ? "/api" : ""}`;
 
   if (backend === "self") {
     // SvelteKit uses Vite's default port, Astro uses 4321, others use 3001.
@@ -593,7 +590,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const clientDir = "apps/web";
     if (vfs.directoryExists(clientDir)) {
       const envPath = `${clientDir}/.env`;
-      const clientVars = buildClientVars(frontend, backend, auth);
+      const clientVars = buildClientVars(config);
       writeEnvFile(vfs, envPath, clientVars);
     }
   }
@@ -640,7 +637,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const nativeDir = "apps/native";
     if (vfs.directoryExists(nativeDir)) {
       const envPath = `${nativeDir}/.env`;
-      const nativeVars = buildNativeVars(frontend, backend, auth);
+      const nativeVars = buildNativeVars(config);
       writeEnvFile(vfs, envPath, nativeVars);
     }
   }

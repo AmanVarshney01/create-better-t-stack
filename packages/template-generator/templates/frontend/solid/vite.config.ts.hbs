@@ -58,6 +58,11 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (eq auth "better-auth")}}
+  optimizeDeps: {
+    include: ["zod"],
+  },
+{{/if}}
 {{#if (eq webDeploy "cloudflare")}}
   build: {
     rollupOptions: {

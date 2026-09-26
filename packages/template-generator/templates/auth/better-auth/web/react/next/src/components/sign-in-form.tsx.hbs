@@ -2,7 +2,6 @@ import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
-import Loader from "./loader";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
@@ -14,7 +13,6 @@ export default function SignInForm({
   onSwitchToSignUp: () => void;
 }) {
   const router = useRouter()
-  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -45,10 +43,6 @@ export default function SignInForm({
       }),
     },
   });
-
-  if (isPending) {
-    return <Loader />;
-  }
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">

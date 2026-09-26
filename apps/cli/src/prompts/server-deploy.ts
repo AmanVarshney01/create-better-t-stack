@@ -1,3 +1,5 @@
+import { supportsServerDeployRuntime } from "@better-t-stack/types";
+
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 import { UserCancelledError } from "../utils/errors";
@@ -69,15 +71,15 @@ export async function getServerDeploymentChoice(
     return "none";
   }
 
-  const options: DeploymentOption[] = (["prisma", "docker", "vercel", "none"] as const).map(
-    (deploy) => {
+  const options: DeploymentOption[] = (["prisma", "docker", "vercel", "none"] as const)
+    .filter((deploy) => supportsServerDeployRuntime(deploy, runtime))
+    .map((deploy) => {
       const { label, hint } =
         deploy === "none"
           ? { label: "None", hint: "Skip deployment setup" }
           : getDeploymentDisplay(deploy);
       return { value: deploy, label, hint };
-    },
-  );
+    });
 
   const response = await navigableSelect<ServerDeploy>({
     message: "Choose server deployment",
@@ -117,6 +119,7 @@ export async function getServerDeploymentToAdd(
 
   if (runtime === "bun" || runtime === "node") {
     for (const deploy of ["prisma", "docker", "vercel"] as const) {
+      if (!supportsServerDeployRuntime(deploy, runtime)) continue;
       const { label, hint } = getDeploymentDisplay(deploy);
       options.push({
         value: deploy,

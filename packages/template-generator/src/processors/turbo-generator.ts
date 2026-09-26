@@ -53,7 +53,7 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
 
   if (config.addons.includes("electrobun")) Object.assign(tasks, getElectrobunTasks());
   if (isConvex) Object.assign(tasks, getConvexTasks());
-  if (!isConvex && hasDatabase) Object.assign(tasks, getDatabaseTasks(dbSupport));
+  if (!isConvex && hasDatabase) Object.assign(tasks, getDatabaseTasks(dbSupport, config.orm));
   if (isDocker) Object.assign(tasks, getDockerTasks());
   if (isSqliteLocal) Object.assign(tasks, getSqliteLocalTask());
   if (hasLocalD1) Object.assign(tasks, getLocalD1Task());
@@ -146,7 +146,7 @@ function getConvexTasks(): TurboTasks {
   };
 }
 
-function getDatabaseTasks(dbSupport: DbScriptSupport): TurboTasks {
+function getDatabaseTasks(dbSupport: DbScriptSupport, orm: ProjectConfig["orm"]): TurboTasks {
   const tasks: TurboTasks = {};
 
   if (dbSupport.hasDbPush) {
@@ -154,7 +154,7 @@ function getDatabaseTasks(dbSupport: DbScriptSupport): TurboTasks {
   }
 
   if (dbSupport.hasDbGenerate) {
-    tasks["db:generate"] = { cache: false, interactive: true };
+    tasks["db:generate"] = { cache: false, interactive: orm === "drizzle" };
   }
 
   if (dbSupport.hasDbMigrate) {
