@@ -29,12 +29,7 @@ const items = computed<NavigationMenuItem[]>(() => [
     <template #right>
       <UColorModeButton />
       {{#if (eq auth "better-auth")}}
-      <ClientOnly>
-        <UserMenu />
-        <template #fallback>
-          <USkeleton class="h-9 w-24" />
-        </template>
-      </ClientOnly>
+      <UserMenu />
       {{/if}}
     </template>
 

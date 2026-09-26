@@ -68,7 +68,7 @@ app.on(
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", (c) => {
+app.get("/polar/success", (c) => {
 	const requestUrl = new URL(c.req.url);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -113,7 +113,7 @@ app.use("/*", async (c, next) => {
 	const context = await createContext({ context: c });
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
-		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
+		prefix: "/rpc",
 		context: context,
 	});
 
@@ -122,7 +122,7 @@ app.use("/*", async (c, next) => {
 	}
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
-		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
+		prefix: "/api-reference",
 		context: context,
 	});
 
@@ -136,11 +136,8 @@ app.use("/*", async (c, next) => {
 
 {{#if (eq api "trpc")}}
 app.use(
-	"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc/*",
+	"/trpc/*",
 	trpcServer({
-{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
-		endpoint: "/api/trpc",
-{{/if}}
 		router: appRouter,
 		createContext: (_opts, context) => {
 			return createContext({ context });
@@ -150,7 +147,7 @@ app.use(
 {{/if}}
 
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (c) => {
+app.post("/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
@@ -169,7 +166,7 @@ app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{
 {{/if}}
 
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (c) => {
+app.post("/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const google = createGoogleGenerativeAI({

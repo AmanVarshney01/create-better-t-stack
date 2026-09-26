@@ -479,7 +479,7 @@ export async function createVirtual(
     database: virtualOptions.database || "none",
     orm: virtualOptions.orm || "none",
     backend: virtualOptions.backend || "hono",
-    runtime: virtualOptions.runtime ?? (virtualOptions.serverDeploy === "vercel" ? "node" : "bun"),
+    runtime: virtualOptions.runtime || "bun",
     frontend: virtualOptions.frontend || ["tanstack-router"],
     addons: virtualOptions.addons || [],
     examples: virtualOptions.examples || [],

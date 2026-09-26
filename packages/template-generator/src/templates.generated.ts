@@ -995,7 +995,7 @@ export default defineNuxtPlugin(() => {
   };
 });
 `],
-  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `{{#if (eq orm "prisma")}}
+  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -1009,7 +1009,7 @@ import type { CloudflareEnv } from "../../src/env.server";
 {{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-{{#if (eq orm "prisma")}}
+{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -1018,7 +1018,7 @@ export default defineNuxtPlugin(() => {
   }
 
   const rpcLink = new RPCLink({
-    url: new URL("/rpc", useRequestURL()).href,
+    url: "/rpc",
     fetch(request, init) {
       return event.fetch(request, init);
     },
@@ -9447,7 +9447,6 @@ const loading = ref(false)
 const fields: AuthFormField[] = [
   {
     name: 'email',
-    id: 'sign-in-email',
     type: 'email',
     label: 'Email',
     placeholder: 'Enter your email',
@@ -9455,7 +9454,6 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'password',
-    id: 'sign-in-password',
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
@@ -9532,7 +9530,6 @@ const loading = ref(false)
 const fields: AuthFormField[] = [
   {
     name: 'name',
-    id: 'sign-up-name',
     type: 'text',
     label: 'Name',
     placeholder: 'Enter your name',
@@ -9540,7 +9537,6 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'email',
-    id: 'sign-up-email',
     type: 'email',
     label: 'Email',
     placeholder: 'Enter your email',
@@ -9548,7 +9544,6 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'password',
-    id: 'sign-up-password',
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
@@ -9656,16 +9651,19 @@ const handleSignOut = async () => {
   </div>
 </template>
 `],
-  ["auth/better-auth/web/nuxt/app/composables/useAuthSession.ts.hbs", `export function useAuthSession() {
+  ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async (to, from) => {
+  if (import.meta.server) return;
+
   const { $authClient } = useNuxtApp();
-  return $authClient.useSession((url, options) =>
-    useFetch(url, { ...options, credentials: "include" }),
-  );
-}
-`],
-  ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async () => {
-  const { data: session } = await useAuthSession();
-  if (!session.value) return navigateTo("/login");
+  const session = $authClient.useSession();
+
+  if (session.value.isPending) {
+    return;
+  }
+
+  if (!session.value.data) {
+    return navigateTo("/login");
+  }
 });
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
@@ -9683,7 +9681,7 @@ definePageMeta({
   middleware: ['auth']
 })
 
-const { data: session } = await useAuthSession()
+const session = $authClient.useSession()
 
 {{#if (eq payments "polar")}}
 const customerState = ref<CustomerState | null>(null)
@@ -9692,17 +9690,13 @@ const customerState = ref<CustomerState | null>(null)
 {{#if (eq api "orpc")}}
 const privateData = useQuery({
   ...$orpc.privateData.queryOptions(),
-  enabled: computed(() => !!session.value?.user)
-})
-
-onServerPrefetch(async () => {
-  if (session.value?.user) await privateData.suspense()
+  enabled: computed(() => !!session.value?.data?.user)
 })
 {{/if}}
 
 {{#if (eq payments "polar")}}
 onMounted(async () => {
-  if (session.value) {
+  if (session.value?.data) {
     const { data } = await $authClient.customer.state()
     customerState.value = data ?? null
   }
@@ -9718,7 +9712,7 @@ const hasProSubscription = computed(() =>
   <UContainer class="py-8">
     <UPageHeader
       title="Dashboard"
-      :description="session?.user ? \`Welcome back, \${session.user.name}!\` : 'Loading...'"
+      :description="session?.data?.user ? \`Welcome back, \${session.data.user.name}!\` : 'Loading...'"
     />
 
     <div class="mt-6 space-y-4">
@@ -9777,16 +9771,15 @@ const hasProSubscription = computed(() =>
 </template>
 `],
   ["auth/better-auth/web/nuxt/app/pages/login.vue.hbs", `<script setup lang="ts">
+const { $authClient } = useNuxtApp();
 import SignInForm from "~/components/SignInForm.vue";
 import SignUpForm from "~/components/SignUpForm.vue";
 
-const { data: session } = await useAuthSession();
+const session = $authClient.useSession();
 const showSignIn = ref(true);
-const hydrated = ref(false);
-onMounted(() => { hydrated.value = true; });
 
 watchEffect(() => {
-  if (session.value) {
+  if (!session?.value.isPending && session?.value.data) {
     navigateTo("/dashboard", { replace: true });
   }
 });
@@ -9794,10 +9787,14 @@ watchEffect(() => {
 
 <template>
   <UContainer class="py-8">
-    <fieldset v-if="!session" :disabled="!hydrated">
+    <div v-if="session.isPending" class="flex flex-col items-center justify-center gap-4 py-12">
+      <UIcon name="i-lucide-loader-2" class="animate-spin text-4xl text-primary" />
+      <span class="text-muted">Loading...</span>
+    </div>
+    <div v-else-if="!session.data">
       <SignInForm v-if="showSignIn" @switch-to-sign-up="showSignIn = false" />
       <SignUpForm v-else @switch-to-sign-in="showSignIn = true" />
-    </fieldset>
+    </div>
   </UContainer>
 </template>
 `],
@@ -9818,9 +9815,6 @@ export default defineNuxtPlugin(() => {
   {{/if}}
 
   const authClient = createAuthClient({
-    fetchOptions: {
-      headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
-    },
     {{#if (ne backend "self")}}
     baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}
@@ -10038,6 +10032,7 @@ export default function LoginPage() {
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
+import Loader from "./loader";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
@@ -10049,6 +10044,7 @@ export default function SignInForm({
   onSwitchToSignUp: () => void;
 }) {
   const router = useRouter()
+  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10079,6 +10075,10 @@ export default function SignInForm({
       }),
     },
   });
+
+  if (isPending) {
+    return <Loader />;
+  }
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -10168,6 +10168,7 @@ export default function SignInForm({
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
+import Loader from "./loader";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
@@ -10179,6 +10180,7 @@ export default function SignUpForm({
   onSwitchToSignIn: () => void;
 }) {
   const router = useRouter();
+  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10212,6 +10214,10 @@ export default function SignUpForm({
       }),
     },
   });
+
+  if (isPending) {
+    return <Loader />;
+  }
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -10398,7 +10404,7 @@ export default function SignInForm({
   onSwitchToSignUp: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending, refetch } = authClient.useSession();
+  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10412,8 +10418,7 @@ export default function SignInForm({
           password: value.password,
         },
         {
-          onSuccess: async () => {
-            await refetch();
+          onSuccess: () => {
             navigate("/dashboard");
             toast.success("Sign in successful");
           },
@@ -10535,7 +10540,7 @@ export default function SignUpForm({
   onSwitchToSignIn: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending, refetch } = authClient.useSession();
+  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10551,8 +10556,7 @@ export default function SignUpForm({
           name: value.name,
         },
         {
-          onSuccess: async () => {
-            await refetch();
+          onSuccess: () => {
             navigate("/dashboard");
             toast.success("Sign up successful");
           },
@@ -10763,24 +10767,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function Dashboard() {
-  const { data: session, isPending, isRefetching } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
   const [customerState, setCustomerState] = useState<CustomerState | null>(null);
   {{/if}}
 
   {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions({ enabled: Boolean(session) }));
+  const privateData = useQuery(orpc.privateData.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions(undefined, { enabled: Boolean(session) }));
+  const privateData = useQuery(trpc.privateData.queryOptions());
   {{/if}}
 
   useEffect(() => {
-    if (!session && !isPending && !isRefetching) {
+    if (!session && !isPending) {
       navigate("/login");
     }
-  }, [session, isPending, isRefetching, navigate]);
+  }, [session, isPending, navigate]);
 
   {{#if (eq payments "polar")}}
   useEffect(() => {
@@ -10795,7 +10799,7 @@ export default function Dashboard() {
   }, [session]);
   {{/if}}
 
-  if (isPending || isRefetching || !session) {
+  if (isPending) {
     return <div>Loading...</div>;
   }
 
@@ -11853,7 +11857,7 @@ function RouteComponent() {
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createSignal, onSettled, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
@@ -11866,10 +11870,6 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   const navigate = useNavigate();
   const [error, setError] = createSignal<string>();
   const [isSubmitting, setIsSubmitting] = createSignal(false);
-  const [hydrated, setHydrated] = createSignal(false);
-  onSettled(() => {
-    setHydrated(true);
-  });
 
   const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault();
@@ -11904,7 +11904,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   return (
     <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
-      <form method="post" onSubmit={submit} class="space-y-4">
+      <form onSubmit={submit} class="space-y-4">
         <div class="space-y-2">
           <label for="email">Email</label>
           <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
@@ -11924,7 +11924,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         <button
           type="submit"
           class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-          disabled={!hydrated() || isSubmitting()}
+          disabled={isSubmitting()}
         >
           {isSubmitting() ? "Submitting..." : "Sign In"}
         </button>
@@ -11943,7 +11943,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createSignal, onSettled, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
@@ -11957,10 +11957,6 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   const navigate = useNavigate();
   const [error, setError] = createSignal<string>();
   const [isSubmitting, setIsSubmitting] = createSignal(false);
-  const [hydrated, setHydrated] = createSignal(false);
-  onSettled(() => {
-    setHydrated(true);
-  });
 
   const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault();
@@ -11995,7 +11991,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   return (
     <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
-      <form method="post" onSubmit={submit} class="space-y-4">
+      <form onSubmit={submit} class="space-y-4">
         <div class="space-y-2">
           <label for="name">Name</label>
           <input id="name" name="name" minlength="2" required class="w-full rounded border p-2" />
@@ -12019,7 +12015,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         <button
           type="submit"
           class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-          disabled={!hydrated() || isSubmitting()}
+          disabled={isSubmitting()}
         >
           {isSubmitting() ? "Submitting..." : "Sign Up"}
         </button>
@@ -12201,8 +12197,6 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
-	const session = authClient.useSession();
-
 	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
 
 	const validationSchema = z.object({
@@ -12216,10 +12210,7 @@ export default function Login() {
 				await authClient.signIn.email(
 					{ email: value.email, password: value.password },
 					{
-						onSuccess: async () => {
-							await $session.refetch();
-							await goto('/dashboard');
-						},
+						onSuccess: () => goto('/dashboard'),
 						onError: (error) => {
 							console.log(error.error.message || 'Sign in failed. Please try again.');
 						},
@@ -12318,8 +12309,6 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
-	const session = authClient.useSession();
-
 	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
 
 	const validationSchema = z.object({
@@ -12339,9 +12328,8 @@ export default function Login() {
 						name: value.name,
 					},
 					{
-						onSuccess: async () => {
-							await $session.refetch();
-							await goto('/dashboard');
+						onSuccess: () => {
+							goto('/dashboard');
 						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign up failed. Please try again.');
@@ -12556,11 +12544,11 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions({ enabled: Boolean($sessionQuery.data) }));
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
 
 	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.isRefetching && !$sessionQuery.data) {
+		if (!$sessionQuery.isPending && !$sessionQuery.data) {
 			goto('/login');
 		}
 	});
@@ -12576,7 +12564,7 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending || $sessionQuery.isRefetching}
+{#if $sessionQuery.isPending}
 	<div>Loading...</div>
 {:else if !$sessionQuery.data}
 	<div>Redirecting to login...</div>
@@ -14591,7 +14579,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}),
 	)
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
-	.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", ({ request, status }) => {
+	.get("/polar/success", ({ request, status }) => {
 		const nativeAppUrl = "{{projectName}}://";
 		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 		const requestUrl = new URL(request.url);
@@ -14627,10 +14615,10 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 {{#if (eq api "orpc")}}
 	.all(
-		"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc*",
+		"/rpc*",
 		async (context) => {
 			const { response } = await rpcHandler.handle(context.request, {
-				prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
+				prefix: "/rpc",
 				context: await createContext({ context }),
 			});
 			return response ?? new Response("Not Found", { status: 404 });
@@ -14640,10 +14628,10 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}
 	)
 	.all(
-		"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference*",
+		"/api-reference*",
 		async (context) => {
 			const { response } = await apiHandler.handle(context.request, {
-				prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
+				prefix: "/api-reference",
 				context: await createContext({ context }),
 			});
 			return response ?? new Response("Not Found", { status: 404 });
@@ -14654,9 +14642,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	)
 {{/if}}
 {{#if (eq api "trpc")}}
-	.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc/*", async (context) => {
+	.all("/trpc/*", async (context) => {
 		const res = await fetchRequestHandler({
-			endpoint: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
+			endpoint: "/trpc",
 			router: appRouter,
 			req: context.request,
 			createContext: () => createContext({ context }),
@@ -14665,7 +14653,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	})
 {{/if}}
 {{#if (includes examples "ai")}}
-	.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (context) => {
+	.post("/ai", async (context) => {
 		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
@@ -14757,7 +14745,7 @@ app.all("/api/auth{/*path}", toNodeHandler(auth));
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", (req, res) => {
+app.get("/polar/success", (req, res) => {
 	const requestUrl = new URL(req.url, ENV.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -14780,7 +14768,7 @@ app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/
 {{/if}}
 {{#if (eq api "trpc")}}
 app.use(
-	"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
+	"/trpc",
 	createExpressMiddleware({
 		router: appRouter,
 		createContext,
@@ -14811,13 +14799,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
-		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
+		prefix: "/rpc",
 		context: await createContext({ req }),
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
-		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
+		prefix: "/api-reference",
 		context: await createContext({ req }),
 	});
 	if (apiResult.matched) return;
@@ -14829,7 +14817,7 @@ app.use(async (req, res, next) => {
 app.use(express.json());
 
 {{#if (includes examples "ai")}}
-app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (req, res) => {
+app.post("/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
@@ -14942,7 +14930,7 @@ fastify.register(clerkPlugin, {
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-fastify.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", async (request, reply) => {
+fastify.get("/polar/success", async (request, reply) => {
 	const requestUrl = new URL(request.url, ENV.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -14970,10 +14958,10 @@ fastify.register(async (rpcApp) => {
 		done(null, undefined);
 	});
 
-	rpcApp.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc/*", async (request, reply) => {
+	rpcApp.all("/rpc/*", async (request, reply) => {
 		const { matched } = await rpcHandler.handle(request, reply, {
 			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
-			prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
+			prefix: "/rpc",
 		});
 
 		if (!matched) {
@@ -14981,10 +14969,10 @@ fastify.register(async (rpcApp) => {
 		}
 	});
 
-	rpcApp.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference/*", async (request, reply) => {
+	rpcApp.all("/api-reference/*", async (request, reply) => {
 		const { matched } = await apiHandler.handle(request, reply, {
 			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
-			prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
+			prefix: "/api-reference",
 		});
 
 		if (!matched) {
@@ -15027,7 +15015,7 @@ fastify.route({
 
 {{#if (eq api "trpc")}}
 fastify.register(fastifyTRPCPlugin, {
-	prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
+	prefix: "/trpc",
 	trpcOptions: {
 		router: appRouter,
 		createContext,
@@ -15044,7 +15032,7 @@ interface AiRequestBody {
 	messages: UIMessage[];
 }
 
-fastify.post('{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai', async function (request) {
+fastify.post('/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
 		model: google('gemini-2.5-flash'),
@@ -15143,7 +15131,7 @@ app.on(
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", (c) => {
+app.get("/polar/success", (c) => {
 	const requestUrl = new URL(c.req.url);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -15188,7 +15176,7 @@ app.use("/*", async (c, next) => {
 	const context = await createContext({ context: c });
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
-		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
+		prefix: "/rpc",
 		context: context,
 	});
 
@@ -15197,7 +15185,7 @@ app.use("/*", async (c, next) => {
 	}
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
-		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
+		prefix: "/api-reference",
 		context: context,
 	});
 
@@ -15211,11 +15199,8 @@ app.use("/*", async (c, next) => {
 
 {{#if (eq api "trpc")}}
 app.use(
-	"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc/*",
+	"/trpc/*",
 	trpcServer({
-{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
-		endpoint: "/api/trpc",
-{{/if}}
 		router: appRouter,
 		createContext: (_opts, context) => {
 			return createContext({ context });
@@ -15225,7 +15210,7 @@ app.use(
 {{/if}}
 
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (c) => {
+app.post("/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
@@ -15244,7 +15229,7 @@ app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{
 {{/if}}
 
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (c) => {
+app.post("/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const google = createGoogleGenerativeAI({
@@ -17058,20 +17043,16 @@ app.listen(port, "0.0.0.0", () => {
 });
 `],
   ["deploy/vercel/_vercelignore", `# Local env files must never ship in deployments: Vercel project env vars are
-# the source of truth (env:preview or env:production), and frameworks like Next.js would
+# the source of truth (bun env:vercel:*), and frameworks like Next.js would
 # otherwise load these localhost values at runtime.
 .env
 .env.*
 **/.env
 **/.env.*
 !**/.env.example
-!**/.env.schema
 local.db
 local.db-*
 .alchemy/
-apps/server/dist/
-packages/api/dist/
-packages/db/prisma/generated/
 `],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -24264,10 +24245,7 @@ import Layout from "../layouts/Layout.astro";
 </script>
 `],
   ["examples/todo/web/nuxt/app/pages/todos.vue.hbs", `<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-
-const hydrated = ref(false)
-onMounted(() => { hydrated.value = true })
+import { ref } from 'vue'
 {{#if (eq backend "convex")}}
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import type { Id } from "@{{ projectName }}/backend/convex/_generated/dataModel";
@@ -24362,19 +24340,16 @@ function handleDeleteTodo(id: number) {
           autocomplete="off"
           class="flex-1"
           {{#if (eq backend "convex")}}
-          :disabled="!hydrated || isCreatePending"
-          {{else}}
-          :disabled="!hydrated"
+          :disabled="isCreatePending"
           {{/if}}
         />
         <UButton
           type="submit"
           {{#if (eq backend "convex")}}
           :loading="isCreatePending"
-          :disabled="!hydrated || !newTodoText.trim()"
+          :disabled="!newTodoText.trim()"
           {{else}}
           :loading="createMutation.isPending.value"
-          :disabled="!hydrated || !newTodoText.trim()"
           {{/if}}
         >
           Add
@@ -30167,12 +30142,7 @@ const items = computed<NavigationMenuItem[]>(() => [
     <template #right>
       <UColorModeButton />
       {{#if (eq auth "better-auth")}}
-      <ClientOnly>
-        <UserMenu />
-        <template #fallback>
-          <USkeleton class="h-9 w-24" />
-        </template>
-      </ClientOnly>
+      <UserMenu />
       {{/if}}
     </template>
 
@@ -30297,20 +30267,7 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
-import { createRequire } from "node:module";
-
-const libsqlRequire = createRequire(import.meta.resolve("libsql"));
-const sqliteBindings = Object.keys(libsqlRequire("./package.json").optionalDependencies)
-  .flatMap((name) => {
-    try {
-      return [libsqlRequire.resolve(name)];
-    } catch {
-      return [];
-    }
-  });
-{{/if}}
-{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
 import { fileURLToPath } from "node:url";
 
 const apiReference = { path: fileURLToPath(new URL("../../packages/api", import.meta.url)) };
@@ -30339,22 +30296,6 @@ export default defineNuxtConfig({
   {{/if}}
   compatibilityDate: 'latest',
   devtools: { enabled: true },
-  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-  vite: {
-    optimizeDeps: {
-      exclude: ['@tanstack/vue-query'],
-      include: [
-        '@orpc/client',
-        '@orpc/client/fetch',
-        '@orpc/tanstack-query',
-        '@tanstack/vue-query-devtools',
-        {{#if (eq auth "better-auth")}}
-        'better-auth/vue',
-        {{/if}}
-      ],
-    },
-  },
-  {{/if}}
   experimental: {
     payloadExtraction: 'client',
   },
@@ -30379,11 +30320,8 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")) (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma"))))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
   nitro: {
-    {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
-    externals: { traceInclude: sqliteBindings },
-    {{/if}}
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     typescript: {
       tsConfig: { references: [apiReference] },
@@ -30429,7 +30367,7 @@ export default defineNuxtConfig({
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}nuxt prepare && vue-tsc -b{{else}}nuxt typecheck{{/if}}",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "{{#if (or (eq webDeploy "none") (eq webDeploy "docker"))}}node .output/server/index.mjs{{else}}nuxt preview{{/if}}",
+    "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -30972,9 +30910,6 @@ export default {
   ssr: false,
 {{/if}}
   appDirectory: "src",
-  future: {
-    unstable_optimizeDeps: true,
-  },
 } satisfies Config;
 `],
   ["frontend/react/react-router/src/components/mode-toggle.tsx.hbs", `import { Moon, Sun } from "lucide-react";
@@ -31099,7 +31034,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31729,9 +31664,13 @@ if (!rootElement.innerHTML) {
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq api "orpc")}}
-import type { orpc } from "@/utils/orpc";
+import { link, orpc } from "@/utils/orpc";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useState } from "react";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createORPCClient } from "@orpc/client";
 {{/if}}
 {{#if (eq api "trpc")}}
 import type { trpc } from "@/utils/trpc";
@@ -31782,9 +31721,28 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
+  {{#if (eq api "orpc")}}
+  const [client] = useState<AppRouterClient>(() => createORPCClient(link));
+  const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
+  {{/if}}
+
   return (
     <>
       <HeadContent />
+      {{#if (eq api "orpc")}}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+      {{else}}
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"
@@ -31797,6 +31755,7 @@ function RootComponent() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
+      {{/if}}
       <TanStackRouterDevtools position="bottom-left" />
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
@@ -33095,11 +33054,6 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-{{#if (eq auth "better-auth")}}
-  optimizeDeps: {
-    include: ["zod"],
-  },
-{{/if}}
 {{#if (eq webDeploy "cloudflare")}}
   build: {
     rollupOptions: {
@@ -34562,10 +34516,11 @@ import { Button } from "@{{projectName}}/ui/components/button"
 import { Input } from "@{{projectName}}/ui/components/input"
 import { Textarea } from "@{{projectName}}/ui/components/textarea"
 
-function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
+function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <fieldset
+    <div
       data-slot="input-group"
+      role="group"
       className={cn(
         "group/input-group relative flex h-8 w-full min-w-0 items-center rounded-none border border-input bg-background shadow-xs transition-[color,box-shadow] outline-none has-[>textarea]:h-auto dark:bg-input/30",
         "has-[>[data-align=inline-start]]:[&>input]:pl-2 has-[>[data-align=inline-end]]:[&>input]:pr-2",
@@ -34605,12 +34560,10 @@ function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
-}: React.ComponentProps<"fieldset"> & VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
   return (
-    {{#if (includes addons "biome")}}
-    // biome-ignore lint/a11y/useKeyWithClickEvents: Enlarges the input click target; keyboard users focus the input with Tab.
-    {{/if}}
-    <fieldset
+    <div
+      role="group"
       data-slot="input-group-addon"
       data-align={align}
       className={cn(inputGroupAddonVariants({ align }), className)}
@@ -34745,19 +34698,16 @@ import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Label({ className, htmlFor, children, ...props }: React.ComponentProps<"label">) {
+function Label({ className, ...props }: React.ComponentProps<"label">) {
   return (
     <label
-      htmlFor={htmlFor}
       data-slot="label"
       className={cn(
         "flex items-center gap-2 text-xs leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
         className
       )}
       {...props}
-    >
-      {children}
-    </label>
+    />
   )
 }
 
@@ -35562,4 +35512,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 530;
+export const TEMPLATE_COUNT = 529;

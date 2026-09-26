@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-
-const hydrated = ref(false)
-onMounted(() => { hydrated.value = true })
+import { ref } from 'vue'
 {{#if (eq backend "convex")}}
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import type { Id } from "@{{ projectName }}/backend/convex/_generated/dataModel";
@@ -97,19 +94,16 @@ function handleDeleteTodo(id: number) {
           autocomplete="off"
           class="flex-1"
           {{#if (eq backend "convex")}}
-          :disabled="!hydrated || isCreatePending"
-          {{else}}
-          :disabled="!hydrated"
+          :disabled="isCreatePending"
           {{/if}}
         />
         <UButton
           type="submit"
           {{#if (eq backend "convex")}}
           :loading="isCreatePending"
-          :disabled="!hydrated || !newTodoText.trim()"
+          :disabled="!newTodoText.trim()"
           {{else}}
           :loading="createMutation.isPending.value"
-          :disabled="!hydrated || !newTodoText.trim()"
           {{/if}}
         >
           Add
