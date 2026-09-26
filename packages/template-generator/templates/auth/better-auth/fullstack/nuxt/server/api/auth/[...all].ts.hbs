@@ -4,7 +4,7 @@ import { createAuth } from "@{{projectName}}/auth";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{#if (eq webDeploy "cloudflare")}}
-import type { CloudflareEnv } from "@{{projectName}}/env/server";
+import type { CloudflareEnv } from "../../../src/env.server";
 {{/if}}
 
 export default defineEventHandler(async (event) => {

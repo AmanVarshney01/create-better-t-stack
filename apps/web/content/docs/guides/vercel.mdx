@@ -156,14 +156,13 @@ bun deploy:check
 
 # 4. Sync envs for the environment you deploy to, then deploy.
 #    Preview and production are separate env stores on Vercel.
-bun env:production && bun deploy:prod    # first deployment
-bun env:preview && bun deploy            # subsequent previews
+bun env:preview && bun deploy            # preview deployment
+bun env:production && bun deploy:prod    # production deployment
 ```
 
 <Callout type="warn">
-  A new Vercel project's first deployment is production. Sync production variables before that first
-  deploy. For subsequent deploys, sync the target environment — preview and production are separate
-  stores. Vercel never uploads local `.env` files, so a deploy without synced envs fails environment
+  Sync variables for the environment you deploy to. Preview and production have separate stores.
+  Vercel does not upload local `.env` files, so a deploy without synced variables fails environment
   validation at runtime.
 </Callout>
 

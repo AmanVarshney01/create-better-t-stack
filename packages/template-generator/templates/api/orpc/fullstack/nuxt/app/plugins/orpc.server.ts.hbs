@@ -7,8 +7,8 @@ import { createRouterClient } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
-{{#if (and (eq webDeploy "cloudflare") (ne orm "prisma"))}}
-import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "../../src/env.server";
 {{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 

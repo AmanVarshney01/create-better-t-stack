@@ -41,8 +41,7 @@ function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"
   const hasAstro = frontend.includes("astro");
   const hasTanstackStart = frontend.includes("tanstack-start");
 
-  // For fullstack self, no base URL is needed (same-origin)
-  if (backend === "self") {
+  if (backend === "self" || backend === "none") {
     return { key: "", value: "", write: false } as const;
   }
 

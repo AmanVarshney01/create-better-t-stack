@@ -1,4 +1,5 @@
 import type { ProjectConfig } from "@better-t-stack/types";
+import { parse, stringify } from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
@@ -34,7 +35,9 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     const version = "npm:@varlock/nextjs-integration@1.2.2";
     if (config.packageManager === "pnpm") {
       const path = "pnpm-workspace.yaml";
-      vfs.writeFile(path, `${vfs.readFile(path) ?? ""}\noverrides:\n  '@next/env': '${version}'\n`);
+      const workspace = parse(vfs.readFile(path) ?? "") ?? {};
+      workspace.overrides = { ...workspace.overrides, "@next/env": version };
+      vfs.writeFile(path, stringify(workspace));
     } else {
       const pkg = vfs.readJson<{ overrides?: Record<string, string> }>("package.json")!;
       pkg.overrides = { ...pkg.overrides, "@next/env": version };

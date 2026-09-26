@@ -12,6 +12,8 @@ const expect = baseExpect.configure({ timeout: 20_000 });
 
 export function verificationBlockers(config: ProjectConfig): string[] {
   const reasons: string[] = [];
+  if (config.frontend.length === 0 && config.backend === "none")
+    reasons.push("No web or server runtime to verify");
   if (config.frontend.some((f) => f.startsWith("native-")))
     reasons.push("Native device runner required");
   if (config.backend === "convex")
@@ -59,10 +61,14 @@ export async function verifyBrowser(
   const taskPlaceholder = config.frontend.some((f) => ["svelte", "astro"].includes(f))
     ? "New task..."
     : "Add a new task...";
+  const origins = new Set(
+    [deployment.web, deployment.server].filter(Boolean).map((url) => new URL(url!).origin),
+  );
+  const assetHeaders = (url: string) =>
+    deployment.protectionBypass && origins.has(new URL(url).origin)
+      ? { "x-vercel-protection-bypass": deployment.protectionBypass }
+      : undefined;
   if (deployment.protectionBypass) {
-    const origins = new Set(
-      [deployment.web, deployment.server].filter(Boolean).map((url) => new URL(url!).origin),
-    );
     await context.route(
       (url) => origins.has(url.origin),
       (route) =>
@@ -235,18 +241,21 @@ export async function verifyBrowser(
       await page.goto(deployment.web);
       const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute("href");
       expect(manifestUrl, "PWA manifest link").toBeTruthy();
-      const manifestResponse = await context.request.get(
-        new URL(manifestUrl!, deployment.web).href,
-      );
+      const manifestHref = new URL(manifestUrl!, deployment.web).href;
+      const manifestResponse = await context.request.get(manifestHref, {
+        headers: assetHeaders(manifestHref),
+      });
       expect(manifestResponse.status(), "PWA manifest response").toBe(200);
       const manifest = await manifestResponse.json();
       expect(manifest.name).toBe(config.projectName);
       expect(manifest.icons.length).toBeGreaterThan(0);
-      for (const icon of manifest.icons)
+      for (const icon of manifest.icons) {
+        const iconUrl = new URL(icon.src, manifestResponse.url()).href;
         expect(
-          (await context.request.get(new URL(icon.src, manifestResponse.url()).href)).status(),
+          (await context.request.get(iconUrl, { headers: assetHeaders(iconUrl) })).status(),
           "PWA icon",
         ).toBe(200);
+      }
       await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
       const cachedUrls = await page.evaluate(async () => {
         const urls: string[] = [];

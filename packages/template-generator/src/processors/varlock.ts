@@ -50,12 +50,15 @@ function schemaKeys(vfs: VirtualFileSystem, app: string, config: ProjectConfig):
   return keys;
 }
 
-function schema(keys: Set<string>, config: ProjectConfig, app: string): string {
+function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: string): string {
+  const readOnlyRuntime =
+    (app === "apps/web" && config.webDeploy === "vercel") ||
+    (app === "apps/server" && config.serverDeploy === "vercel");
   const lines = [
     "# @defaultRequired=true",
     "# @defaultSensitive=true",
     "# @currentEnv=$NODE_ENV",
-    `# @generateTsTypes(path=./src/env.ts, exposeEnv=local${app === "apps/server" && config.serverDeploy === "vercel" ? ", auto=false" : ""})`,
+    `# @generateTsTypes(path=./src/${envFile}, exposeEnv=local${readOnlyRuntime ? ", auto=false" : ""})`,
     "# ---",
     "",
     "# @public @type=enum(development, production, test)",
@@ -95,12 +98,6 @@ function schema(keys: Set<string>, config: ProjectConfig, app: string): string {
     ) {
       type = 'string(matches="^(https?://|/(?!/))")';
     }
-    const publicServer = [
-      "CORS_ORIGIN",
-      "BETTER_AUTH_URL",
-      "POLAR_SUCCESS_URL",
-      "CLERK_PUBLISHABLE_KEY",
-    ].includes(key);
     let value = "";
     if (vercel && ["BETTER_AUTH_URL", "CORS_ORIGIN"].includes(key)) {
       value = "$VERCEL_ORIGIN";
@@ -115,11 +112,7 @@ function schema(keys: Set<string>, config: ProjectConfig, app: string): string {
     }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
-    lines.push(
-      `# ${isPublic ? "@public " : publicServer ? "@public @dynamic " : ""}@type=${type}`,
-      `${key}=${value}`,
-      "",
-    );
+    lines.push(`# ${isPublic ? "@public " : ""}@type=${type}`, `${key}=${value}`, "");
   }
   return lines.join("\n");
 }
@@ -131,7 +124,7 @@ function processAlchemySchema(vfs: VirtualFileSystem, config: ProjectConfig): vo
   // credentials are Alchemy outputs, so validating them here blocks provisioning.
   const inputs = new Set([
     "NODE_ENV",
-    ...Array.from(source.matchAll(/Config\.(?:string|redacted)\("([A-Z_]+)"\)/g), (m) => m[1]!),
+    ...Array.from(source.matchAll(/Config\.(?:String|Redacted)\("([A-Z_]+)"\)/g), (m) => m[1]!),
   ]);
   const imports: string[] = [];
   for (const app of ["apps/server", "apps/web"]) {
@@ -164,7 +157,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
       .some(
         (file) =>
           file.startsWith("apps/web/") &&
-          vfs.readFile(file)?.includes(`@${config.projectName}/env/web`),
+          vfs.readFile(file)?.includes(`from "${importPath(file, "apps/web/src/env.public")}"`),
       )
   )
     return;
@@ -176,7 +169,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
   const nuxt = config.frontend.includes("nuxt");
   const lines = [
     "// Alchemy validates deployment inputs with Varlock; Workers use native env bindings.",
-    'import type { PublicCoercedEnvSchema } from "./env";',
+    `import type { PublicCoercedEnvSchema } from "./env${svelte ? ".generated" : ""}";`,
   ];
   if (svelte && keys.length) lines.push(`import { ${keys.join(", ")} } from "$env/static/public";`);
   if (nuxt && keys.length) lines.push('import { useRuntimeConfig } from "#imports";');
@@ -190,7 +183,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
       lines.push(`  get ${key}() { return useRuntimeConfig().public.${name}; },`);
     } else {
       lines.push(
-        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}`},`,
+        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}!`},`,
       );
     }
   }
@@ -222,14 +215,16 @@ export function processVarlock(
     if (!vfs.exists(`${app}/package.json`)) continue;
     const keys = schemaKeys(vfs, app, config);
     for (const key of keys) allKeys.add(key);
-    vfs.writeFile(`${app}/.env.schema`, schema(keys, config, app));
+    const envFile =
+      app === "apps/web" && config.frontend.includes("svelte") ? "env.generated.ts" : "env.ts";
+    vfs.writeFile(`${app}/.env.schema`, schema(keys, config, envFile, app));
     vfs.writeFile(`${app}/bunfig.toml`, `env = false\n${vfs.readFile(`${app}/bunfig.toml`) ?? ""}`);
     const pkg = vfs.readJson<Package>(`${app}/package.json`)!;
     pkg.scripts = { ...pkg.scripts, "env:generate": "varlock codegen" };
     vfs.writeJson(`${app}/package.json`, pkg);
     commands.push(`varlock codegen --path ./${app}/`);
     const ignore = `${app}/.gitignore`;
-    vfs.writeFile(ignore, `${vfs.readFile(ignore) ?? ""}\n!.env.schema\n/src/env.ts\n`);
+    vfs.writeFile(ignore, `${vfs.readFile(ignore) ?? ""}\n!.env.schema\n/src/${envFile}\n`);
   }
   if (vfs.exists("packages/db/package.json")) {
     const keys = config.dbSetup === "d1" ? ["NODE_ENV"] : ["NODE_ENV", "DATABASE_*"];
@@ -254,6 +249,29 @@ export function processVarlock(
   if (commands.length) {
     root.scripts["env:generate"] = commands.join(" && ");
     root.scripts.postinstall = [root.scripts.postinstall, ...commands].filter(Boolean).join(" && ");
+  }
+  if (
+    config.auth === "better-auth" &&
+    config.backend !== "convex" &&
+    vfs.exists("packages/db/package.json") &&
+    (config.orm === "drizzle" || config.orm === "prisma") &&
+    config.runtime !== "workers" &&
+    config.serverDeploy !== "cloudflare" &&
+    !(config.backend === "self" && config.webDeploy === "cloudflare")
+  ) {
+    const execute =
+      config.packageManager === "bun"
+        ? "bun x"
+        : config.packageManager === "pnpm"
+          ? "pnpm dlx"
+          : "npx --yes";
+    const output = config.orm === "prisma" ? "prisma/schema/auth.prisma" : "src/schema/auth.ts";
+    const app = vfs.readJson<Package>(`${server}/package.json`)!;
+    app.scripts ??= {};
+    app.scripts["auth:generate"] =
+      `varlock run -- ${execute} auth@latest generate --config src/services.ts --output ../../packages/db/${output} --yes`;
+    vfs.writeJson(`${server}/package.json`, app);
+    root.scripts["auth:generate"] = `cd ${server} && ${config.packageManager} run auth:generate`;
   }
   vfs.writeJson("package.json", root);
   if (["express", "fastify"].includes(config.backend) && config.auth === "better-auth") {
@@ -280,20 +298,10 @@ export function processVarlock(
     if (!file.startsWith("apps/") || !/\.(ts|tsx|vue|svelte|astro)$/.test(file)) continue;
     const app = file.split("/").slice(0, 2).join("/");
     let content = vfs.readFile(file)!;
-    content = content
-      .replaceAll(
-        `@${config.projectName}/env/web`,
-        importPath(
-          file,
-          config.webDeploy === "cloudflare" ? "apps/web/src/env.public" : "apps/web/src/env",
-        ),
-      )
-      .replaceAll(`@${config.projectName}/env/native`, importPath(file, "apps/native/src/env"))
-      .replaceAll(`@${config.projectName}/env/server`, importPath(file, `${server}/src/env.server`))
-      .replaceAll(
-        `@${config.projectName}/app-services`,
-        importPath(file, `${server}/src/services`),
-      );
+    content = content.replaceAll(
+      `@${config.projectName}/app-services`,
+      importPath(file, `${server}/src/services`),
+    );
     if (file !== "apps/web/src/client.ts") {
       content = content.replaceAll(
         `@${config.projectName}/auth/client`,

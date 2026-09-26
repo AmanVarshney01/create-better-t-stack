@@ -6,7 +6,7 @@ import type { polar } from "@polar-sh/better-auth";
 {{/if}}
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
-import { ENV } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 
 export const authClient = createAuthClient({
 	baseURL: ENV.EXPO_PUBLIC_SERVER_URL,

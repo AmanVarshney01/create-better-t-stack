@@ -56,8 +56,8 @@ function writePrismaServer(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): 
         writer,
         "build: {",
         () => {
-          writer.writeLine('type: "auto" as const,');
-          writer.writeLine('framework: "bun" as const,');
+          writer.writeLine('type: "auto",');
+          writer.writeLine('framework: "bun",');
         },
         "},",
       );

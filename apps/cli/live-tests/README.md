@@ -5,12 +5,12 @@ Run from the repository root. These tests create disposable projects and databas
 ```sh
 bun run build:cli
 cd apps/cli && bunx playwright install chromium && cd ../..
-bun run test:live plan --where '{"frontend":["tanstack-router"],"backend":"hono","runtime":"bun","database":"postgres","orm":"drizzle","dbSetup":"neon","api":"trpc","auth":"better-auth","payments":"none","webDeploy":"none","serverDeploy":"none","packageManager":"bun","addons":[],"examples":["todo"]}'
+bun run test:live plan --where '{"frontend":["tanstack-router"],"backend":"hono","runtime":"bun","database":"sqlite","orm":"drizzle","dbSetup":"none","api":"trpc","auth":"better-auth","payments":"none","webDeploy":"none","serverDeploy":"none","packageManager":"bun","addons":[],"examples":["todo"]}'
 ```
 
 Replace `plan` with `run` to execute that selection. Remove selection fields to enumerate their valid alternatives. An empty selection enumerates all supported core stack choices, frontend/native pairs, addon subsets, and example subsets using the existing compatibility rules. It does **not** yet enumerate addon-specific options or automatic database-setup login flows.
 
-The complete matrix is much larger than an overnight run: on 2026-09-16, core choices alone (with addons and examples explicitly empty) enumerated 3,667,650 cases. Use explicit filters for manageable batches; a successful batch is not complete-matrix certification.
+The complete matrix has millions of core cases before addon and example subsets. Use explicit filters for manageable batches; a successful batch is not complete-matrix certification.
 
 `--limit N` bounds a run for development; a limited run reports incomplete coverage and exits nonzero. Zero matching cases also exits nonzero. An enumerated case only passes after its runtime checks and resource cleanup succeed. Missing adapters or credentials are blocked, never passed.
 
@@ -26,7 +26,7 @@ Supply credentials in the local process environment or use the provider CLI's ex
 | Clerk, Polar sandbox, Convex                | Dedicated test accounts to be added later                               | Blocked; provider-specific verification still required                                              |
 | Supabase, Turso, PlanetScale, MongoDB Atlas | Dedicated test accounts to be added later                               | Blocked; database provisioners still required                                                       |
 
-Vercel function cases require the Node runtime; Bun remains a supported package manager. Vercel's first deployment is production, so the runner verifies production first and preview second on its disposable project. It creates a deployment-protection bypass secret scoped to that project. Browser requests only attach it to the test deployment's origin.
+Vercel function cases require the Node runtime; Bun remains a supported package manager. The runner verifies production and preview on its disposable project. It creates a deployment-protection bypass secret scoped to that project. Browser requests only attach it to the test deployment's origin.
 
 ## Verification and current limits
 

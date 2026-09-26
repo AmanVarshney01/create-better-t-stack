@@ -8,7 +8,7 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
-export default defineConfig({
+export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}({ command }) => ({{/if}}{
   resolve: {
     tsconfigPaths: true,
   },
@@ -22,7 +22,7 @@ export default defineConfig({
 {{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {
     // The deployment artifact has no node_modules; bundle all server dependencies.
-    noExternal: true,
+    noExternal: command === "build" ? true : undefined,
   },
 {{/if}}
 {{#if (and (eq webDeploy "prisma") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
@@ -48,4 +48,4 @@ export default defineConfig({
     },
   },
 {{/if}}
-});
+}{{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}){{/if}});

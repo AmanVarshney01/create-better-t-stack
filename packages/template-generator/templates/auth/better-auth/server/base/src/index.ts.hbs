@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 {{#if (eq orm "prisma")}}
 import { prismaAdapter } from "better-auth/adapters/prisma";
 {{else if (eq orm "drizzle")}}
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import * as schema from "@{{projectName}}/db/schema/auth";
 {{else if (eq orm "mongoose")}}
 import { mongodbAdapter } from "better-auth/adapters/mongodb";

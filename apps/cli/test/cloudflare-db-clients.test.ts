@@ -45,7 +45,7 @@ describe("Cloudflare DB client generation", () => {
     expect(dbFile).not.toContain("export const db = createDb();");
     expect(authFile).toContain("export function createAuth(env: AuthConfig, database: Database");
     expect(authFile).not.toContain("export const auth = await createAuth();");
-    expect(envFile).toContain('export { env } from "cloudflare:workers";');
+    expect(envFile).toContain('export { env as ENV } from "cloudflare:workers";');
     expect(serverFile).toContain("(await createAuth()).handler(c.req.raw)");
     expect(contextFile).toContain("(await createAuth(db)).api.getSession");
     expect(todoRouterFile).toContain("ctx.db");
@@ -84,14 +84,10 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).toContain("prismaAdapter(database,");
     expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
-    expect(envFile).toContain("type EnvValue = Env[keyof Env];");
-    expect(envFile).toContain(
-      "function resolveEnvValue(key: keyof Env & string): EnvValue | undefined",
-    );
     expect(envFile).toContain("export async function getEnvAsync()");
     expect(envFile).toContain("getCloudflareContext({ async: true })");
-    expect(envFile).toContain("export const env = createEnvProxy(resolveEnvValue);");
-    expect(envFile).not.toContain('export { env } from "cloudflare:workers";');
+    expect(envFile).toContain("export const ENV = createEnvProxy(resolveEnvValue);");
+    expect(envFile).not.toContain('export { env as ENV } from "cloudflare:workers";');
     expect(envPackageFile).toContain('"@opennextjs/cloudflare"');
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
@@ -111,7 +107,7 @@ describe("Cloudflare DB client generation", () => {
         "toNextJsHandler(await createAuth()).POST(request)",
       ],
       envNeedle: 'import { getCloudflareContext } from "@opennextjs/cloudflare";',
-      envAbsentNeedle: 'export { env } from "cloudflare:workers";',
+      envAbsentNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
     {
       name: "TanStack Start",
@@ -119,7 +115,7 @@ describe("Cloudflare DB client generation", () => {
       api: "trpc",
       routePath: "apps/web/src/routes/api/auth/$.ts",
       routeNeedles: ["const auth = await createAuth()", "return auth.handler(request)"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
     {
       name: "Nuxt",
@@ -143,7 +139,7 @@ describe("Cloudflare DB client generation", () => {
         "export const GET = handle",
         "export const POST = handle",
       ],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
     {
       name: "Astro",
@@ -151,7 +147,7 @@ describe("Cloudflare DB client generation", () => {
       api: "orpc",
       routePath: "apps/web/src/pages/api/auth/[...all].ts",
       routeNeedles: ["const auth = await createAuth();", "return auth.handler(ctx.request);"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
   ] as const;
 
@@ -185,7 +181,6 @@ describe("Cloudflare DB client generation", () => {
       const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
       expect(dbFile).toContain('import { drizzle } from "drizzle-orm/d1";');
-      expect(dbFile).toContain("drizzle(env.DB, { schema })");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
       expect(authFile).toContain(
@@ -266,13 +261,12 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).toContain("prismaAdapter(database,");
     expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
-    expect(envFile).toContain("type EnvValue = Env[keyof Env];");
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
     expect(contextFile).toContain("(await createAuth(db)).api.getSession");
     expect(infraFile).toContain('export const web = Cloudflare.Website.StaticSite("web", {');
-    expect(infraFile).toContain('BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET")');
-    expect(infraFile).not.toContain("BETTER_AUTH_SECRET: yield* Config.redacted");
+    expect(infraFile).toContain('BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET")');
+    expect(infraFile).not.toContain("BETTER_AUTH_SECRET: yield* Config.Redacted");
     expect(infraFile).toContain("memo: false");
     expect(infraFile).toContain('migrations: "../../packages/db/prisma/migrations"');
     expect(infraFile).not.toContain("migrationsDir:");
@@ -308,7 +302,6 @@ describe("Cloudflare DB client generation", () => {
 
     expect(dbFile).toContain('import postgres from "postgres";');
     expect(dbFile).toContain("{ max: 1 }");
-    expect(dbFile).toContain("return drizzle({ client, schema });");
   });
 
   it("keeps Better Auth MongoDB templates factory-only for Cloudflare Next deployments", async () => {
@@ -364,7 +357,7 @@ describe("Cloudflare DB client generation", () => {
     const serverFile = files.get("apps/server/src/index.ts");
 
     expect(dbFile).not.toContain("export const db");
-    expect(files.get("apps/server/src/services.ts")).toContain("const db = createDb(env)");
+    expect(files.get("apps/server/src/services.ts")).toContain("const db = createDb(ENV)");
     expect(authFile).not.toContain("export const auth");
     expect(
       files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
@@ -436,7 +429,7 @@ it("awaits MongoDB and shares one connection between auth and API context per re
   const createContext = new Function(
     "createDb",
     "createConfiguredAuth",
-    "env",
+    "ENV",
     `${source}\nreturn createContext;`,
   )(
     async () => ({ connection: ++connections }),

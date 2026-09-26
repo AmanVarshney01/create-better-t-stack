@@ -1,9 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import yaml from "yaml";
 
+import { add } from "../src/index";
 import { expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
 
 async function readPnpmWorkspace(config: TestConfig) {
@@ -24,6 +25,33 @@ async function readPnpmWorkspace(config: TestConfig) {
 }
 
 describe("pnpm workspace", () => {
+  it("updates approvals when adding addons while preserving workspace customizations", async () => {
+    const result = await runCreateTest({
+      projectName: "pnpm-add-approvals",
+      packageManager: "pnpm",
+      addons: ["none"],
+    });
+    expectSuccess(result);
+    const workspacePath = path.join(result.projectDir!, "pnpm-workspace.yaml");
+    const workspace = yaml.parse(await readFile(workspacePath, "utf8"));
+    workspace.packages.push("tools/*");
+    workspace.allowBuilds = { ...workspace.allowBuilds, sharp: false };
+    workspace.overrides = { "custom-package": "1.0.0" };
+    await writeFile(workspacePath, yaml.stringify(workspace));
+
+    const added = await add({
+      projectDir: result.projectDir!,
+      addons: ["turborepo"],
+      install: false,
+    });
+    expect(added.success).toBe(true);
+    const updated = yaml.parse(await readFile(workspacePath, "utf8"));
+    expect(updated.allowBuilds).toMatchObject({ esbuild: true, sharp: false });
+    expect(updated.packages).toEqual(workspace.packages);
+    expect(updated.overrides).toEqual(workspace.overrides);
+    expect(updated.catalog).toEqual(workspace.catalog);
+  });
+
   it("adds build approvals for the Convex Better Auth Cloudflare stack", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-convex-cloudflare",

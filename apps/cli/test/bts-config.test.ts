@@ -9,6 +9,40 @@ import { readBtsConfig, updateBtsConfig } from "../src/utils/bts-config";
 import { expectSuccess, runCreateTest } from "./test-utils";
 
 describe("persisted project configuration", () => {
+  it("allows adding addons to projects with legacy Hono skill selections", async () => {
+    const result = await runCreateTest({ projectName: "legacy-hono-skills" });
+    expectSuccess(result);
+    const configPath = join(result.projectDir, "bts.jsonc");
+    const original = await readBtsConfig(result.projectDir);
+    const legacy = {
+      ...original,
+      addonOptions: {
+        skills: {
+          scope: "project",
+          agents: ["claude-code"],
+          selections: [{ source: "yusukebe/hono-skill", skills: ["hono"] }],
+        },
+      },
+    };
+    const content = `// keep my settings\n${JSON.stringify(legacy, null, 2)}`;
+    await fs.writeFile(configPath, content);
+
+    const loaded = await readBtsConfig(result.projectDir);
+    expect(loaded?.addonOptions?.skills).toEqual({
+      scope: "project",
+      agents: ["claude-code"],
+      selections: [{ source: "honojs/skills", skills: ["hono"] }],
+    });
+    expect(await fs.readFile(configPath, "utf8")).toBe(content);
+
+    const added = await add({ projectDir: result.projectDir, addons: ["biome"], install: false });
+    expect(added.success).toBe(true);
+    const updated = await readBtsConfig(result.projectDir);
+    expect(updated?.addons).toContain("biome");
+    expect(updated?.addonOptions?.skills).toEqual(loaded?.addonOptions?.skills);
+    expect(await fs.readFile(configPath, "utf8")).toContain("// keep my settings");
+  });
+
   it("preserves comments and user fields while saving addon changes", async () => {
     const result = await runCreateTest({ projectName: "config-preservation" });
     expectSuccess(result);

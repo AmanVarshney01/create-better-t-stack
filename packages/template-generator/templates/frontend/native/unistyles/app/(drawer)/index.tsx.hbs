@@ -4,7 +4,7 @@ import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex"
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { ENV } from "@{{projectName}}/env/native";
+import { ENV } from "../../src/env";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";

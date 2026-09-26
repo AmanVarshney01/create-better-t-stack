@@ -170,7 +170,7 @@ describe("Clerk matrix", () => {
 
         if (
           usesBackendClerkClient(combo.backend, combo.api) &&
-          !contextFile?.includes("publishableKey: env.CLERK_PUBLISHABLE_KEY")
+          !contextFile?.includes("publishableKey: ENV.CLERK_PUBLISHABLE_KEY")
         ) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing publishableKey in packages/api/src/context.ts`,
@@ -179,7 +179,7 @@ describe("Clerk matrix", () => {
 
         if (
           usesBackendClerkClient(combo.backend, combo.api) &&
-          !contextFile?.includes("authorizedParties: [env.CORS_ORIGIN]")
+          !contextFile?.includes("authorizedParties: [ENV.CORS_ORIGIN]")
         ) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing authorizedParties in packages/api/src/context.ts`,
@@ -225,7 +225,7 @@ describe("Clerk matrix", () => {
           );
         } else if (
           proxyFile.includes('/env/server"') ||
-          proxyFile.includes("env.CLERK_SECRET_KEY")
+          proxyFile.includes("ENV.CLERK_SECRET_KEY")
         ) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: Next proxy still imports shared server env`,
@@ -319,7 +319,7 @@ describe("Clerk matrix", () => {
             );
           } else if (
             startFile.includes('/env/server"') ||
-            startFile.includes("env.CLERK_SECRET_KEY")
+            startFile.includes("ENV.CLERK_SECRET_KEY")
           ) {
             failures.push(
               `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: TanStack Start entry still imports shared server env`,

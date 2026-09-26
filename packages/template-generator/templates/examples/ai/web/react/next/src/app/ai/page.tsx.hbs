@@ -341,7 +341,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
-import { ENV } from "@{{projectName}}/env/web";
+import { ENV } from "../../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 
 export default function AIPage() {
   const [input, setInput] = useState("");

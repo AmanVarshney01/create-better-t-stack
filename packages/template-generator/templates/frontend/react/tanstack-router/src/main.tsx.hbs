@@ -16,7 +16,7 @@ import { routeTree } from "./routeTree.gen";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
 {{#if (or (eq backend "convex") (eq auth "clerk"))}}
-  import { ENV } from "@{{projectName}}/env/web";
+  import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/if}}
 {{#if (eq auth "clerk")}}
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";

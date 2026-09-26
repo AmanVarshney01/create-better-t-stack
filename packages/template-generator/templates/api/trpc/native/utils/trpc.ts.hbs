@@ -8,7 +8,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
-import { ENV } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 
 export const queryClient = new QueryClient();
 

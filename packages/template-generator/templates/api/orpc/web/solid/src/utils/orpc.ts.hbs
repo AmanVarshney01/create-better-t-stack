@@ -7,7 +7,7 @@ import { getRequestEvent } from "@solidjs/web";
 {{/unless}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
-import { ENV } from "@{{projectName}}/env/web";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/unless}}
 
 {{#if (eq backend "self")}}

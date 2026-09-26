@@ -296,6 +296,27 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  ...(["trpc", "orpc"] as const).map(
+    (api) =>
+      ({
+        name: `next-hono-${api}-auth`,
+        config: {
+          ...baseConfig,
+          frontend: ["next"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api,
+          auth: "better-auth",
+          payments: "none",
+          addons: [],
+          examples: ["todo"],
+          webDeploy: api === "trpc" ? "docker" : "none",
+          serverDeploy: api === "trpc" ? "docker" : "none",
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "nuxt-orpc",
     config: {
@@ -792,7 +813,9 @@ async function runCommand(sampleName: string, projectDir: string, command: strin
         BTS_TELEMETRY: "0",
         NEXT_TELEMETRY_DISABLED: "1",
         HUSKY: "0",
-        NODE_ENV: args.includes("build") ? "production" : process.env.NODE_ENV,
+        NODE_ENV: args.some((arg) => arg === "build" || arg.startsWith("build:"))
+          ? "production"
+          : process.env.NODE_ENV,
       },
     });
 
@@ -949,21 +972,6 @@ async function validatePwaBuildArtifacts(sample: SelectedBuildSample, projectDir
       runtime.kill("SIGTERM");
       await runtime;
     }
-  }
-}
-
-async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
-  if (sample.config.webDeploy !== "prisma") return;
-
-  const webDir = path.join(projectDir, "apps/web");
-  const entrypoint = sample.config.frontend?.includes("react-router")
-    ? "build/server/index.js"
-    : sample.config.frontend?.includes("svelte")
-      ? "build/index.js"
-      : undefined;
-
-  if (entrypoint) {
-    expect(await fs.pathExists(path.join(webDir, entrypoint))).toBe(true);
   }
 }
 
@@ -1273,7 +1281,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const frontend = sample.config.frontend ?? [];
   const entrypoint = frontend.includes("react-router")
     ? "build/server/index.js"
-    : frontend.includes("svelte")
+    : frontend.includes("svelte") && sample.config.backend !== "none"
       ? "build/index.js"
       : frontend.includes("solid")
         ? ".output/server/index.mjs"
@@ -1577,6 +1585,12 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             );
             expect(await fs.pathExists(generatedClient)).toBe(true);
           }
+          if (["tanstack-start-self-auth-todo", "next-self-prisma"].includes(sample.name)) {
+            await runCommand(sample.name, projectDir, sample.packageManager, [
+              "run",
+              "auth:generate",
+            ]);
+          }
           const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(
@@ -1599,7 +1613,6 @@ try {
           }
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
-          await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);

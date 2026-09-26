@@ -8,6 +8,27 @@ import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./te
 
 describe("Authentication Configurations", () => {
   describe("Better-Auth Provider", () => {
+    it.each(["drizzle", "prisma"] as const)(
+      "omits schema generation when yolo skips the database package with %s",
+      async (orm) => {
+        const result = await runCreateTest({
+          projectName: `auth-no-db-${orm}`,
+          auth: "better-auth",
+          database: "none",
+          orm,
+          yolo: true,
+        });
+        expectSuccess(result);
+        expect(await fs.pathExists(path.join(result.projectDir, "packages/db/package.json"))).toBe(
+          false,
+        );
+        for (const file of ["package.json", "apps/server/package.json"]) {
+          const pkg = await fs.readJson(path.join(result.projectDir, file));
+          expect(pkg.scripts?.["auth:generate"]).toBeUndefined();
+        }
+      },
+    );
+
     const databases = ["sqlite", "postgres", "mysql"];
     for (const database of databases) {
       it(`should work with better-auth + ${database}`, async () => {
@@ -23,13 +44,6 @@ describe("Authentication Configurations", () => {
         if (!result.projectDir) {
           throw new Error("Expected projectDir to be defined");
         }
-
-        const authSchema = await fs.readFile(
-          path.join(result.projectDir, "packages/db/src/schema/auth.ts"),
-          "utf8",
-        );
-        expect(authSchema).not.toContain("issuer:");
-        expect(authSchema).toContain('uniqueIndex("account_providerId_accountId_uidx")');
       });
     }
 
@@ -803,14 +817,14 @@ describe("Authentication Configurations", () => {
       );
 
       expect(proxyFile).not.toContain('/env/server"');
-      expect(proxyFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(proxyFile).not.toContain("ENV.CLERK_SECRET_KEY");
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
       expect(apiContextFile).toContain("auth: clerkAuth");
-      expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
-      expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
+      expect(apiContextFile).toContain("publishableKey: ENV.CLERK_PUBLISHABLE_KEY");
+      expect(apiContextFile).toContain("authorizedParties: [ENV.CORS_ORIGIN]");
       expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
       expect(serverEnvPackageFile).toContain("CLERK_SECRET_KEY");
       expect(serverEnvFile).toContain("CLERK_PUBLISHABLE_KEY=");
@@ -845,7 +859,7 @@ describe("Authentication Configurations", () => {
       );
 
       expect(startFile).not.toContain('/env/server"');
-      expect(startFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(startFile).not.toContain("ENV.CLERK_SECRET_KEY");
       expect(authRouteFile).toContain('createFileRoute("/_auth")');
       expect(authRouteFile).toContain("SignInButton");
       expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');
@@ -1056,17 +1070,6 @@ describe("Authentication Configurations", () => {
         expectSuccess(result);
         if (!result.projectDir) {
           throw new Error("Expected projectDir to be defined");
-        }
-
-        if (orm === "prisma") {
-          const authSchema = await fs.readFile(
-            path.join(result.projectDir, "packages/db/prisma/schema/auth.prisma"),
-            "utf8",
-          );
-          expect(authSchema).not.toContain("issuer                String");
-          expect(authSchema).toContain(
-            '@@unique([providerId, accountId], map: "account_providerId_accountId_uidx")',
-          );
         }
       });
     }

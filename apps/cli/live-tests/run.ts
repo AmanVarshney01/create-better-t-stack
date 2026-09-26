@@ -116,6 +116,10 @@ async function executeCase(selection: ProjectConfig, id: string) {
   const previous = state.result(id);
   if (previous?.status === "passed" || (previous?.status === "failed" && !values["retry-failed"]))
     return;
+  if ((await fingerprint()) !== binaryHash)
+    throw new Error(
+      "CLI or runner changed during this run; start a new run with the updated inputs.",
+    );
   const caseDirectory = path.join(directory, id, `attempt-${Date.now()}`);
   await mkdir(caseDirectory, { recursive: true, mode: 0o700 });
   const name = `bts-live-${path.basename(directory).slice(0, 6)}-${id.slice(0, 12)}`;
@@ -216,7 +220,12 @@ async function executeCase(selection: ProjectConfig, id: string) {
         } catch (error) {
           verificationErrors.push(error);
         }
-        if (verificationErrors.length) throw new Error(verificationErrors.map(String).join("\n"));
+        if (verificationErrors.length) {
+          const detail = verificationErrors.map(String).join("\n");
+          throw verificationErrors.every((error) => error instanceof Blocked)
+            ? new Blocked(detail)
+            : new Error(detail);
+        }
       }
     } else if (targets.size === 0) {
       await commands.run("build", project, config.packageManager, ["run", "build"]);
@@ -318,10 +327,6 @@ try {
       }
       const id = caseId(config);
       if (action === "run") {
-        if ((await fingerprint()) !== binaryHash)
-          throw new Error(
-            "CLI or runner changed during this run; start a new run with the updated inputs.",
-          );
         await executeCase(config, id);
       }
       count++;

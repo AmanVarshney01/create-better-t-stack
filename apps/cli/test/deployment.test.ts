@@ -702,7 +702,9 @@ describe("Deployment Configurations", () => {
       expect(web?.rewrites).toBeUndefined();
       expect(files.get("apps/web/react-router.config.ts")).not.toContain("ssr: false");
       // Vercel functions have no node_modules; deps must be bundled into the server build
-      expect(files.get("apps/web/vite.config.ts")).toContain("noExternal: true");
+      expect(files.get("apps/web/vite.config.ts")).toContain(
+        'noExternal: command === "build" ? true : undefined',
+      );
     });
 
     it("should use the explicit Vercel adapter for SvelteKit Vercel deploys", async () => {
@@ -854,7 +856,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
-      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL")');
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
         alchemy: expect.any(String),
@@ -898,7 +900,7 @@ describe("Deployment Configurations", () => {
       const authFile = files.get("packages/auth/src/index.ts") ?? "";
 
       expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
-      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL")');
       expect(authFile).toContain("baseURL: env.BETTER_AUTH_URL");
     });
 
@@ -1165,7 +1167,7 @@ describe("Deployment Configurations", () => {
         'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
       );
       expect(nextWebOnlyInfra).toContain(
-        'NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL")',
+        'NEXT_PUBLIC_SERVER_URL: Config.String("NEXT_PUBLIC_SERVER_URL")',
       );
       expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
 
@@ -2103,6 +2105,8 @@ describe("Client URL selection", () => {
     { frontend: "tanstack-router", api: "trpc", deploy: "none" },
     { frontend: "tanstack-router", api: "orpc", deploy: "none" },
     { frontend: "next", api: "orpc", deploy: "none" },
+    { frontend: "next", api: "trpc", deploy: "vercel" },
+    { frontend: "next", api: "orpc", deploy: "docker" },
     { frontend: "svelte", api: "orpc", deploy: "none" },
     { frontend: "astro", api: "orpc", deploy: "none" },
     { frontend: "tanstack-router", api: "trpc", deploy: "vercel" },
@@ -2145,7 +2149,8 @@ describe("Client URL selection", () => {
       const rpcExpression = rpcSource.match(/url: (`[^`\n]+`)/)?.[1];
       expect(rpcExpression).toBeDefined();
       const executable = new Bun.Transpiler({ loader: "ts" })
-        .transformSync(authSource)
+        .transformSync(`${authSource}
+export const urls = [authClient.baseURL, ${rpcExpression}];`)
         .replace(/^import .*;\n/gm, "")
         .replace(/^export /gm, "");
       const evaluate = new Function(
@@ -2154,7 +2159,7 @@ describe("Client URL selection", () => {
         "window",
         "globalThis",
         "process",
-        `${executable}\n${new Bun.Transpiler({ loader: "ts" }).transformSync(`const rpcUrl = ${rpcExpression};`)}\nreturn [authClient.baseURL, rpcUrl];`,
+        `${executable}\nreturn urls;`,
       );
       const processEnv = {
         SERVER_URL: deploy === "docker" ? "http://server:3000/" : undefined,
@@ -2181,7 +2186,7 @@ describe("Client URL selection", () => {
           {
             process: { env: processEnv },
           },
-          { env: { ...processEnv, [envKey]: publicUrl } },
+          { env: { [envKey]: publicUrl } },
         );
         expect(urls).toEqual([
           deploy === "none" ? publicUrl : `${origin}/api/auth`,

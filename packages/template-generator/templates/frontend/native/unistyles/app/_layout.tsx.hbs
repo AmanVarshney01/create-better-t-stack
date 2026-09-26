@@ -9,7 +9,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { ENV } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -22,10 +22,10 @@ import { queryClient } from "@/utils/orpc";
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
-import { ENV } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 {{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-import { ENV } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 {{/if}}
 {{#if (eq auth "clerk")}}
 import { ClerkProvider, useAuth } from "@clerk/expo";

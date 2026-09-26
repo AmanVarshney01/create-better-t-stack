@@ -57,7 +57,7 @@ function providerLayers(plan: AlchemyDeploymentPlan): string[] {
 }
 
 function usesLayer(plan: AlchemyDeploymentPlan): boolean {
-  return providerLayers(plan).length > 1;
+  return plan.hasAlchemyManagedDatabase || providerLayers(plan).length > 1;
 }
 
 function writeImports(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {

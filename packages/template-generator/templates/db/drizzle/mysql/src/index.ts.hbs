@@ -1,6 +1,6 @@
 import type { DatabaseConfig } from "./config";
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
@@ -12,7 +12,7 @@ export function createDb(env: DatabaseConfig) {
 			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 		},
-		schema,
+		relations,
 	});
 }
 {{else}}
@@ -23,8 +23,7 @@ export function createDb(env: DatabaseConfig) {
 		connection: {
 			uri: env.DATABASE_URL,
 		},
-		schema,
-		mode: "default",
+		relations,
 	});
 }
 {{/if}}
@@ -32,7 +31,7 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
@@ -44,7 +43,7 @@ export function createDb(env: DatabaseConfig) {
 			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 		},
-		schema,
+		relations,
 	});
 }
 {{else}}
@@ -55,8 +54,7 @@ export function createDb(env: DatabaseConfig) {
 		connection: {
 			uri: env.DATABASE_URL,
 		},
-		schema,
-		mode: "default",
+		relations,
 	});
 }
 {{/if}}
