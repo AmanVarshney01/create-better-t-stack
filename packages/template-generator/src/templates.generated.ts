@@ -17050,6 +17050,7 @@ app.listen(port, "0.0.0.0", () => {
 **/.env
 **/.env.*
 !**/.env.example
+!**/.env.schema
 local.db
 local.db-*
 .alchemy/

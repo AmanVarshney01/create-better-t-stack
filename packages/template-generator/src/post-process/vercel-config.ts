@@ -21,6 +21,7 @@ type VercelService = {
   installCommand?: string;
   buildCommand?: string;
   outputDirectory?: string;
+  functions?: Record<string, { includeFiles: string }>;
   rewrites?: VercelRewrite[];
   routes?: VercelRoute[];
 };
@@ -83,6 +84,12 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
       framework: backend,
       entrypoint: "src/index.ts",
       installCommand,
+      functions: {
+        "src/index.ts": {
+          includeFiles:
+            "{package.json,apps/server/.env.schema,node_modules/.bin/varlock,node_modules/varlock/**}",
+        },
+      },
     };
     if (hasWeb) {
       // /api/auth/* must reach the server unstripped: better-auth derives its
