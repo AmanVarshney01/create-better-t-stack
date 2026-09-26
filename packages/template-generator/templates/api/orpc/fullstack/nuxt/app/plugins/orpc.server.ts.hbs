@@ -1,4 +1,4 @@
-{{#if (eq orm "prisma")}}
+{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -12,7 +12,7 @@ import type { CloudflareEnv } from "../../src/env.server";
 {{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-{{#if (eq orm "prisma")}}
+{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -21,7 +21,7 @@ export default defineNuxtPlugin(() => {
   }
 
   const rpcLink = new RPCLink({
-    url: new URL("/rpc", useRequestURL()).href,
+    url: "/rpc",
     fetch(request, init) {
       return event.fetch(request, init);
     },
