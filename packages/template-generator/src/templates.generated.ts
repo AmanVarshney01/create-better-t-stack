@@ -17059,6 +17059,7 @@ local.db-*
 `],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { parseEnv } from "node:util";
 
 const DEFAULT_ENVIRONMENT = "preview";
@@ -17117,6 +17118,7 @@ const vercelArgs = [...passthroughArgs, ...forwardedArgs];
 const envFiles = files.length > 0 ? files : DEFAULT_FILES;
 
 const env = new Map<string, string>();
+const undeclaredKeys: string[] = [];
 
 for (const file of envFiles) {
 	if (!existsSync(file)) {
@@ -17124,10 +17126,25 @@ for (const file of envFiles) {
 		continue;
 	}
 
+	// Only the keys an app declares in its .env.schema are config; tools such as
+	// database CLIs also write local-only values (claim links, direct URLs) to .env
+	const schemaFile = join(dirname(file), ".env.schema");
+	const declaredKeys = existsSync(schemaFile)
+		? new Set(Object.keys(parseEnv(readFileSync(schemaFile, "utf8"))))
+		: undefined;
+
 	for (const [key, value] of Object.entries(parseEnv(readFileSync(file, "utf8")))) {
 		if (SKIP_KEYS.has(key)) continue;
+		if (declaredKeys && !declaredKeys.has(key)) {
+			undeclaredKeys.push(key);
+			continue;
+		}
 		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
 	}
+}
+
+if (undeclaredKeys.length > 0) {
+	console.log(\`Skipping \${undeclaredKeys.join(", ")}: not declared in .env.schema.\`);
 }
 
 {{#if (includes addons "axiom")}}

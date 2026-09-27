@@ -199,6 +199,12 @@ describe("Turbo config generator", () => {
     expect(config.tasks["db:push"]).toEqual({ cache: false, interactive: true });
     expect(config.tasks["db:generate"]).toEqual({ cache: false, interactive: true });
     expect(config.tasks["db:migrate"]).toEqual({ cache: false, interactive: true });
+    // prisma generate never prompts; Vercel builds run it without a terminal
+    expect(
+      generateTurboConfig(configWith({ addons: ["turborepo"], orm: "prisma" })).tasks[
+        "db:generate"
+      ],
+    ).toEqual({ cache: false, interactive: false });
     expect(config.tasks["db:studio"]).toEqual({ cache: false, persistent: true });
     expect(config.tasks["db:local"]).toEqual({ cache: false, persistent: true });
 
