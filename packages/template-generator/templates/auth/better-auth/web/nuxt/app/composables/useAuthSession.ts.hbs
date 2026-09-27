@@ -1,0 +1,6 @@
+export function useAuthSession() {
+  const { $authClient } = useNuxtApp();
+  return $authClient.useSession((url, options) =>
+    useFetch(url, { ...options, credentials: "include" }),
+  );
+}
