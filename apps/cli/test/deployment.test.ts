@@ -604,6 +604,41 @@ describe("Deployment Configurations", () => {
       }
     });
 
+    it("should keep Nuxt Icon's endpoint off the server's /api path on Vercel", async () => {
+      const create = (backend: "hono" | "self") =>
+        createVirtual({
+          projectName: `nuxt-${backend}-vercel`,
+          frontend: ["nuxt"],
+          backend,
+          runtime: backend === "self" ? "none" : "node",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+          webDeploy: "vercel",
+          serverDeploy: backend === "self" ? "none" : "vercel",
+        });
+      const combined = await create("hono");
+      const self = await create("self");
+      if (combined.isErr()) throw combined.error;
+      if (self.isErr()) throw self.error;
+
+      // Vercel routes /api/* to the server service, which would 404 Nuxt Icon's default endpoint
+      expect(
+        collectFiles(combined.value.root, combined.value.root.path).get("apps/web/nuxt.config.ts"),
+      ).toContain('localApiEndpoint: "/_nuxt_icon"');
+      expect(
+        collectFiles(self.value.root, self.value.root.path).get("apps/web/nuxt.config.ts"),
+      ).not.toContain("localApiEndpoint");
+    });
+
     it("should reject Bun runtime Vercel server deployments", async () => {
       // varlock/auto-load launches the Node-based Varlock CLI; Vercel's Bun runtime has no Node
       const result = await runCreateTest({

@@ -48,6 +48,11 @@ export default defineNuxtConfig({
   },
   {{/unless}}
   css: ['~/assets/css/main.css'],
+  {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
+  icon: {
+    localApiEndpoint: "/_nuxt_icon",
+  },
+  {{/if}}
   devServer: {
     port: 3001
   },
