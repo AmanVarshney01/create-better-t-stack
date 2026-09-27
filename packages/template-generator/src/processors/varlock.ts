@@ -50,12 +50,15 @@ function schemaKeys(vfs: VirtualFileSystem, app: string, config: ProjectConfig):
   return keys;
 }
 
-function schema(keys: Set<string>, config: ProjectConfig, envFile: string): string {
+function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: string): string {
+  const readOnlyRuntime =
+    (app === "apps/web" && config.webDeploy === "vercel") ||
+    (app === "apps/server" && config.serverDeploy === "vercel");
   const lines = [
     "# @defaultRequired=true",
     "# @defaultSensitive=true",
     "# @currentEnv=$NODE_ENV",
-    `# @generateTsTypes(path=./src/${envFile}, exposeEnv=local)`,
+    `# @generateTsTypes(path=./src/${envFile}, exposeEnv=local${readOnlyRuntime ? ", auto=false" : ""})`,
     "# ---",
     "",
     "# @public @type=enum(development, production, test)",
@@ -214,7 +217,7 @@ export function processVarlock(
     for (const key of keys) allKeys.add(key);
     const envFile =
       app === "apps/web" && config.frontend.includes("svelte") ? "env.generated.ts" : "env.ts";
-    vfs.writeFile(`${app}/.env.schema`, schema(keys, config, envFile));
+    vfs.writeFile(`${app}/.env.schema`, schema(keys, config, envFile, app));
     vfs.writeFile(`${app}/bunfig.toml`, `env = false\n${vfs.readFile(`${app}/bunfig.toml`) ?? ""}`);
     const pkg = vfs.readJson<Package>(`${app}/package.json`)!;
     pkg.scripts = { ...pkg.scripts, "env:generate": "varlock codegen" };

@@ -93,6 +93,25 @@ describe("Database Setup Configurations", () => {
       expectSuccess(result);
     });
 
+    it("should keep drizzle-kit to the public schema on provider databases", async () => {
+      const result = await runCreateTest({
+        projectName: "prisma-postgres-drizzle-setup",
+        database: "postgres",
+        orm: "drizzle",
+        dbSetup: "prisma-postgres",
+        manualDb: true,
+      });
+
+      expectSuccess(result);
+      // drizzle-kit 1.0 manages every schema by default and would drop provider
+      // schemas such as Prisma Postgres' ppg on push
+      const config = await readFile(
+        join(result.projectDir!, "packages/db/drizzle.config.ts"),
+        "utf8",
+      );
+      expect(config).toContain('schemaFilter: ["public"]');
+    });
+
     it("should fail with Neon + non-PostgreSQL database", async () => {
       const result = await runCreateTest({
         projectName: "neon-mysql-fail",

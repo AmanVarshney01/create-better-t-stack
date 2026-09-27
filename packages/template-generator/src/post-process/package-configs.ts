@@ -216,13 +216,21 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (hasVercelDeploy) {
     const vercelTarget = config.webDeploy === "vercel" ? "web" : "server";
     const vercelDeploy = isMixedCloud ? `deploy:${vercelTarget}` : "deploy";
-    scripts["deploy:setup"] = "vercel link";
-    scripts["dev:vercel"] = "vercel dev -L";
+    // Run the CLI without installing it: its pinned jose@5 displaces better-auth's jose@6 peer
+    // at the npm root, which nests drizzle-orm away from the hoisted drizzle-kit
+    const vercel =
+      config.packageManager === "bun"
+        ? "bunx vercel"
+        : config.packageManager === "pnpm"
+          ? "pnpm dlx vercel"
+          : "npx --yes vercel";
+    scripts["deploy:setup"] = `${vercel} link`;
+    scripts["dev:vercel"] = `${vercel} dev -L`;
     scripts["env:preview"] = "tsx scripts/sync-vercel-env.ts preview";
     scripts["env:production"] = "tsx scripts/sync-vercel-env.ts production";
-    scripts[vercelDeploy] = "vercel deploy";
-    scripts[`${vercelDeploy}:prod`] = "vercel deploy --prod";
-    scripts["deploy:check"] = "vercel deploy --dry";
+    scripts[vercelDeploy] = `${vercel} deploy`;
+    scripts[`${vercelDeploy}:prod`] = `${vercel} deploy --prod`;
+    scripts["deploy:check"] = `${vercel} deploy --dry`;
   }
 
   // Add compose scripts when deploying web/server as Docker containers

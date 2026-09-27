@@ -39,7 +39,7 @@ export const link = new RPCLink({
 	url: `${ENV.EXPO_PUBLIC_SERVER_URL}/rpc`,
 {{/if}}
 {{else}}
-	url: `${ENV.EXPO_PUBLIC_SERVER_URL}/rpc`,
+	url: `${ENV.EXPO_PUBLIC_SERVER_URL}{{apiPrefix webDeploy serverDeploy}}/rpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch(request, init) {

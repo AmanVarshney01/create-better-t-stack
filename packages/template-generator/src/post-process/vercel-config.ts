@@ -9,10 +9,7 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 
 type VercelRewrite = { source: string; destination: string | { service: string } };
 
-type VercelRoute = {
-  src: string;
-  transforms: { type: string; op: string; args: string }[];
-};
+type PackageJson = { varlock?: { loadPath: string } };
 
 type VercelService = {
   root: string;
@@ -21,8 +18,8 @@ type VercelService = {
   installCommand?: string;
   buildCommand?: string;
   outputDirectory?: string;
+  functions?: Record<string, { includeFiles: string }>;
   rewrites?: VercelRewrite[];
-  routes?: VercelRoute[];
 };
 
 function getWebFramework(frontend: ProjectConfig["frontend"], isDesktop: boolean): string {
@@ -78,23 +75,33 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   if (hasServer) {
-    const server: VercelService = {
+    services.server = {
       root: "apps/server",
       framework: backend,
       entrypoint: "src/index.ts",
       installCommand,
-    };
-    if (hasWeb) {
-      // /api/auth/* must reach the server unstripped: better-auth derives its
-      // router base path from the public URL path
-      server.routes = [
-        {
-          src: "/api/((?!auth(?:/|$)).*)",
-          transforms: [{ type: "request.path", op: "set", args: "/$1" }],
+      // Vercel compiles the entrypoint itself; a dist bundle would be deployed apart
+      // from apps/server/node_modules, which bun and pnpm installs rely on
+      buildCommand: `${packageManager} run env:generate && ${packageManager} run check-types`,
+      functions: {
+        // varlock/auto-load runs the Varlock CLI, which file tracing can't follow.
+        // Paths are relative to the repository root, the function's working directory
+        "src/index.ts": {
+          includeFiles:
+            "{package.json,apps/server/.env.schema,node_modules/.bin/varlock,node_modules/varlock/**}",
         },
-      ];
+      },
+    };
+    const pkg = vfs.readJson<PackageJson>("package.json");
+    if (pkg) vfs.writeJson("package.json", { ...pkg, varlock: { loadPath: "./apps/server/" } });
+  }
+
+  if (config.orm === "prisma" && config.database !== "none") {
+    // Prisma Client is generated code, so every service build has to create it first
+    for (const service of Object.values(services)) {
+      const command = service.buildCommand ?? `${packageManager} run build`;
+      service.buildCommand = `cd ../.. && ${packageManager} run db:generate && cd ${service.root} && ${command}`;
     }
-    services.server = server;
   }
 
   const rewrites: VercelRewrite[] = [];

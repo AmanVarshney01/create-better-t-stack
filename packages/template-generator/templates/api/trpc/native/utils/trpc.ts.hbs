@@ -18,7 +18,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: `${ENV.EXPO_PUBLIC_SERVER_URL}/api/trpc`,
 {{else}}
-			url: `${ENV.EXPO_PUBLIC_SERVER_URL}/trpc`,
+			url: `${ENV.EXPO_PUBLIC_SERVER_URL}{{apiPrefix webDeploy serverDeploy}}/trpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 			fetch:

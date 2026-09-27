@@ -570,7 +570,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: generateAPIUrl("/ai"),
+      api: generateAPIUrl("{{apiPrefix webDeploy serverDeploy}}/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });

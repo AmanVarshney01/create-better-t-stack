@@ -74,11 +74,11 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   }
 
   if (isVercelWeb || isVercelServer) {
-    // Env file parsing uses node:util; only the Vercel CLI is needed.
+    // Env file parsing uses node:util; the Vercel CLI runs through the package runner
     addPackageDependency({
       vfs,
       packagePath: "package.json",
-      devDependencies: ["@types/node", "tsx", "vercel"],
+      devDependencies: ["@types/node", "tsx"],
     });
   }
 

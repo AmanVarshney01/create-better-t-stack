@@ -838,7 +838,7 @@ export const getDisabledReason = (
       return "Docker server deployment requires the Bun or Node runtime";
     }
     if (optionId === "vercel" && !supportsServerDeployRuntime(optionId, currentStack.runtime)) {
-      return "Vercel server deployment requires the Bun or Node runtime";
+      return "Vercel server deployment requires the Node runtime";
     }
     if (optionId === "prisma" && !supportsServerDeployRuntime(optionId, currentStack.runtime)) {
       return "Prisma server deployment requires the Bun or Node runtime";

@@ -108,7 +108,12 @@ describe("Deployment Configurations", () => {
           const result = await runCreateTest({
             projectName: `${serverDeploy}-server-deploy`,
             serverDeploy: serverDeploy,
-            runtime: serverDeploy === "cloudflare" ? "workers" : "bun",
+            runtime:
+              serverDeploy === "cloudflare"
+                ? "workers"
+                : serverDeploy === "vercel"
+                  ? "node"
+                  : "bun",
           });
 
           expectSuccess(result);
@@ -230,7 +235,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -260,10 +265,8 @@ describe("Deployment Configurations", () => {
             framework?: string;
             entrypoint?: string;
             buildCommand?: string;
-            routes?: Array<{
-              src?: string;
-              transforms?: Array<{ type?: string; op?: string; args?: string }>;
-            }>;
+            functions?: Record<string, { includeFiles?: string }>;
+            routes?: unknown[];
           }
         >;
         rewrites?: Array<{
@@ -274,6 +277,7 @@ describe("Deployment Configurations", () => {
       const packageJson = JSON.parse(files.get("package.json") ?? "{}") as {
         scripts?: Record<string, string>;
         devDependencies?: Record<string, string>;
+        varlock?: { loadPath?: string };
       };
 
       expect(files.has("vercel.json")).toBe(true);
@@ -281,7 +285,7 @@ describe("Deployment Configurations", () => {
       // Without this, no-git deploys upload local .env files and frameworks
       // like Next.js load the localhost values at runtime
       expect(files.get(".vercelignore")).toContain("**/.env");
-      expect(vercelConfig.bunVersion).toBe("1.x");
+      expect(vercelConfig.bunVersion).toBeUndefined();
       expect(vercelConfig.services?.web).toMatchObject({
         root: "apps/web",
         framework: "nextjs",
@@ -292,10 +296,17 @@ describe("Deployment Configurations", () => {
         framework: "hono",
         entrypoint: "src/index.ts",
       });
-      expect(vercelConfig.services?.server?.routes?.[0]).toMatchObject({
-        src: "/api/((?!auth(?:/|$)).*)",
-        transforms: [{ type: "request.path", op: "set", args: "/$1" }],
-      });
+      // Vercel Services pass the original path, so the server serves /api itself
+      expect(vercelConfig.services?.server?.routes).toBeUndefined();
+      expect(files.get("apps/server/src/index.ts")).toContain('"/api/trpc/*"');
+      expect(files.get("apps/web/.env")).toContain(
+        "NEXT_PUBLIC_SERVER_URL=http://localhost:3000/api",
+      );
+      // The function runs from the repo root, where varlock/auto-load looks for config
+      expect(packageJson.varlock).toEqual({ loadPath: "./apps/server/" });
+      expect(vercelConfig.services?.server?.functions?.["src/index.ts"]?.includeFiles).toContain(
+        "apps/server/.env.schema",
+      );
       expect(vercelConfig.rewrites).toEqual([
         { source: "/api/(.*)", destination: { service: "server" } },
         { source: "/(.*)", destination: { service: "web" } },
@@ -326,17 +337,18 @@ describe("Deployment Configurations", () => {
       expect(packageJson.devDependencies).not.toHaveProperty("@vercel/config");
       expect(packageJson.devDependencies).toHaveProperty("@types/node");
       expect(packageJson.devDependencies).toHaveProperty("tsx");
-      expect(packageJson.devDependencies).toHaveProperty("vercel");
+      // The CLI runs through the package runner; installing it breaks npm hoisting
+      expect(packageJson.devDependencies).not.toHaveProperty("vercel");
       // File parsing uses the Node runtime without a dotenv dependency.
       expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
       expect(packageJson.scripts).toMatchObject({
-        "deploy:setup": "vercel link",
-        "dev:vercel": "vercel dev -L",
+        "deploy:setup": "bunx vercel link",
+        "dev:vercel": "bunx vercel dev -L",
         "env:preview": "tsx scripts/sync-vercel-env.ts preview",
         "env:production": "tsx scripts/sync-vercel-env.ts production",
-        deploy: "vercel deploy",
-        "deploy:prod": "vercel deploy --prod",
-        "deploy:check": "vercel deploy --dry",
+        deploy: "bunx vercel deploy",
+        "deploy:prod": "bunx vercel deploy --prod",
+        "deploy:check": "bunx vercel deploy --dry",
       });
       expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
       expect(files.get("apps/web/.env.schema")).toContain("@type=string(matches=");
@@ -382,12 +394,12 @@ describe("Deployment Configurations", () => {
       };
 
       // Different platforms per target: scripts are named by what they deploy
-      expect(pkg.scripts?.["deploy:web"]).toBe("vercel deploy");
-      expect(pkg.scripts?.["deploy:web:prod"]).toBe("vercel deploy --prod");
+      expect(pkg.scripts?.["deploy:web"]).toBe("bunx vercel deploy");
+      expect(pkg.scripts?.["deploy:web:prod"]).toBe("bunx vercel deploy --prod");
       expect(pkg.scripts?.["deploy:server"]).toContain("deploy");
       expect(pkg.scripts?.destroy).toContain("destroy");
       expect(pkg.scripts).not.toHaveProperty("deploy");
-      expect(pkg.scripts?.["deploy:setup"]).toBe("vercel link");
+      expect(pkg.scripts?.["deploy:setup"]).toBe("bunx vercel link");
       expect(pkg.scripts?.["env:production"]).toBe("tsx scripts/sync-vercel-env.ts production");
     });
 
@@ -397,7 +409,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "express",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -525,7 +537,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "none",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -555,25 +567,25 @@ describe("Deployment Configurations", () => {
       expect(syncScript).not.toContain('"CORS_ORIGIN"');
     });
 
-    it("should export Elysia apps for Vercel server deployments", async () => {
+    it("should generate Prisma Client before each Vercel service build", async () => {
       const result = await createVirtual({
-        projectName: "elysia-vercel",
-        webDeploy: "none",
+        projectName: "next-express-prisma-vercel",
+        webDeploy: "vercel",
         serverDeploy: "vercel",
-        backend: "elysia",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
+        backend: "express",
+        runtime: "node",
+        database: "postgres",
+        orm: "prisma",
+        auth: "better-auth",
         payments: "none",
         api: "trpc",
-        frontend: ["tanstack-router"],
+        frontend: ["next"],
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
         install: false,
         git: false,
-        packageManager: "bun",
+        packageManager: "pnpm",
       });
 
       if (result.isErr()) {
@@ -581,14 +593,86 @@ describe("Deployment Configurations", () => {
       }
 
       const files = collectFiles(result.value.root, result.value.root.path);
-      const serverEntry = files.get("apps/server/src/index.ts");
+      const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}") as {
+        services?: Record<string, { buildCommand?: string }>;
+      };
 
-      expect(serverEntry).toContain("const app = new Elysia()");
-      expect(serverEntry).toContain("export default app;");
-      // Bun does not auto-serve Elysia's default export, so a guarded local
-      // listen must remain (skipped on Vercel via process.env.VERCEL).
-      expect(serverEntry).toContain("if (!process.env.VERCEL)");
-      expect(serverEntry).toContain("app.listen(3000");
+      for (const service of ["web", "server"]) {
+        expect(vercelConfig.services?.[service]?.buildCommand).toStartWith(
+          `cd ../.. && pnpm run db:generate && cd apps/${service} && `,
+        );
+      }
+    });
+
+    it("should keep Nuxt Icon's endpoint off the server's /api path on Vercel", async () => {
+      const create = (backend: "hono" | "self") =>
+        createVirtual({
+          projectName: `nuxt-${backend}-vercel`,
+          frontend: ["nuxt"],
+          backend,
+          runtime: backend === "self" ? "none" : "node",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+          webDeploy: "vercel",
+          serverDeploy: backend === "self" ? "none" : "vercel",
+        });
+      const combined = await create("hono");
+      const self = await create("self");
+      if (combined.isErr()) throw combined.error;
+      if (self.isErr()) throw self.error;
+
+      // Vercel routes /api/* to the server service, which would 404 Nuxt Icon's default endpoint
+      expect(
+        collectFiles(combined.value.root, combined.value.root.path).get("apps/web/nuxt.config.ts"),
+      ).toContain('localApiEndpoint: "/_nuxt_icon"');
+      expect(
+        collectFiles(self.value.root, self.value.root.path).get("apps/web/nuxt.config.ts"),
+      ).not.toContain("localApiEndpoint");
+    });
+
+    it("should default Vercel server deployments to the node runtime", async () => {
+      const result = await createVirtual({
+        projectName: "vercel-default-runtime",
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+      });
+
+      if (result.isErr()) throw result.error;
+      expect(result.value.config.runtime).toBe("node");
+    });
+
+    it("should reject Bun runtime Vercel server deployments", async () => {
+      // varlock/auto-load launches the Node-based Varlock CLI; Vercel's Bun runtime has no Node
+      const result = await runCreateTest({
+        projectName: "elysia-bun-vercel-fail",
+        serverDeploy: "vercel",
+        backend: "elysia",
+        runtime: "bun",
+      });
+
+      expectError(result, "'--server-deploy vercel' is not compatible with '--runtime bun'");
     });
 
     it("should guard the local Elysia listen for node-runtime Vercel deploys", async () => {
@@ -632,7 +716,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "none",
         orm: "none",
         auth: "none",
@@ -679,7 +763,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "none",
         orm: "none",
         auth: "none",
@@ -714,7 +798,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "fastify",
-        runtime: "bun",
+        runtime: "node",
         database: "none",
         orm: "none",
         auth: "none",
@@ -752,7 +836,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -2085,7 +2169,7 @@ describe("Client URL selection", () => {
         projectName: `client-url-${frontend}-${api}-${deploy}`,
         frontend: [frontend],
         backend: "hono",
-        runtime: "bun",
+        runtime: deploy === "vercel" ? "node" : "bun",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",

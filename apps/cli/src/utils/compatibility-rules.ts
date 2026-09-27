@@ -241,7 +241,7 @@ export function validateVercelServerDeploy(
 
   if (runtime && !supportsServerDeployRuntime(serverDeploy, runtime)) {
     return validationErr(
-      "'--server-deploy vercel' is not compatible with '--runtime workers'. Use '--runtime bun' or '--runtime node', or choose '--server-deploy cloudflare'.",
+      `'--server-deploy vercel' is not compatible with '--runtime ${runtime}'. Use '--runtime node'. Bun remains supported as a package manager.`,
     );
   }
 

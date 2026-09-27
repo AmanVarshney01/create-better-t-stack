@@ -92,6 +92,11 @@ Handlebars.registerHelper(
   (backend, dbSetup, webDeploy, serverDeploy, dbSetupOptions) =>
     usesAlchemyManagedDatabase({ backend, dbSetup, webDeploy, serverDeploy, dbSetupOptions }),
 );
+// Vercel Services pass the original request path to the server service, so a
+// server deployed alongside its web app serves the public /api paths directly
+Handlebars.registerHelper("apiPrefix", (webDeploy, serverDeploy) =>
+  webDeploy === "vercel" && serverDeploy === "vercel" ? "/api" : "",
+);
 Handlebars.registerHelper(
   "usesRequestScopedCloudflareEnv",
   (backend, webDeploy, frontend) =>
