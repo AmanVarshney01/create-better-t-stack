@@ -639,6 +639,30 @@ describe("Deployment Configurations", () => {
       ).not.toContain("localApiEndpoint");
     });
 
+    it("should default Vercel server deployments to the node runtime", async () => {
+      const result = await createVirtual({
+        projectName: "vercel-default-runtime",
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+      });
+
+      if (result.isErr()) throw result.error;
+      expect(result.value.config.runtime).toBe("node");
+    });
+
     it("should reject Bun runtime Vercel server deployments", async () => {
       // varlock/auto-load launches the Node-based Varlock CLI; Vercel's Bun runtime has no Node
       const result = await runCreateTest({
