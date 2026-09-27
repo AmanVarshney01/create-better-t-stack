@@ -11,6 +11,8 @@ export function getAllowedDependencyScripts(config: ProjectConfig): AllowedDepen
 
   if (
     config.runtime === "node" ||
+    // drizzle-kit depends on esbuild
+    config.orm === "drizzle" ||
     hasCloudflareDeploy ||
     hasPrismaDeploy ||
     config.webDeploy === "docker" ||

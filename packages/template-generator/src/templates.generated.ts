@@ -12111,7 +12111,12 @@ import { createSignal, onSettled } from "solid-js";
 export { authClient };
 
 export function useSession() {
-	const [session, setSession] = createSignal(authClient.useSession.get());
+	// Start from the pending state the server rendered so hydration matches, then follow the store
+	const [session, setSession] = createSignal<ReturnType<typeof authClient.useSession.get>>({
+		...authClient.useSession.get(),
+		data: null,
+		isPending: true,
+	});
 	onSettled(() => authClient.useSession.subscribe(setSession));
 	return session;
 }
@@ -15377,9 +15382,9 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
-    "@solidjs/signals": "2.0.0-rc.7",
-    "@solidjs/compiler": "2.0.0-rc.7",
-    "@solidjs/babel-plugin": "2.0.0-rc.7"
+    "@solidjs/signals": "2.0.0-rc.10",
+    "@solidjs/compiler": "2.0.0-rc.10",
+    "@solidjs/babel-plugin": "2.0.0-rc.10"
   },
 {{/if}}
   "scripts": {}

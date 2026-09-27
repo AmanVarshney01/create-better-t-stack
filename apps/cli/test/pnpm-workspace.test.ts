@@ -175,6 +175,27 @@ describe("pnpm workspace", () => {
     });
   });
 
+  it("adds esbuild approval for Drizzle stacks", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-solid-hono-drizzle",
+      frontend: ["solid"],
+      backend: "hono",
+      runtime: "bun",
+      api: "orpc",
+      database: "sqlite",
+      orm: "drizzle",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["none"],
+      examples: ["todo"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toMatchObject({ esbuild: true });
+  });
+
   it("adds esbuild approval for Vite+ stacks", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-svelte-vite-plus",
