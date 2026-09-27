@@ -1,3 +1,18 @@
+{{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+import { createRequire } from "node:module";
+
+// libsql loads its platform binding by a computed name, which file tracing can't follow
+const libsqlRequire = createRequire(import.meta.resolve("libsql"));
+const libsqlBindings = Object.keys(libsqlRequire("./package.json").optionalDependencies).flatMap(
+  (name) => {
+    try {
+      return [libsqlRequire.resolve(name)];
+    } catch {
+      return [];
+    }
+  },
+);
+{{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
 import { fileURLToPath } from "node:url";
 
@@ -56,8 +71,11 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")) (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma"))))}}
   nitro: {
+    {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+    externals: { traceInclude: libsqlBindings },
+    {{/if}}
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     typescript: {
       tsConfig: { references: [apiReference] },
