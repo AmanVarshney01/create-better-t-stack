@@ -20,6 +20,7 @@ type VercelService = {
   outputDirectory?: string;
   functions?: Record<string, { includeFiles: string }>;
   rewrites?: VercelRewrite[];
+  bindings?: { type: "service"; service: string; format: "url"; env: string }[];
 };
 
 function getWebFramework(frontend: ProjectConfig["frontend"], isDesktop: boolean): string {
@@ -64,6 +65,11 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
     if (hasServer) {
       // Same-origin /api: the client calls the domain it was served from
       web.buildCommand = `${getPublicServerUrlVar(frontend)}=/api ${packageManager} run build`;
+      if (!isStaticSpa) {
+        // SSR calls the server over an internal, deployment-aware URL that skips
+        // Deployment Protection, so protected previews still render their data
+        web.bindings = [{ type: "service", service: "server", format: "url", env: "SERVER_URL" }];
+      }
     }
     if (frontend.includes("react-router") && isDesktop) {
       web.outputDirectory = "build/client";

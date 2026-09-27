@@ -995,7 +995,7 @@ export default defineNuxtPlugin(() => {
   };
 });
 `],
-  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
+  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `{{#if (eq orm "prisma")}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -1009,7 +1009,7 @@ import type { CloudflareEnv } from "../../src/env.server";
 {{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
+{{#if (eq orm "prisma")}}
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -1018,7 +1018,7 @@ export default defineNuxtPlugin(() => {
   }
 
   const rpcLink = new RPCLink({
-    url: "/rpc",
+    url: new URL("/rpc", useRequestURL()).href,
     fetch(request, init) {
       return event.fetch(request, init);
     },
@@ -9447,6 +9447,7 @@ const loading = ref(false)
 const fields: AuthFormField[] = [
   {
     name: 'email',
+    id: 'sign-in-email',
     type: 'email',
     label: 'Email',
     placeholder: 'Enter your email',
@@ -9454,6 +9455,7 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'password',
+    id: 'sign-in-password',
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
@@ -9530,6 +9532,7 @@ const loading = ref(false)
 const fields: AuthFormField[] = [
   {
     name: 'name',
+    id: 'sign-up-name',
     type: 'text',
     label: 'Name',
     placeholder: 'Enter your name',
@@ -9537,6 +9540,7 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'email',
+    id: 'sign-up-email',
     type: 'email',
     label: 'Email',
     placeholder: 'Enter your email',
@@ -9544,6 +9548,7 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'password',
+    id: 'sign-up-password',
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
@@ -9651,19 +9656,16 @@ const handleSignOut = async () => {
   </div>
 </template>
 `],
-  ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async (to, from) => {
-  if (import.meta.server) return;
-
+  ["auth/better-auth/web/nuxt/app/composables/useAuthSession.ts.hbs", `export function useAuthSession() {
   const { $authClient } = useNuxtApp();
-  const session = $authClient.useSession();
-
-  if (session.value.isPending) {
-    return;
-  }
-
-  if (!session.value.data) {
-    return navigateTo("/login");
-  }
+  return $authClient.useSession((url, options) =>
+    useFetch(url, { ...options, credentials: "include" }),
+  );
+}
+`],
+  ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async () => {
+  const { data: session } = await useAuthSession();
+  if (!session.value) return navigateTo("/login");
 });
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
@@ -9681,7 +9683,7 @@ definePageMeta({
   middleware: ['auth']
 })
 
-const session = $authClient.useSession()
+const { data: session } = await useAuthSession()
 
 {{#if (eq payments "polar")}}
 const customerState = ref<CustomerState | null>(null)
@@ -9690,13 +9692,17 @@ const customerState = ref<CustomerState | null>(null)
 {{#if (eq api "orpc")}}
 const privateData = useQuery({
   ...$orpc.privateData.queryOptions(),
-  enabled: computed(() => !!session.value?.data?.user)
+  enabled: computed(() => !!session.value?.user)
+})
+
+onServerPrefetch(async () => {
+  if (session.value?.user) await privateData.suspense()
 })
 {{/if}}
 
 {{#if (eq payments "polar")}}
 onMounted(async () => {
-  if (session.value?.data) {
+  if (session.value) {
     const { data } = await $authClient.customer.state()
     customerState.value = data ?? null
   }
@@ -9712,7 +9718,7 @@ const hasProSubscription = computed(() =>
   <UContainer class="py-8">
     <UPageHeader
       title="Dashboard"
-      :description="session?.data?.user ? \`Welcome back, \${session.data.user.name}!\` : 'Loading...'"
+      :description="session?.user ? \`Welcome back, \${session.user.name}!\` : 'Loading...'"
     />
 
     <div class="mt-6 space-y-4">
@@ -9771,15 +9777,16 @@ const hasProSubscription = computed(() =>
 </template>
 `],
   ["auth/better-auth/web/nuxt/app/pages/login.vue.hbs", `<script setup lang="ts">
-const { $authClient } = useNuxtApp();
 import SignInForm from "~/components/SignInForm.vue";
 import SignUpForm from "~/components/SignUpForm.vue";
 
-const session = $authClient.useSession();
+const { data: session } = await useAuthSession();
 const showSignIn = ref(true);
+const hydrated = ref(false);
+onMounted(() => { hydrated.value = true; });
 
 watchEffect(() => {
-  if (!session?.value.isPending && session?.value.data) {
+  if (session.value) {
     navigateTo("/dashboard", { replace: true });
   }
 });
@@ -9787,14 +9794,10 @@ watchEffect(() => {
 
 <template>
   <UContainer class="py-8">
-    <div v-if="session.isPending" class="flex flex-col items-center justify-center gap-4 py-12">
-      <UIcon name="i-lucide-loader-2" class="animate-spin text-4xl text-primary" />
-      <span class="text-muted">Loading...</span>
-    </div>
-    <div v-else-if="!session.data">
+    <fieldset v-if="!session" :disabled="!hydrated">
       <SignInForm v-if="showSignIn" @switch-to-sign-up="showSignIn = false" />
       <SignUpForm v-else @switch-to-sign-in="showSignIn = true" />
-    </div>
+    </fieldset>
   </UContainer>
 </template>
 `],
@@ -9815,6 +9818,9 @@ export default defineNuxtPlugin(() => {
   {{/if}}
 
   const authClient = createAuthClient({
+    fetchOptions: {
+      headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
+    },
     {{#if (ne backend "self")}}
     baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}
@@ -10404,7 +10410,7 @@ export default function SignInForm({
   onSwitchToSignUp: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10418,7 +10424,8 @@ export default function SignInForm({
           password: value.password,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign in successful");
           },
@@ -10540,7 +10547,7 @@ export default function SignUpForm({
   onSwitchToSignIn: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10556,7 +10563,8 @@ export default function SignUpForm({
           name: value.name,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign up successful");
           },
@@ -10767,24 +10775,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function Dashboard() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, isRefetching } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
   const [customerState, setCustomerState] = useState<CustomerState | null>(null);
   {{/if}}
 
   {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions({ enabled: Boolean(session) }));
   {{/if}}
   {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions());
+  const privateData = useQuery(trpc.privateData.queryOptions(undefined, { enabled: Boolean(session) }));
   {{/if}}
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (!session && !isPending && !isRefetching) {
       navigate("/login");
     }
-  }, [session, isPending, navigate]);
+  }, [session, isPending, isRefetching, navigate]);
 
   {{#if (eq payments "polar")}}
   useEffect(() => {
@@ -10799,7 +10807,7 @@ export default function Dashboard() {
   }, [session]);
   {{/if}}
 
-  if (isPending) {
+  if (isPending || isRefetching || !session) {
     return <div>Loading...</div>;
   }
 
@@ -11857,7 +11865,7 @@ function RouteComponent() {
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onSettled, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
@@ -11870,6 +11878,10 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   const navigate = useNavigate();
   const [error, setError] = createSignal<string>();
   const [isSubmitting, setIsSubmitting] = createSignal(false);
+  const [hydrated, setHydrated] = createSignal(false);
+  onSettled(() => {
+    setHydrated(true);
+  });
 
   const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault();
@@ -11904,7 +11916,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   return (
     <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
-      <form onSubmit={submit} class="space-y-4">
+      <form method="post" onSubmit={submit} class="space-y-4">
         <div class="space-y-2">
           <label for="email">Email</label>
           <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
@@ -11924,7 +11936,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         <button
           type="submit"
           class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-          disabled={isSubmitting()}
+          disabled={!hydrated() || isSubmitting()}
         >
           {isSubmitting() ? "Submitting..." : "Sign In"}
         </button>
@@ -11943,7 +11955,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onSettled, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
@@ -11957,6 +11969,10 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   const navigate = useNavigate();
   const [error, setError] = createSignal<string>();
   const [isSubmitting, setIsSubmitting] = createSignal(false);
+  const [hydrated, setHydrated] = createSignal(false);
+  onSettled(() => {
+    setHydrated(true);
+  });
 
   const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault();
@@ -11991,7 +12007,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   return (
     <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
-      <form onSubmit={submit} class="space-y-4">
+      <form method="post" onSubmit={submit} class="space-y-4">
         <div class="space-y-2">
           <label for="name">Name</label>
           <input id="name" name="name" minlength="2" required class="w-full rounded border p-2" />
@@ -12015,7 +12031,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         <button
           type="submit"
           class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-          disabled={isSubmitting()}
+          disabled={!hydrated() || isSubmitting()}
         >
           {isSubmitting() ? "Submitting..." : "Sign Up"}
         </button>
@@ -12197,6 +12213,8 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
 
 	const validationSchema = z.object({
@@ -12210,7 +12228,10 @@ export default function Login() {
 				await authClient.signIn.email(
 					{ email: value.email, password: value.password },
 					{
-						onSuccess: () => goto('/dashboard'),
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
+						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign in failed. Please try again.');
 						},
@@ -12309,6 +12330,8 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
 
 	const validationSchema = z.object({
@@ -12328,8 +12351,9 @@ export default function Login() {
 						name: value.name,
 					},
 					{
-						onSuccess: () => {
-							goto('/dashboard');
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
 						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign up failed. Please try again.');
@@ -12544,11 +12568,11 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions({ enabled: Boolean($sessionQuery.data) }));
 	{{/if}}
 
 	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.data) {
+		if (!$sessionQuery.isPending && !$sessionQuery.isRefetching && !$sessionQuery.data) {
 			goto('/login');
 		}
 	});
@@ -12564,7 +12588,7 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending}
+{#if $sessionQuery.isPending || $sessionQuery.isRefetching}
 	<div>Loading...</div>
 {:else if !$sessionQuery.data}
 	<div>Redirecting to login...</div>
@@ -24276,7 +24300,10 @@ import Layout from "../layouts/Layout.astro";
 </script>
 `],
   ["examples/todo/web/nuxt/app/pages/todos.vue.hbs", `<script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+
+const hydrated = ref(false)
+onMounted(() => { hydrated.value = true })
 {{#if (eq backend "convex")}}
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import type { Id } from "@{{ projectName }}/backend/convex/_generated/dataModel";
@@ -24371,16 +24398,19 @@ function handleDeleteTodo(id: number) {
           autocomplete="off"
           class="flex-1"
           {{#if (eq backend "convex")}}
-          :disabled="isCreatePending"
+          :disabled="!hydrated || isCreatePending"
+          {{else}}
+          :disabled="!hydrated"
           {{/if}}
         />
         <UButton
           type="submit"
           {{#if (eq backend "convex")}}
           :loading="isCreatePending"
-          :disabled="!newTodoText.trim()"
+          :disabled="!hydrated || !newTodoText.trim()"
           {{else}}
           :loading="createMutation.isPending.value"
+          :disabled="!hydrated || !newTodoText.trim()"
           {{/if}}
         >
           Add
@@ -30173,7 +30203,12 @@ const items = computed<NavigationMenuItem[]>(() => [
     <template #right>
       <UColorModeButton />
       {{#if (eq auth "better-auth")}}
-      <UserMenu />
+      <ClientOnly>
+        <UserMenu />
+        <template #fallback>
+          <USkeleton class="h-9 w-24" />
+        </template>
+      </ClientOnly>
       {{/if}}
     </template>
 
@@ -30298,7 +30333,22 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+import { createRequire } from "node:module";
+
+// libsql loads its platform binding by a computed name, which file tracing can't follow
+const libsqlRequire = createRequire(import.meta.resolve("libsql"));
+const libsqlBindings = Object.keys(libsqlRequire("./package.json").optionalDependencies).flatMap(
+  (name) => {
+    try {
+      return [libsqlRequire.resolve(name)];
+    } catch {
+      return [];
+    }
+  },
+);
+{{/if}}
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
 import { fileURLToPath } from "node:url";
 
 const apiReference = { path: fileURLToPath(new URL("../../packages/api", import.meta.url)) };
@@ -30356,8 +30406,11 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")) (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma"))))}}
   nitro: {
+    {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+    externals: { traceInclude: libsqlBindings },
+    {{/if}}
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     typescript: {
       tsConfig: { references: [apiReference] },
@@ -30403,7 +30456,7 @@ export default defineNuxtConfig({
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}nuxt prepare && vue-tsc -b{{else}}nuxt typecheck{{/if}}",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "{{#if (or (eq webDeploy "none") (eq webDeploy "docker"))}}node .output/server/index.mjs{{else}}nuxt preview{{/if}}",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -31070,7 +31123,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32791,14 +32844,14 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.23",
-    "@solidjs/web": "2.0.0-rc.7",
-    "solid-js": "2.0.0-rc.7"
+    "@solidjs/router": "2.0.0-next.30",
+    "@solidjs/web": "2.0.0-rc.10",
+    "solid-js": "2.0.0-rc.10"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.39",
+    "@solidjs/vite-plugin": "3.0.0-next.46",
     "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.3.0",
+    "filesystem-routing": "0.4.0",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
     "nitro": "3.0.260903-beta"{{/unless}}
@@ -35548,4 +35601,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 529;
+export const TEMPLATE_COUNT = 530;
