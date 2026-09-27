@@ -40,7 +40,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-  const url = new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
+  const url = new URL("{{apiPrefix webDeploy serverDeploy}}/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
   url.searchParams.set("returnUrl", returnUrl);
   return url.toString();
 };

@@ -1043,7 +1043,7 @@ function generateDeploymentCommands(
 
     if (webDeploy === "vercel" && serverDeploy === "vercel" && backend !== "self") {
       lines.push(
-        "- Web requests under `/api/*` route to the server service and are rewritten before reaching the backend.",
+        "- Web requests under `/api/*` route to the server service, which serves those paths directly. Local server URLs include `/api` too.",
       );
     }
 

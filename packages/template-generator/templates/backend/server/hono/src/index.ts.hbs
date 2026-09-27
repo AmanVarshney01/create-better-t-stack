@@ -68,7 +68,7 @@ app.on(
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("/polar/success", (c) => {
+app.get("{{apiPrefix webDeploy serverDeploy}}/polar/success", (c) => {
 	const requestUrl = new URL(c.req.url);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -113,7 +113,7 @@ app.use("/*", async (c, next) => {
 	const context = await createContext({ context: c });
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
-		prefix: "/rpc",
+		prefix: "{{apiPrefix webDeploy serverDeploy}}/rpc",
 		context: context,
 	});
 
@@ -122,7 +122,7 @@ app.use("/*", async (c, next) => {
 	}
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
-		prefix: "/api-reference",
+		prefix: "{{apiPrefix webDeploy serverDeploy}}/api-reference",
 		context: context,
 	});
 
@@ -136,8 +136,9 @@ app.use("/*", async (c, next) => {
 
 {{#if (eq api "trpc")}}
 app.use(
-	"/trpc/*",
+	"{{apiPrefix webDeploy serverDeploy}}/trpc/*",
 	trpcServer({
+		endpoint: "{{apiPrefix webDeploy serverDeploy}}/trpc",
 		router: appRouter,
 		createContext: (_opts, context) => {
 			return createContext({ context });
@@ -147,7 +148,7 @@ app.use(
 {{/if}}
 
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-app.post("/ai", async (c) => {
+app.post("{{apiPrefix webDeploy serverDeploy}}/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
@@ -166,7 +167,7 @@ app.post("/ai", async (c) => {
 {{/if}}
 
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-app.post("/ai", async (c) => {
+app.post("{{apiPrefix webDeploy serverDeploy}}/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const google = createGoogleGenerativeAI({

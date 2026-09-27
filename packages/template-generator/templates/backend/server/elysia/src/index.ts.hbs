@@ -63,7 +63,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}),
 	)
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
-	.get("/polar/success", ({ request, status }) => {
+	.get("{{apiPrefix webDeploy serverDeploy}}/polar/success", ({ request, status }) => {
 		const nativeAppUrl = "{{projectName}}://";
 		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 		const requestUrl = new URL(request.url);
@@ -99,10 +99,10 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 {{#if (eq api "orpc")}}
 	.all(
-		"/rpc*",
+		"{{apiPrefix webDeploy serverDeploy}}/rpc*",
 		async (context) => {
 			const { response } = await rpcHandler.handle(context.request, {
-				prefix: "/rpc",
+				prefix: "{{apiPrefix webDeploy serverDeploy}}/rpc",
 				context: await createContext({ context }),
 			});
 			return response ?? new Response("Not Found", { status: 404 });
@@ -112,10 +112,10 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}
 	)
 	.all(
-		"/api-reference*",
+		"{{apiPrefix webDeploy serverDeploy}}/api-reference*",
 		async (context) => {
 			const { response } = await apiHandler.handle(context.request, {
-				prefix: "/api-reference",
+				prefix: "{{apiPrefix webDeploy serverDeploy}}/api-reference",
 				context: await createContext({ context }),
 			});
 			return response ?? new Response("Not Found", { status: 404 });
@@ -126,9 +126,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	)
 {{/if}}
 {{#if (eq api "trpc")}}
-	.all("/trpc/*", async (context) => {
+	.all("{{apiPrefix webDeploy serverDeploy}}/trpc/*", async (context) => {
 		const res = await fetchRequestHandler({
-			endpoint: "/trpc",
+			endpoint: "{{apiPrefix webDeploy serverDeploy}}/trpc",
 			router: appRouter,
 			req: context.request,
 			createContext: () => createContext({ context }),
@@ -137,7 +137,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	})
 {{/if}}
 {{#if (includes examples "ai")}}
-	.post("/ai", async (context) => {
+	.post("{{apiPrefix webDeploy serverDeploy}}/ai", async (context) => {
 		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
