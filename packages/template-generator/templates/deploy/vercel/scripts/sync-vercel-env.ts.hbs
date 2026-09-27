@@ -60,6 +60,7 @@ const envFiles = files.length > 0 ? files : DEFAULT_FILES;
 
 const env = new Map<string, string>();
 const undeclaredKeys: string[] = [];
+const emptyKeys: string[] = [];
 
 for (const file of envFiles) {
 	if (!existsSync(file)) {
@@ -80,12 +81,22 @@ for (const file of envFiles) {
 			undeclaredKeys.push(key);
 			continue;
 		}
-		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
+		const syncedValue = OVERRIDE_KEYS.get(key) ?? value;
+		if (!syncedValue) {
+			emptyKeys.push(key);
+			continue;
+		}
+		env.set(key, syncedValue);
 	}
 }
 
 if (undeclaredKeys.length > 0) {
 	console.log(`Skipping ${undeclaredKeys.join(", ")}: not declared in .env.schema.`);
+}
+if (emptyKeys.length > 0) {
+	console.warn(
+		`Warning: ${emptyKeys.join(", ")} ${emptyKeys.length === 1 ? "is" : "are"} empty in your .env file(s) and won't be synced. Required values must be set before deploying, or the build or server fails env validation.`,
+	);
 }
 
 {{#if (includes addons "axiom")}}
