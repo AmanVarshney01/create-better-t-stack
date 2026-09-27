@@ -337,17 +337,18 @@ describe("Deployment Configurations", () => {
       expect(packageJson.devDependencies).not.toHaveProperty("@vercel/config");
       expect(packageJson.devDependencies).toHaveProperty("@types/node");
       expect(packageJson.devDependencies).toHaveProperty("tsx");
-      expect(packageJson.devDependencies).toHaveProperty("vercel");
+      // The CLI runs through the package runner; installing it breaks npm hoisting
+      expect(packageJson.devDependencies).not.toHaveProperty("vercel");
       // File parsing uses the Node runtime without a dotenv dependency.
       expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
       expect(packageJson.scripts).toMatchObject({
-        "deploy:setup": "vercel link",
-        "dev:vercel": "vercel dev -L",
+        "deploy:setup": "bunx vercel link",
+        "dev:vercel": "bunx vercel dev -L",
         "env:preview": "tsx scripts/sync-vercel-env.ts preview",
         "env:production": "tsx scripts/sync-vercel-env.ts production",
-        deploy: "vercel deploy",
-        "deploy:prod": "vercel deploy --prod",
-        "deploy:check": "vercel deploy --dry",
+        deploy: "bunx vercel deploy",
+        "deploy:prod": "bunx vercel deploy --prod",
+        "deploy:check": "bunx vercel deploy --dry",
       });
       expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
       expect(files.get("apps/web/.env.schema")).toContain("@type=string(matches=");
@@ -393,12 +394,12 @@ describe("Deployment Configurations", () => {
       };
 
       // Different platforms per target: scripts are named by what they deploy
-      expect(pkg.scripts?.["deploy:web"]).toBe("vercel deploy");
-      expect(pkg.scripts?.["deploy:web:prod"]).toBe("vercel deploy --prod");
+      expect(pkg.scripts?.["deploy:web"]).toBe("bunx vercel deploy");
+      expect(pkg.scripts?.["deploy:web:prod"]).toBe("bunx vercel deploy --prod");
       expect(pkg.scripts?.["deploy:server"]).toContain("deploy");
       expect(pkg.scripts?.destroy).toContain("destroy");
       expect(pkg.scripts).not.toHaveProperty("deploy");
-      expect(pkg.scripts?.["deploy:setup"]).toBe("vercel link");
+      expect(pkg.scripts?.["deploy:setup"]).toBe("bunx vercel link");
       expect(pkg.scripts?.["env:production"]).toBe("tsx scripts/sync-vercel-env.ts production");
     });
 

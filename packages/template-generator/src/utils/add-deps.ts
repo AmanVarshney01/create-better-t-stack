@@ -169,7 +169,6 @@ export const dependencyVersionMap = {
   effect: "4.0.0-rc.115",
   "@effect/platform-node": "4.0.0-rc.115",
   "@effect/platform-bun": "4.0.0-rc.115",
-  vercel: "^59.11.7",
 
   "babel-preset-expo": "~57.0.10",
   varlock: "1.18.0",
