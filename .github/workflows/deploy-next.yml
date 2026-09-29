@@ -43,6 +43,9 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - name: Build workspace deps (types + template-generator)
+        run: bun run --filter web prebuild
+
       - name: Apply D1 migrations
         working-directory: packages/backend
         run: bunx wrangler d1 migrations apply bts-analytics --remote
@@ -55,9 +58,6 @@ jobs:
           workingDirectory: packages/backend
           packageManager: bun
           command: deploy
-
-      - name: Build web deps (types + template-generator)
-        run: bun run --filter web prebuild
 
       - name: Build OpenNext worker
         working-directory: apps/web
