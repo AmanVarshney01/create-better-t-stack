@@ -388,6 +388,14 @@ describe("Authentication Configurations", () => {
             : frontend === "tanstack-router" || frontend === "tanstack-start"
               ? "apps/web/src/routes/_auth/dashboard.tsx"
               : "apps/web/src/routes/dashboard.tsx";
+        const convexClientPath =
+          frontend === "next"
+            ? "apps/web/src/components/providers.tsx"
+            : frontend === "tanstack-start"
+              ? "apps/web/src/router.tsx"
+              : frontend === "tanstack-router"
+                ? "apps/web/src/main.tsx"
+                : "apps/web/src/root.tsx";
         const convexConfigFile = await fs.readFile(
           path.join(result.projectDir, "packages/backend/convex/convex.config.ts"),
           "utf8",
@@ -402,6 +410,10 @@ describe("Authentication Configurations", () => {
         );
         const dashboardFile = await fs.readFile(
           path.join(result.projectDir, dashboardPath),
+          "utf8",
+        );
+        const convexClientFile = await fs.readFile(
+          path.join(result.projectDir, convexClientPath),
           "utf8",
         );
         const authRouteFile =
@@ -437,6 +449,11 @@ describe("Authentication Configurations", () => {
           expect(authRouteFile).toContain('createFileRoute("/_auth")');
           expect(authRouteFile).toContain("Authenticated");
           expect(authRouteFile).toContain("Unauthenticated");
+        }
+        if (frontend === "next") {
+          expect(convexClientFile).not.toContain("expectAuth: true");
+        } else {
+          expect(convexClientFile).toContain("expectAuth: true");
         }
         expect(dashboardFile).toContain('from "@convex-dev/polar/react";');
         expect(dashboardFile).toContain("api.polar.listAllProducts");
@@ -552,6 +569,10 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
           "utf8",
         );
+        const nativeLayoutFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/_layout.tsx"),
+          "utf8",
+        );
         const backendPackageFile = await fs.readFile(
           path.join(result.projectDir, "packages/backend/package.json"),
           "utf8",
@@ -585,6 +606,7 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
         expect(nativeIndexFile).toContain("Upgrade to Pro");
         expect(nativeIndexFile).toContain("Manage Subscription");
+        expect(nativeLayoutFile).toContain("expectAuth: true");
         if (frontend === "native-bare") {
           expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
           expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
@@ -1005,6 +1027,15 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const mainFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/main.tsx"),
+        "utf8",
+      );
+      expect(mainFile).not.toContain("expectAuth: true");
     });
   });
 
