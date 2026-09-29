@@ -1,6 +1,7 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 
 import Providers from "@/components/providers";
@@ -15,18 +16,6 @@ import {
 
 import "./global.css";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-geist",
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-geist-mono",
-});
 
 const ogImage = `${SITE_URL}/og/site/home.png`;
 
@@ -176,7 +165,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={cn(geist.variable, geistMono.variable, "font-sans")}
+      className={cn(GeistSans.variable, GeistMono.variable, "font-sans")}
       suppressHydrationWarning
     >
       <body>

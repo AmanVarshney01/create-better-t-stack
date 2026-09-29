@@ -13,7 +13,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review, closed]
   workflow_dispatch:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: read
@@ -50,7 +50,7 @@ jobs:
       - name: Merge main + open PRs into next (no repo code executed in this step)
         id: merge
         env:
-          GH_TOKEN: ${{ github.token }}   # read-only listing/fetch
+          GH_TOKEN: ${{ github.token }} # read-only listing/fetch
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
