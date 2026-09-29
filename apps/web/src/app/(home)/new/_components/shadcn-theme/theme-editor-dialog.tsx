@@ -208,6 +208,18 @@ export function ThemeEditorDialog({ fields, onChange }: ThemeEditorDialogProps) 
               className="builder-focus-ring font-mono text-[12px]"
             />
           </label>
+          <p className="font-mono text-[10px] leading-relaxed text-fd-muted-foreground">
+            Build a theme and copy its preset code at{" "}
+            <a
+              href="https://ui.shadcn.com/create"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline underline-offset-2 hover:text-fd-foreground"
+            >
+              ui.shadcn.com/create
+            </a>
+            .
+          </p>
           {presetError && (
             <p
               id="shadcn-preset-error"
