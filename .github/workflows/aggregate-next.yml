@@ -1,0 +1,137 @@
+name: Aggregate next
+
+# Lives on the fork's DEFAULT branch (`main`): schedule by GitHub uses the default
+# branch's workflow file.
+#
+# Keeps `next` = fork `main` + every open PR that targets `main`, by LOCAL merge.
+# NEVER uses `gh pr merge` (that merges into the PR base and closes the PRs).
+# Pushes with NEXT_SYNC_TOKEN so the push event triggers deploy-next.yml
+# (GITHUB_TOKEN pushes do not trigger other workflows).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aggregate-next
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout next
+        uses: actions/checkout@v7
+        with:
+          ref: next
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          check-latest: true
+          package-manager-cache: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Merge main + open PRs into next (no repo code executed in this step)
+        id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}   # read-only listing/fetch
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config commit.gpgsign false
+
+          # 1) keep next current with main
+          git fetch origin main --no-tags
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "next already contains origin/main"
+          elif git merge --no-ff --no-edit origin/main -m "merge(next): sync main"; then
+            echo "merged origin/main"
+          else
+            syncfiles=$(git diff --name-only --diff-filter=U | paste -sd, -)
+            git merge --abort
+            conflicted+="- origin/main: CONFLICT in ${syncfiles:-unknown}"$'\n'
+          fi
+
+          # 2) aggregate every open, non-draft PR targeting main
+          if ! rows_raw=$(gh pr list --repo "$REPO" --base main --state open --limit 100 \
+            --json number,headRefName,headRefOid,isDraft \
+            --jq '.[] | select(.isDraft==false) | "\(.number) \(.headRefName) \(.headRefOid)"'); then
+            echo "::error::gh pr list failed (check token permissions)"; exit 1
+          fi
+          mapfile -t rows <<<"$rows_raw"
+
+          merged=""; skipped=""; conflicted=""
+          for row in "${rows[@]:-}"; do
+            [ -n "$row" ] || continue
+            read -r num ref sha <<<"$row"
+            if git merge-base --is-ancestor "$sha" HEAD 2>/dev/null; then
+              skipped+="- #$num already in next"$'\n'; continue
+            fi
+            if ! git fetch origin "+refs/heads/$ref:refs/remotes/origin/$ref" --no-tags; then
+              conflicted+="- #$num ($ref): fetch failed"$'\n'; continue
+            fi
+            if git merge --no-ff --no-edit "origin/$ref" -m "merge(next): #$num $ref" >/dev/null 2>&1; then
+              merged+="- #$num ($ref)"$'\n'
+            else
+              files=$(git diff --name-only --diff-filter=U | paste -sd, -)
+              git merge --abort
+              conflicted+="- #$num ($ref): CONFLICT in ${files:-unknown}"$'\n'
+            fi
+          done
+
+          {
+            echo "## Aggregate next"
+            echo "### Merged";         echo "${merged:-_none_}"
+            echo "### Already present"; echo "${skipped:-_none_}"
+            echo "### Conflicted (NOT merged)"; echo "${conflicted:-_none_}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "has_conflicts=$([ -n "$conflicted" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate generated artifacts + lockfile
+        run: |
+          set -euo pipefail
+          bun install
+          bun run --filter @better-t-stack/template-generator generate-templates || \
+            (cd packages/template-generator && bun run generate-templates)
+          git add -A
+
+      - name: Build workspace dependencies for typecheck
+        run: bun run --filter web prebuild
+
+      - name: Verify aggregated tree (no secrets in this step)
+        run: |
+          set -euo pipefail
+          if grep -rn '<<<<<<<\|>>>>>>>' --include='*.ts' --include='*.tsx' --include='*.hbs' packages apps; then
+            echo "conflict markers remain"; exit 1
+          fi
+          bunx tsc --noEmit -p packages/template-generator/tsconfig.json
+          bun run --filter web check-types
+
+      - name: Push next
+        env:
+          NEXT_SYNC_TOKEN: ${{ secrets.NEXT_SYNC_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NEXT_SYNC_TOKEN:-}" ]; then echo "::error::NEXT_SYNC_TOKEN secret is missing"; exit 1; fi
+          git remote set-url origin "https://x-access-token:${NEXT_SYNC_TOKEN}@github.com/${REPO}.git"
+          git push origin HEAD:next
