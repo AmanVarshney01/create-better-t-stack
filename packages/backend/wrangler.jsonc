@@ -8,12 +8,26 @@
     {
       "binding": "DB",
       "database_name": "bts-analytics",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "b8dbf650-f98d-486f-9522-b3bdb301990a",
       "migrations_dir": "migrations",
     },
   ],
-  "kv_namespaces": [{ "binding": "OSS_STATS_KV", "id": "00000000000000000000000000000000" }],
-  "triggers": { "crons": ["0 */6 * * *"] },
-  "routes": [{ "pattern": "api.create.1d.gg", "custom_domain": true }],
-  "observability": { "enabled": true },
+  "kv_namespaces": [
+    {
+      "binding": "OSS_STATS_KV",
+      "id": "1c925021cdb043c3938178b0558f9860",
+    },
+  ],
+  "triggers": {
+    "crons": ["0 */6 * * *"],
+  },
+  "routes": [
+    {
+      "pattern": "api.create.1d.gg",
+      "custom_domain": true,
+    },
+  ],
+  "observability": {
+    "enabled": true,
+  },
 }
