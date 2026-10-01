@@ -109,6 +109,7 @@ export async function verifyBrowser(
   const errors: string[] = [];
   let offline = false;
   const cancelledNavigations: string[] = [];
+  const cancelledSessionRequests: { url: string; afterResponse: number }[] = [];
   const requests: { url: string; status: number }[] = [];
   page.on("pageerror", (error) => errors.push(`${page.url()}: ${error.message}`));
   page.on("console", (message) => {
@@ -118,6 +119,14 @@ export async function verifyBrowser(
   page.on("requestfailed", (request) => {
     if (offline) return;
     const failure = request.failure()?.errorText;
+    if (
+      failure === "net::ERR_ABORTED" &&
+      request.method() === "GET" &&
+      new URL(request.url()).pathname === "/api/auth/get-session"
+    ) {
+      cancelledSessionRequests.push({ url: request.url(), afterResponse: requests.length });
+      return;
+    }
     if (
       failure === "net::ERR_ABORTED" &&
       request.method() === "GET" &&
@@ -172,6 +181,23 @@ export async function verifyBrowser(
       await expect(page).toHaveURL(/\/dashboard\/?$/);
       if (config.api !== "none")
         await expect(page.getByText(/^(API: )?This is private$/)).toBeVisible();
+      if (config.frontend.includes("nuxt")) {
+        // Disable JavaScript so client fetching cannot hide a broken SSR session or RPC call.
+        const serverRendered = await browser.newContext({
+          javaScriptEnabled: false,
+          storageState: await context.storageState(),
+          extraHTTPHeaders: assetHeaders(deployment.web),
+        });
+        try {
+          const serverPage = await serverRendered.newPage();
+          expect((await serverPage.goto(`${deployment.web}/dashboard`))?.status()).toBe(200);
+          await expect(serverPage.getByText(/Welcome.*Live Test/)).toBeVisible();
+          if (config.api !== "none")
+            await expect(serverPage.getByText(/^(API: )?This is private$/)).toBeVisible();
+        } finally {
+          await serverRendered.close();
+        }
+      }
       await page.reload();
       if (config.frontend.includes("astro"))
         await expect(page.locator("#user-name")).toHaveText("Live Test");
@@ -236,17 +262,20 @@ export async function verifyBrowser(
       }
     }
     if (config.auth === "better-auth") {
-      const signedOut = page.waitForResponse(
-        (response) =>
-          response.url().includes("/api/auth/sign-out") && response.request().method() === "POST",
-      );
       const signOut = page
         .getByRole("button", { name: /^Sign out$/i })
         .or(page.getByRole("menuitem", { name: "Sign Out", exact: true }));
-      if (!(await signOut.isVisible()))
-        await page.getByRole("button", { name: "Live Test", exact: true }).click();
-      await signOut.click();
-      expect((await signedOut).status(), "Sign-out request").toBe(200);
+      const userMenu = page.getByRole("button", { name: "Live Test", exact: true });
+      await expect(signOut.or(userMenu).first()).toBeVisible();
+      if (!(await signOut.isVisible())) await userMenu.click();
+      const [signedOut] = await Promise.all([
+        page.waitForResponse(
+          (response) =>
+            response.url().includes("/api/auth/sign-out") && response.request().method() === "POST",
+        ),
+        signOut.click(),
+      ]);
+      expect(signedOut.status(), "Sign-out request").toBe(200);
       await page.waitForURL((url) => url.pathname === "/", { waitUntil: "load" });
       await page.goto(`${deployment.web}/dashboard`);
       await expect(page).toHaveURL(/\/login\/?$/);
@@ -299,6 +328,13 @@ export async function verifyBrowser(
       await context.setOffline(false);
       offline = false;
     }
+    for (const { url, afterResponse } of cancelledSessionRequests)
+      expect(
+        requests
+          .slice(afterResponse)
+          .some((request) => request.url === url && request.status === 200),
+        "Cancelled session reads must have a successful replacement",
+      ).toBe(true);
     expect(errors, "Browser crashes, network failures and wrong API origins").toEqual([]);
   } catch (error) {
     await page
@@ -308,7 +344,7 @@ export async function verifyBrowser(
   } finally {
     await writeFile(
       path.join(directory, `${stage}-network.json`),
-      JSON.stringify({ requests, errors, cancelledNavigations }, null, 2),
+      JSON.stringify({ requests, errors, cancelledNavigations, cancelledSessionRequests }, null, 2),
       { mode: 0o600 },
     );
     await context.tracing.stop({ path: path.join(directory, `${stage}-trace.zip`) });

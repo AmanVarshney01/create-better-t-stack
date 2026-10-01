@@ -42,12 +42,7 @@ async function neonRequest(method: string, endpoint: string, body?: string) {
 
 // Account-free databases: Neon claimable projects are deleted during cleanup, and
 // Prisma Postgres databases expire on their own through create-db's TTL
-async function provisionClaimableNeon(
-  config: ProjectConfig,
-  state: RunState,
-  id: string,
-  commands: Commands,
-) {
+async function provisionClaimableNeon(state: RunState, id: string, commands: Commands) {
   const envFile = path.join(commands.directory, "neon-claim.env");
   await writeFile(envFile, "", { mode: 0o600 });
   const stdout = await commands.run("neon-claim-create", commands.directory, "npx", [
@@ -59,10 +54,12 @@ async function provisionClaimableNeon(
     "json",
     "--file",
     envFile,
+    "--context-file",
+    path.join(commands.directory, "neon-context.json"),
     "--no-analytics",
   ]);
   const { project_id } = z.object({ project_id: z.string() }).parse(JSON.parse(stdout));
-  state.resource(id, "neon-claim", project_id, config.projectDir);
+  state.resource(id, "neon-claim", project_id, commands.directory);
   const url = parseEnv(await readFile(envFile, "utf8")).DATABASE_URL;
   if (!url) throw new Error("neon claim create did not write DATABASE_URL");
   return commands.secret(url);
@@ -110,7 +107,7 @@ export async function provisionDatabase(
     throw new Blocked(
       `Database provisioner not yet available: ${config.dbSetup}/${config.database}`,
     );
-  if (!process.env.NEON_API_KEY) return provisionClaimableNeon(config, state, id, commands);
+  if (!process.env.NEON_API_KEY) return provisionClaimableNeon(state, id, commands);
   const project = {
     name: config.projectName,
     region_id: process.env.BTS_LIVE_NEON_REGION ?? "aws-us-east-1",
@@ -218,6 +215,17 @@ export async function deployVercel(
     .parse(JSON.parse(stdout));
   if ((result.target ?? "preview") !== stage)
     throw new Error(`Expected ${stage} deployment, received ${result.target}`);
+  if (stage === "preview") {
+    const unprotected = await fetch(result.url, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(30_000),
+    });
+    await unprotected.body?.cancel();
+    if (![401, 403, 302, 303, 307, 308].includes(unprotected.status))
+      throw new Error(
+        `Preview must require Deployment Protection; received HTTP ${unprotected.status}`,
+      );
+  }
   let url = result.url;
   if (stage === "production") {
     const inspection = z
@@ -321,6 +329,8 @@ export async function cleanup(resource: Resource, commands: Commands) {
       "delete",
       resource.id,
       "--yes",
+      "--context-file",
+      path.join(resource.directory, "neon-context.json"),
       "--no-analytics",
     ]);
   } else if (resource.provider === "neon") {

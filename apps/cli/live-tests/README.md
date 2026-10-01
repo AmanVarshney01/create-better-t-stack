@@ -18,15 +18,18 @@ The complete matrix has millions of core cases before addon and example subsets.
 
 Supply credentials in the local process environment or use the provider CLI's existing login. Do not commit credentials here.
 
+Account-free Neon claims use a separate context file per case, so parallel batches do not link the repository to a disposable project.
+
 | Provider                                    | Runner input                                                            | Status                                                                                              |
 | ------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Neon                                        | `NEON_API_KEY`; optional `BTS_LIVE_NEON_ORG_ID`, `BTS_LIVE_NEON_REGION` | Disposable project provisioning and cleanup implemented                                             |
+| Neon                                        | Optional `NEON_API_KEY`, `BTS_LIVE_NEON_ORG_ID`, `BTS_LIVE_NEON_REGION` | Account-free claimable project, or authenticated API project; deleted after the case                |
+| Prisma Postgres                             | No account; optional `BTS_LIVE_PRISMA_POSTGRES_REGION`                  | Disposable database expires after two hours                                                         |
 | Vercel                                      | Existing `vercel login`; `BTS_LIVE_VERCEL_SCOPE`                        | Disposable project; production and preview deployments; browser checks and runtime logs implemented |
 | Cloudflare through Alchemy                  | Project-local Alchemy profile; `CLOUDFLARE_ACCOUNT_ID`                  | Adapter needs an authenticated live run; Wrangler login alone is insufficient                       |
 | Clerk, Polar sandbox, Convex                | Dedicated test accounts to be added later                               | Blocked; provider-specific verification still required                                              |
 | Supabase, Turso, PlanetScale, MongoDB Atlas | Dedicated test accounts to be added later                               | Blocked; database provisioners still required                                                       |
 
-Vercel function cases require the Node runtime; Bun remains a supported package manager. The runner verifies production and preview on its disposable project. It creates a deployment-protection bypass secret scoped to that project. Browser requests only attach it to the test deployment's origin.
+Vercel function cases require the Node runtime; Bun remains a supported package manager. The runner verifies production and preview on its disposable project. It creates a deployment-protection bypass secret scoped to that project and verifies that preview access without it is denied. Nuxt dashboards are also checked with JavaScript disabled to verify server-rendered sessions and private RPC data. Browser requests only attach it to the test deployment's origin.
 
 ## Verification and current limits
 
@@ -59,3 +62,7 @@ The small runner regression suite does not deploy anything:
 ```sh
 bun test apps/cli/live-tests/runner.test.ts
 ```
+
+## Selected validation run
+
+The [2026-10-02 verification record](./verification-2026-10-02.md) lists the 19 local, five Postgres, and two Vercel fixtures that passed, including production and protected preview stages.
