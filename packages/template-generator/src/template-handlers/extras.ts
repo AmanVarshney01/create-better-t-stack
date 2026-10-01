@@ -47,6 +47,7 @@ export function processPnpmWorkspaceConfig(vfs: VirtualFileSystem, config: Proje
   }
   if (config.frontend.includes("solid")) {
     workspace.overrides = {
+      "solid-js": "2.0.0-rc.10",
       "@solidjs/signals": "2.0.0-rc.10",
       "@solidjs/compiler": "2.0.0-rc.10",
       "@solidjs/babel-plugin": "2.0.0-rc.10",

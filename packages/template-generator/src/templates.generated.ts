@@ -1642,17 +1642,19 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
+{{> getServerUrlSpaces}}
+
 export default defineNuxtPlugin(() => {
-  const event = useRequestEvent();
   const requestURL = useRequestURL();
   const config = useRuntimeConfig();
   const serverUrl =
     (import.meta.server && config.serverUrl) || config.public.serverUrl;
-  const rpcUrl = new URL(\`\${serverUrl.replace(/\\/$/, "")}/rpc\`, requestURL.origin).href;
+  const resolvedServerUrl = {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}getServerUrl(serverUrl){{else}}serverUrl.replace(/\\/$/, ""){{/if}};
+  const rpcUrl = new URL(\`\${resolvedServerUrl}/rpc\`, requestURL.origin).href;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
-    headers: () => event?.headers ?? {},
+    headers: () => import.meta.server ? useRequestHeaders(["cookie"]) : {},
     {{#if (eq auth "better-auth")}}
     fetch(url, options) {
         return fetch(url, {
@@ -9806,15 +9808,17 @@ watchEffect(() => {
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
+{{> getServerUrlSpaces}}
+
 export default defineNuxtPlugin(() => {
   {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
   const rawServerUrl = (import.meta.server && config.serverUrl) || config.public.serverUrl;
   // Same-origin paths like /api need an absolute base, and better-auth derives
   // its route matching from this URL's path, so it must be exactly /api/auth
-  const serverOrigin = rawServerUrl.startsWith("/")
+  const serverOrigin = {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}getServerUrl(rawServerUrl);{{else}}rawServerUrl.startsWith("/")
     ? (import.meta.server ? useRequestURL() : window.location).origin + rawServerUrl
-    : rawServerUrl;
+    : rawServerUrl;{{/if}}
   {{/if}}
 
   const authClient = createAuthClient({
@@ -9822,7 +9826,7 @@ export default defineNuxtPlugin(() => {
       headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
     },
     {{#if (ne backend "self")}}
-    baseURL: new URL("/api/auth", serverOrigin).toString(),
+    baseURL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}\`\${serverOrigin}/auth\`{{else}}new URL("/api/auth", serverOrigin).toString(){{/if}},
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -15382,6 +15386,7 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
+    "solid-js": "2.0.0-rc.10",
     "@solidjs/signals": "2.0.0-rc.10",
     "@solidjs/compiler": "2.0.0-rc.10",
     "@solidjs/babel-plugin": "2.0.0-rc.10"
@@ -24454,6 +24459,7 @@ function handleDeleteTodo(id: number) {
         >
           <div class="flex items-center gap-3">
             <UCheckbox
+              :disabled="!hydrated"
               :model-value="todo.completed"
               @update:model-value="() => handleToggleTodo(todo._id, todo.completed)"
               :id="\`todo-\${todo._id}\`"
@@ -24473,6 +24479,7 @@ function handleDeleteTodo(id: number) {
             square
             @click="handleDeleteTodo(todo._id)"
             aria-label="Delete todo"
+            :disabled="!hydrated"
             icon="i-lucide-trash-2"
           />
         </li>
@@ -24509,6 +24516,7 @@ function handleDeleteTodo(id: number) {
         >
           <div class="flex items-center gap-3">
             <UCheckbox
+              :disabled="!hydrated"
               :model-value="todo.completed"
               @update:model-value="() => handleToggleTodo(todo.id, todo.completed)"
               :id="\`todo-\${todo.id}\`"
@@ -24528,6 +24536,7 @@ function handleDeleteTodo(id: number) {
             square
             @click="handleDeleteTodo(todo.id)"
             aria-label="Delete todo"
+            :disabled="!hydrated"
             icon="i-lucide-trash-2"
           />
         </li>

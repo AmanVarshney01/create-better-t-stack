@@ -4,17 +4,19 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
+{{> getServerUrlSpaces}}
+
 export default defineNuxtPlugin(() => {
-  const event = useRequestEvent();
   const requestURL = useRequestURL();
   const config = useRuntimeConfig();
   const serverUrl =
     (import.meta.server && config.serverUrl) || config.public.serverUrl;
-  const rpcUrl = new URL(`${serverUrl.replace(/\/$/, "")}/rpc`, requestURL.origin).href;
+  const resolvedServerUrl = {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}getServerUrl(serverUrl){{else}}serverUrl.replace(/\/$/, ""){{/if}};
+  const rpcUrl = new URL(`${resolvedServerUrl}/rpc`, requestURL.origin).href;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
-    headers: () => event?.headers ?? {},
+    headers: () => import.meta.server ? useRequestHeaders(["cookie"]) : {},
     {{#if (eq auth "better-auth")}}
     fetch(url, options) {
         return fetch(url, {

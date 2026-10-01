@@ -17,6 +17,7 @@ export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
   "better-auth": "1.7.6",
+  "@better-auth/core": "1.7.6",
   "@better-auth/drizzle-adapter": "1.7.6",
   "@better-auth/expo": "1.7.5",
 
