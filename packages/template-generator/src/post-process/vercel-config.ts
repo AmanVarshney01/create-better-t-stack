@@ -4,24 +4,13 @@
  */
 
 import type { ProjectConfig } from "@better-t-stack/types";
+import type { ServiceConfig, Services } from "@vercel/build-utils";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-type VercelRewrite = { source: string; destination: string | { service: string } };
+type VercelRewrite = NonNullable<ServiceConfig["rewrites"]>[number];
 
 type PackageJson = { varlock?: { loadPath: string } };
-
-type VercelService = {
-  root: string;
-  framework: string;
-  entrypoint?: string;
-  installCommand?: string;
-  buildCommand?: string;
-  outputDirectory?: string;
-  functions?: Record<string, { includeFiles: string }>;
-  rewrites?: VercelRewrite[];
-  bindings?: { type: "service"; service: string; format: "url"; env: string }[];
-};
 
 function getWebFramework(frontend: ProjectConfig["frontend"], isDesktop: boolean): string {
   if (frontend.includes("next")) return "nextjs";
@@ -54,10 +43,10 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
     frontend.includes("tanstack-router") || (frontend.includes("react-router") && isDesktop);
   const installCommand = `cd ../.. && ${packageManager} install`;
 
-  const services: Record<string, VercelService> = {};
+  const services: Services = {};
 
   if (hasWeb) {
-    const web: VercelService = {
+    const web: ServiceConfig = {
       root: "apps/web",
       framework: getWebFramework(frontend, isDesktop),
       installCommand,
@@ -122,10 +111,11 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
     rewrites.push({ source: "/(.*)", destination: { service: "server" } });
   }
 
-  vfs.writeJson("vercel.json", {
+  const vercelConfig = {
     $schema: "https://openapi.vercel.sh/vercel.json",
     bunVersion: runtime === "bun" ? "1.x" : undefined,
     services,
     rewrites,
-  });
+  };
+  vfs.writeFile("vercel.json", JSON.stringify(vercelConfig, null, 2));
 }

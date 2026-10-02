@@ -1,18 +1,8 @@
-{{#if (eq orm "prisma")}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-{{else}}
-import { createRouterClient } from "@orpc/server";
-import { appRouter } from "@{{projectName}}/api/routers/index";
-import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
-{{#if (eq webDeploy "cloudflare")}}
-import type { CloudflareEnv } from "../../src/env.server";
-{{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-{{#if (eq orm "prisma")}}
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -28,22 +18,6 @@ export default defineNuxtPlugin(() => {
   });
 
   const client: AppRouterClient = createORPCClient(rpcLink);
-{{else}}
-export default defineNuxtPlugin(async () => {
-  const event = useRequestEvent();
-
-  const context = await createContext({
-    headers: event?.headers ?? new Headers(),
-    {{#if (eq webDeploy "cloudflare")}}
-    env: (event?.context.cloudflare as { env: CloudflareEnv }).env,
-    {{/if}}
-  });
-
-  const client = createRouterClient(appRouter, {
-    context,
-  });
-{{/if}}
-
   const orpc = createTanstackQueryUtils(client);
 
   return {

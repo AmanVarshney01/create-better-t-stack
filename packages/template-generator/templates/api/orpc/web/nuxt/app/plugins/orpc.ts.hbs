@@ -16,7 +16,7 @@ export default defineNuxtPlugin(() => {
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
-    headers: () => import.meta.server ? useRequestHeaders(["cookie"]) : {},
+    headers: import.meta.server ? useRequestHeaders(["cookie"]) : {},
     {{#if (eq auth "better-auth")}}
     fetch(url, options) {
         return fetch(url, {

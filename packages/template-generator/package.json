@@ -32,8 +32,8 @@
       "default": "./dist/fs-writer.mjs"
     },
     "./template-reader": {
-      "types": "./dist/template-reader.d.mts",
-      "default": "./dist/template-reader.mjs"
+      "types": "./dist/core/template-reader.d.mts",
+      "default": "./dist/core/template-reader.mjs"
     }
   },
   "publishConfig": {
@@ -59,6 +59,7 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.4.1",
+    "@vercel/build-utils": "14.14.0",
     "fs-extra": "^11.4.0",
     "is-binary-path": "^3.0.0",
     "tinyglobby": "^0.2.17",

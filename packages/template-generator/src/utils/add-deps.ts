@@ -16,10 +16,10 @@ export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
 
-  "better-auth": "1.7.6",
-  "@better-auth/core": "1.7.6",
-  "@better-auth/drizzle-adapter": "1.7.6",
-  "@better-auth/expo": "1.7.5",
+  "better-auth": "1.7.7",
+  "@better-auth/core": "1.7.7",
+  "@better-auth/drizzle-adapter": "1.7.7",
+  "@better-auth/expo": "1.7.7",
 
   "@clerk/backend": "^3.17.1",
   "@clerk/express": "^2.1.66",
@@ -150,7 +150,7 @@ export const dependencyVersionMap = {
   "@tanstack/svelte-form": "^1.33.5",
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).
-  "@tanstack/solid-query": "6.0.0-rc.4",
+  "@tanstack/solid-query": "6.0.0-rc.5",
   "@tanstack/query-core": "5.101.4",
 
   wrangler: "^4.129.0",

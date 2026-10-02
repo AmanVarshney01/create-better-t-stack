@@ -1,14 +1,19 @@
 {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
 import { createRequire } from "node:module";
+import { z } from "zod";
 
 // libsql loads its platform binding by a computed name, which file tracing can't follow
 const libsqlRequire = createRequire(import.meta.resolve("libsql"));
-const libsqlBindings = Object.keys(libsqlRequire("./package.json").optionalDependencies).flatMap(
+const libsqlPackage = z.object({
+  optionalDependencies: z.record(z.string(), z.string()),
+}).parse(libsqlRequire("./package.json"));
+const libsqlBindings = Object.keys(libsqlPackage.optionalDependencies).flatMap(
   (name) => {
     try {
       return [libsqlRequire.resolve(name)];
-    } catch {
-      return [];
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "MODULE_NOT_FOUND") return [];
+      throw error;
     }
   },
 );

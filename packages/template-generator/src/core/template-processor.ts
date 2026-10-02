@@ -108,9 +108,7 @@ Handlebars.registerHelper(
 
 const getServerUrlSource = `{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
 function getServerUrl(url: string) {
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
+	const processEnv = typeof process === "undefined" ? undefined : process.env;
 	if (typeof window === "undefined" && processEnv?.SERVER_URL) {
 {{#if (eq webDeploy "vercel")}}
 		return new URL("api", processEnv.SERVER_URL).toString().replace(/\\/$/, "");
