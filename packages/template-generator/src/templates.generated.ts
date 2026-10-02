@@ -6117,6 +6117,40 @@ export const Route = createFileRoute('/api/auth/$')({
   },
 })
 `],
+  ["auth/better-auth/loaders/svelte/dashboard.ts.hbs", `import { authClient } from '$lib/auth-client';
+import type { BetterFetchOption } from 'better-auth/client';
+import { redirect } from '@sveltejs/kit';
+{{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
+import type { PageServerLoad } from './$types';
+
+export const load = (async ({ fetch, request{{#if (eq backend "self")}}, url{{/if}} }) => {
+{{else}}
+import type { PageLoad } from './$types';
+
+// The session cookie belongs to the separate API origin and is available in the browser.
+export const ssr = false;
+
+export const load = (async ({ fetch }) => {
+{{/if}}
+  const fetchOptions = {
+    customFetchImpl: fetch,
+{{#if (eq backend "self")}}
+    baseURL: new URL('/api/auth', url).toString(),
+{{/if}}
+{{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
+    headers: { cookie: request.headers.get('cookie') ?? '' },
+    signal: request.signal,
+{{/if}}
+    throw: true,
+  } satisfies BetterFetchOption;
+  const session = await authClient.getSession({ fetchOptions });
+  if (!session) redirect(307, '/login');
+{{#if (eq payments "polar")}}
+  const customerState = await authClient.customer.state({ fetchOptions });
+{{/if}}
+  return { user: session.user{{#if (eq payments "polar")}}, customerState{{/if}} };
+}) satisfies {{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}PageServerLoad{{else}}PageLoad{{/if}};
+`],
   ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -9632,11 +9666,11 @@ const handleSignOut = async () => {
   </div>
 </template>
 `],
+  ["auth/better-auth/web/nuxt/app/composables/useAuthFetch.ts.hbs", `export const useAuthFetch = createUseFetch({ credentials: "include" });
+`],
   ["auth/better-auth/web/nuxt/app/composables/useAuthSession.ts.hbs", `export function useAuthSession() {
   const { $authClient } = useNuxtApp();
-  return $authClient.useSession((url, options) =>
-    useFetch(url, { ...options, credentials: "include" }),
-  );
+  return $authClient.useSession(useAuthFetch);
 }
 `],
   ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async () => {
@@ -10734,9 +10768,6 @@ export default function UserMenu() {
 }
 `],
   ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
-{{/if}}
-{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -10749,45 +10780,44 @@ import { trpc } from "@/utils/trpc";
 {{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import type { BetterFetchOption } from "better-auth/client";
+import { redirect } from "react-router";
+import type { Route } from "./+types/dashboard";
 
-export default function Dashboard() {
-  const { data: session, isPending, isRefetching } = authClient.useSession();
-  const navigate = useNavigate();
-  {{#if (eq payments "polar")}}
-  const [customerState, setCustomerState] = useState<CustomerState | null>(null);
-  {{/if}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+export async function loader({ request }: Route.LoaderArgs) {
+{{else}}
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+{{/if}}
+  const fetchOptions = {
+    signal: request.signal,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+    headers: { cookie: request.headers.get("cookie") ?? "" },
+{{/if}}
+    throw: true,
+  } satisfies BetterFetchOption;
+  const session = await authClient.getSession({ fetchOptions });
+  if (!session) throw redirect("/login");
+{{#if (eq payments "polar")}}
+  const customerState = await authClient.customer.state({ fetchOptions });
+{{/if}}
+  return { user: session.user{{#if (eq payments "polar")}}, customerState{{/if}} };
+}
 
-  {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions({ enabled: Boolean(session) }));
-  {{/if}}
-  {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions(undefined, { enabled: Boolean(session) }));
-  {{/if}}
+{{#unless (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+export function HydrateFallback() {
+  return <div>Loading...</div>;
+}
 
-  useEffect(() => {
-    if (!session && !isPending && !isRefetching) {
-      navigate("/login");
-    }
-  }, [session, isPending, isRefetching, navigate]);
-
-  {{#if (eq payments "polar")}}
-  useEffect(() => {
-    async function fetchCustomerState() {
-      if (session) {
-        const { data } = await authClient.customer.state();
-        setCustomerState(data ?? null);
-      }
-    }
-
-    fetchCustomerState();
-  }, [session]);
-  {{/if}}
-
-  if (isPending || isRefetching || !session) {
-    return <div>Loading...</div>;
-  }
+{{/unless}}
+export default function Dashboard({ loaderData }: Route.ComponentProps) {
+  const { user{{#if (eq payments "polar")}}, customerState{{/if}} } = loaderData;
+{{#if (eq api "orpc")}}
+  const privateData = useQuery(orpc.privateData.queryOptions());
+{{/if}}
+{{#if (eq api "trpc")}}
+  const privateData = useQuery(trpc.privateData.queryOptions());
+{{/if}}
 
   {{#if (eq payments "polar")}}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
@@ -10796,7 +10826,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
+      <p>Welcome {user.name}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
@@ -12534,57 +12564,30 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
-{{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
-{{/if}}
-
-	import { goto } from '$app/navigation';
+	import type { PageProps } from './$types';
+	{{#if (eq payments "polar")}}
 	import { authClient } from '$lib/auth-client';
+	{{/if}}
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
-	{{#if (eq payments "polar")}}
-	let customerState = $state<CustomerState | null>(null);
-	{{/if}}
-
-	const sessionQuery = authClient.useSession();
+	let { data }: PageProps = $props();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions({ enabled: Boolean($sessionQuery.data) }));
-	{{/if}}
-
-	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.isRefetching && !$sessionQuery.data) {
-			goto('/login');
-		}
-	});
-
-	{{#if (eq payments "polar")}}
-	$effect(() => {
-		if ($sessionQuery.data) {
-			authClient.customer.state().then(({ data }) => {
-				customerState = data ?? null;
-			});
-		}
-	});
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending || $sessionQuery.isRefetching}
-	<div>Loading...</div>
-{:else if !$sessionQuery.data}
-	<div>Redirecting to login...</div>
-{:else}
 	<div>
 		<h1>Dashboard</h1>
-		<p>Welcome {$sessionQuery.data.user.name}</p>
+		<p>Welcome {data.user.name}</p>
 		{{#if (eq api "orpc")}}
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {(customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
-		{#if (customerState?.activeSubscriptions?.length ?? 0) > 0}
+		<p>Plan: {(data.customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (data.customerState?.activeSubscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -12595,7 +12598,6 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 		{/if}
 		{{/if}}
 	</div>
-{/if}
 `],
   ["auth/better-auth/web/svelte/src/routes/login/+page.svelte.hbs", `<script lang="ts">
 	import SignInForm from '../../components/SignInForm.svelte';
@@ -31474,6 +31476,9 @@ export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy
   resolve: {
     tsconfigPaths: true,
   },
+  optimizeDeps: {
+    entries: ["src/**/*.{ts,tsx}"],
+  },
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
@@ -35594,4 +35599,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 530;
+export const TEMPLATE_COUNT = 532;

@@ -1,55 +1,28 @@
 <script lang="ts">
-{{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
-{{/if}}
-
-	import { goto } from '$app/navigation';
+	import type { PageProps } from './$types';
+	{{#if (eq payments "polar")}}
 	import { authClient } from '$lib/auth-client';
+	{{/if}}
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
-	{{#if (eq payments "polar")}}
-	let customerState = $state<CustomerState | null>(null);
-	{{/if}}
-
-	const sessionQuery = authClient.useSession();
+	let { data }: PageProps = $props();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions({ enabled: Boolean($sessionQuery.data) }));
-	{{/if}}
-
-	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.isRefetching && !$sessionQuery.data) {
-			goto('/login');
-		}
-	});
-
-	{{#if (eq payments "polar")}}
-	$effect(() => {
-		if ($sessionQuery.data) {
-			authClient.customer.state().then(({ data }) => {
-				customerState = data ?? null;
-			});
-		}
-	});
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending || $sessionQuery.isRefetching}
-	<div>Loading...</div>
-{:else if !$sessionQuery.data}
-	<div>Redirecting to login...</div>
-{:else}
 	<div>
 		<h1>Dashboard</h1>
-		<p>Welcome {$sessionQuery.data.user.name}</p>
+		<p>Welcome {data.user.name}</p>
 		{{#if (eq api "orpc")}}
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {(customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
-		{#if (customerState?.activeSubscriptions?.length ?? 0) > 0}
+		<p>Plan: {(data.customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (data.customerState?.activeSubscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -60,4 +33,3 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 		{/if}
 		{{/if}}
 	</div>
-{/if}

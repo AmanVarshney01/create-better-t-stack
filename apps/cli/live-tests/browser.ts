@@ -46,50 +46,6 @@ export async function openBrowser(): Promise<Browser> {
   return chromium.launch();
 }
 
-// Vite dev servers discover dependencies as pages request them and force-reload open
-// pages once they re-optimize, so visit every tested route before asserting
-async function warmUp(browser: Browser, config: ProjectConfig, web: string) {
-  const context = await browser.newContext();
-  const routes = [
-    "/",
-    ...(config.auth === "better-auth" ? ["/login", "/dashboard"] : []),
-    ...(config.examples.includes("todo") ? ["/todos"] : []),
-  ];
-  try {
-    for (const route of routes) {
-      const page = await context.newPage();
-      try {
-        const response = await page.goto(`${web}${route}`, { waitUntil: "load", timeout: 60_000 });
-        expect(response?.status(), `Dev warm-up ${route}`).toBe(200);
-        if (route === "/" && config.api !== "none")
-          await expect(
-            page.getByText(config.frontend.includes("nuxt") ? "Connected (OK)" : "Connected", {
-              exact: true,
-            }),
-          ).toBeVisible();
-        else if (route === "/login" || route === "/dashboard") {
-          await expect(page).toHaveURL(/\/login\/?$/);
-          await expect(page.getByLabel(/^Email\s*\*?$/)).toBeEditable();
-          await expect(
-            page.locator("form").getByRole("button", { name: /^Sign (In|Up)$/ }),
-          ).toBeEnabled();
-        } else if (route === "/todos")
-          await expect(
-            page.getByPlaceholder(
-              config.frontend.some((frontend) => ["svelte", "astro"].includes(frontend))
-                ? "New task..."
-                : "Add a new task...",
-            ),
-          ).toBeEditable();
-      } finally {
-        await page.close();
-      }
-    }
-  } finally {
-    await context.close();
-  }
-}
-
 export async function verifyBrowser(
   browser: Browser,
   config: ProjectConfig,
@@ -100,7 +56,6 @@ export async function verifyBrowser(
   previousStage?: string,
 ) {
   if (!deployment.web) throw new Blocked("No deployed web URL available for browser verification");
-  if (stage === "development") await warmUp(browser, config, deployment.web);
   const context = await browser.newContext();
   const email = `live-${previousStage ?? stage}@example.test`;
   const persistedTask = `Survives restart ${previousStage ?? stage}`;
@@ -108,6 +63,11 @@ export async function verifyBrowser(
   const taskPlaceholder = config.frontend.some((f) => ["svelte", "astro"].includes(f))
     ? "New task..."
     : "Add a new task...";
+  const combinedOrigin =
+    config.webDeploy === config.serverDeploy && ["vercel", "docker"].includes(config.webDeploy);
+  const serverAuthLoader =
+    (config.frontend.includes("react-router") && combinedOrigin) ||
+    (config.frontend.includes("svelte") && (config.backend === "self" || combinedOrigin));
   await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
   const page = await context.newPage();
   page.setDefaultTimeout(20_000);
@@ -164,6 +124,15 @@ export async function verifyBrowser(
         }),
       ).toBeVisible();
     if (config.auth === "better-auth") {
+      if (serverAuthLoader) {
+        const protectedPage = await context.request.get(`${deployment.web}/dashboard`, {
+          maxRedirects: 0,
+        });
+        expect([302, 307], "Unauthenticated dashboard redirects before hydration").toContain(
+          protectedPage.status(),
+        );
+        expect(new URL(protectedPage.headers().location!, deployment.web).pathname).toBe("/login");
+      }
       const loginSession = config.frontend.includes("nuxt")
         ? undefined
         : page.waitForResponse((response) => response.url().includes("/api/auth/get-session"));
@@ -188,7 +157,7 @@ export async function verifyBrowser(
       await expect(page).toHaveURL(/\/dashboard\/?$/);
       if (config.api !== "none")
         await expect(page.getByText(/^(API: )?This is private$/)).toBeVisible();
-      if (config.frontend.includes("nuxt")) {
+      if (config.frontend.includes("nuxt") || serverAuthLoader) {
         // Disable JavaScript so client fetching cannot hide a broken SSR session or RPC call.
         const serverRendered = await browser.newContext({
           javaScriptEnabled: false,
@@ -198,7 +167,7 @@ export async function verifyBrowser(
           const serverPage = await serverRendered.newPage();
           expect((await serverPage.goto(`${deployment.web}/dashboard`))?.status()).toBe(200);
           await expect(serverPage.getByText(/Welcome.*Live Test/)).toBeVisible();
-          if (config.api !== "none")
+          if (config.api !== "none" && config.frontend.includes("nuxt"))
             await expect(serverPage.getByText(/^(API: )?This is private$/)).toBeVisible();
         } finally {
           await serverRendered.close();

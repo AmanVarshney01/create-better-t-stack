@@ -1,0 +1,33 @@
+import { authClient } from '$lib/auth-client';
+import type { BetterFetchOption } from 'better-auth/client';
+import { redirect } from '@sveltejs/kit';
+{{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
+import type { PageServerLoad } from './$types';
+
+export const load = (async ({ fetch, request{{#if (eq backend "self")}}, url{{/if}} }) => {
+{{else}}
+import type { PageLoad } from './$types';
+
+// The session cookie belongs to the separate API origin and is available in the browser.
+export const ssr = false;
+
+export const load = (async ({ fetch }) => {
+{{/if}}
+  const fetchOptions = {
+    customFetchImpl: fetch,
+{{#if (eq backend "self")}}
+    baseURL: new URL('/api/auth', url).toString(),
+{{/if}}
+{{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
+    headers: { cookie: request.headers.get('cookie') ?? '' },
+    signal: request.signal,
+{{/if}}
+    throw: true,
+  } satisfies BetterFetchOption;
+  const session = await authClient.getSession({ fetchOptions });
+  if (!session) redirect(307, '/login');
+{{#if (eq payments "polar")}}
+  const customerState = await authClient.customer.state({ fetchOptions });
+{{/if}}
+  return { user: session.user{{#if (eq payments "polar")}}, customerState{{/if}} };
+}) satisfies {{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}PageServerLoad{{else}}PageLoad{{/if}};

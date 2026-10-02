@@ -65,6 +65,42 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  {
+    name: "react-router-server-auth-polar-types",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["react-router"],
+      backend: "hono",
+      runtime: "node",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "polar",
+      addons: [],
+      examples: [],
+      webDeploy: "docker",
+      serverDeploy: "docker",
+    },
+  },
+  {
+    name: "svelte-server-auth-polar-types",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "polar",
+      addons: [],
+      examples: [],
+    },
+  },
   ...(["native-bare", "native-uniwind", "native-unistyles"] as const).map(
     (frontend) =>
       ({
@@ -584,7 +620,7 @@ const buildSamples: BuildSample[] = [
   },
   {
     name: "prisma-react-router-web",
-    packageManagers: ["bun"],
+    packageManagers: ["bun", "npm"],
     config: {
       ...baseConfig,
       frontend: ["react-router"],
