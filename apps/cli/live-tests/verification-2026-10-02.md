@@ -59,3 +59,42 @@ Result directories are private, ignored artifacts under `apps/cli/.smoke/live/`.
 All recorded Neon and Vercel resources for these successful runs were cleaned up. Prisma Postgres databases use the requested two-hour expiration instead of immediate deletion.
 
 The runtime fixtures use Bun 1.4.2 and Node 26.7.0 on macOS. The runner remains local-only; these live deployments are not wired into CI or releases.
+
+## Official documentation audit follow-up
+
+The [documentation/type audit](./docs-audit-2026-10-02.md) covers the final corrections and their official sources. Standard Better Auth packages are aligned at 1.7.7; Solid runtime/compiler packages use rc.13 with matching router, Vite plugin and Query releases. The historical batches above predate some audit corrections.
+
+- Root formatting/lint, CLI/test/template-generator typechecks, CLI build/publint and template-generator build/publint passed.
+- Default CLI suite: 803 passed, 57 skipped, zero failures.
+- CLI smoke creation matrix: 1,087 passed, 57 skipped, zero failures.
+- Website/shared-type tests: 86 passed, zero failures.
+- Focused deployment/runner regressions: 94 passed, one optional browser test skipped.
+- Opt-in bypass-cookie browser regression: one passed, 40 assertions. It covers browser, JavaScript-disabled SSR and HTTP contexts, external assets and redirects, and bootstrap redirects with no credential disclosure.
+- Fresh `solid-v2-prisma-web` and `nuxt-sqlite-fullstack` generated-build samples passed installation, typechecks, builds and HTTP runtime checks. The Solid production entry boots without the duplicate exports reported by CI.
+
+Version-aligned local runtime cases (Better Auth 1.7.7; development and production):
+
+| Frontend | Backend | Package manager | SQLite ORM | Result directory |
+| -------- | ------- | --------------- | ---------- | ---------------- |
+| solid    | hono    | bun             | drizzle    | `dda641449be6`   |
+| solid    | self    | bun             | drizzle    | `50cc652d1ec5`   |
+| solid    | hono    | npm             | drizzle    | `b6ac11927d1a`   |
+| solid    | self    | npm             | drizzle    | `d54ed57e6847`   |
+| solid    | hono    | pnpm            | drizzle    | `de5867f8e182`   |
+| solid    | self    | pnpm            | drizzle    | `9acfdcbcaaad`   |
+| nuxt     | self    | bun             | drizzle    | `69fcde0fb1e0`   |
+| nuxt     | self    | bun             | prisma     | `f77463c9de61`   |
+| none     | hono    | bun             | drizzle    | `ac3aadb0aa80`   |
+
+All nine passed. Nuxt includes authenticated server-rendered HTML/private RPC checks with JavaScript disabled; the server-only case verifies auth, RPC and database CRUD without launching Chromium. Cases whose exact source fingerprint had already passed were resumed rather than regenerated.
+
+Final audit Vercel reruns (Better Auth 1.7.7 and the scoped-cookie runner):
+
+| Frontend | Backend     | Postgres setup               | ORM     | Stages                         | Result directory |
+| -------- | ----------- | ---------------------------- | ------- | ------------------------------ | ---------------- |
+| nuxt     | hono / Node | account-free Neon            | drizzle | production + protected preview | `5fdd6a4b95ef`   |
+| next     | hono / Node | account-free Prisma Postgres | prisma  | production + protected preview | `743598338907`   |
+
+Both fixtures passed all four deployment stages, including authentication, persisted todos, direct database assertions and cleanup. Nuxt additionally passed its authenticated dashboard/private RPC checks with JavaScript disabled. Production ran against its public alias without bypass credentials; preview required a real Vercel bypass cookie and denied unauthenticated access. Both result databases contain zero pending resources; Prisma Postgres has its requested two-hour TTL.
+
+An earlier audit attempt incorrectly expected an authorization cookie on the public production alias. It failed visibly and cleaned up resources; authorization is now confined to protected previews. The final passing rows above include that correction.

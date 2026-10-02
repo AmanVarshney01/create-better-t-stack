@@ -29,7 +29,7 @@ Account-free Neon claims use a separate context file per case, so parallel batch
 | Clerk, Polar sandbox, Convex                | Dedicated test accounts to be added later                               | Blocked; provider-specific verification still required                                              |
 | Supabase, Turso, PlanetScale, MongoDB Atlas | Dedicated test accounts to be added later                               | Blocked; database provisioners still required                                                       |
 
-Vercel function cases require the Node runtime; Bun remains a supported package manager. The runner verifies production and preview on its disposable project. It creates a deployment-protection bypass secret scoped to that project and verifies that preview access without it is denied. Nuxt dashboards are also checked with JavaScript disabled to verify server-rendered sessions and private RPC data. Browser requests only attach it to the test deployment's origin.
+Vercel function cases require the Node runtime; Bun remains a supported package manager. The runner verifies production and preview on its disposable project. It creates a deployment-protection bypass secret scoped to that project and verifies that preview access without it is denied. Authorization exchanges the bypass header for Vercel's scoped cookie at each deployment origin, without following bootstrap redirects. Subsequent requests use cookies, so external resources do not receive the bypass header. Nuxt dashboards are also checked with JavaScript disabled to verify server-rendered sessions and private RPC data.
 
 ## Verification and current limits
 
@@ -63,6 +63,14 @@ The small runner regression suite does not deploy anything:
 bun test apps/cli/live-tests/runner.test.ts
 ```
 
+With Chromium installed, the optional credential-scoping regression checks browser, JavaScript-disabled SSR and HTTP contexts against local protected and external origins:
+
+```sh
+BTS_LIVE_BROWSER_TESTS=1 bun test apps/cli/live-tests/protection.test.ts
+```
+
 ## Selected validation run
 
 The [2026-10-02 verification record](./verification-2026-10-02.md) lists the 19 local, five Postgres, and two Vercel fixtures that passed, including production and protected preview stages.
+
+The [official documentation and type audit](./docs-audit-2026-10-02.md) explains the reviewed changes, upstream sources and corrections to verified PR findings.
