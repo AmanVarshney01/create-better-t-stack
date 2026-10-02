@@ -10,8 +10,14 @@ These selections cover the outstanding handoff batches; they do not certify the 
 - `bun run build:cli`: passed, including publint.
 - CLI and CLI-test typechecks: passed.
 - Template-generator typecheck: passed.
-- `BTS_MATRIX_MODE=smoke bun test` in `apps/cli`: 1,068 passed, 56 skipped, zero failures.
+- `BTS_MATRIX_MODE=smoke bun test` in `apps/cli`: 1,080 passed, 56 skipped, zero failures.
 - Website and shared-type tests: 86 passed, zero failures.
+
+## Generated-build CI follow-up
+
+The first GitHub Actions run passed the main test suite but failed seven generated-build shards at Alchemy CLI startup. The pinned Effect platform release candidates resolved their transitive `@effect/platform-node-shared` caret dependency to the incompatible stable release. Generated Alchemy workspaces now override that dependency to match their Effect version, using the appropriate Bun/npm or pnpm workspace configuration.
+
+After the fix, `workers-clerk-hono` (Bun) and `tanstack-start-axiom-pnpm` passed fresh installation, Alchemy CLI startup, typechecks, and builds. Twelve dependency-generation regression cases cover Cloudflare, Prisma hosting, Axiom, and stacks without Alchemy across Bun, npm, and pnpm. The full GitHub generated-build matrix must also pass before merge.
 
 ## Runtime cases
 
