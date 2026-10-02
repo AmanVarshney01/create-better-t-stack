@@ -3,6 +3,7 @@ import { expect, request } from "@playwright/test";
 import { z } from "zod";
 
 import type { DatabaseAssertions } from "./database";
+import { authorizeDeployment } from "./protection";
 import type { Deployment } from "./providers";
 
 export async function verifyServer(
@@ -18,8 +19,6 @@ export async function verifyServer(
     Origin:
       deployment.web ?? (origin.startsWith("http://localhost:") ? "http://localhost:3001" : origin),
   });
-  if (deployment.protectionBypass)
-    headers.set("x-vercel-protection-bypass", deployment.protectionBypass);
   const context = await request.newContext({
     extraHTTPHeaders: Object.fromEntries(headers),
     timeout: 30_000,
@@ -43,6 +42,7 @@ export async function verifyServer(
       : z.object({ json: z.json().optional() }).parse(body).json;
   };
   try {
+    await authorizeDeployment(context, deployment);
     expect((await context.get(deployment.server)).status(), "Server health").toBe(200);
     if (config.api !== "none") expect(await rpc("healthCheck")).toBe("OK");
     if (config.auth === "better-auth") {
@@ -56,7 +56,9 @@ export async function verifyServer(
       );
       expect(signedIn.status(), "Authentication").toBe(200);
       const session = await context.get(`${origin}/api/auth/get-session`);
-      expect((await session.json()).user.email).toBe(email);
+      expect(session.status(), "Session request").toBe(200);
+      const body = z.object({ user: z.object({ email: z.string() }) }).parse(await session.json());
+      expect(body.user.email).toBe(email);
       await database?.user(email);
       if (config.api !== "none")
         expect(await rpc("privateData")).toMatchObject({

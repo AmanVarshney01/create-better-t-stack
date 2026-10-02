@@ -4,10 +4,13 @@ import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { cleanResources } from "./cleanup";
 import { Commands } from "./command";
 import { DatabaseAssertions } from "./database";
 import { caseId, configurations, type Selection } from "./matrix";
+import { assertPreviewProtected } from "./providers";
 import { RunState } from "./state";
+import { verifyRuntime } from "./verification";
 
 const directories: string[] = [];
 afterEach(() => {
@@ -32,6 +35,31 @@ const selection: Selection = {
   examples: ["todo"],
 };
 
+test("preview protection accepts denials and Vercel login redirects, not application redirects", () => {
+  for (const status of [401, 403])
+    expect(() => assertPreviewProtected(new Response(null, { status }))).not.toThrow();
+  expect(() =>
+    assertPreviewProtected(
+      new Response(null, {
+        status: 307,
+        headers: { location: "https://vercel.com/login" },
+      }),
+    ),
+  ).not.toThrow();
+  for (const location of [
+    "/login",
+    "https://app.example.test/login",
+    "https://vercel.com.example.test/login",
+  ])
+    expect(() =>
+      assertPreviewProtected(new Response(null, { status: 307, headers: { location } })),
+    ).toThrow("Deployment Protection");
+  for (const status of [200, 500])
+    expect(() => assertPreviewProtected(new Response(null, { status }))).toThrow(
+      "Deployment Protection",
+    );
+});
+
 test("a bounded matrix preserves explicit empty selections and rejects an incompatible stack", () => {
   const cases = [...configurations(selection)];
   expect(cases).toHaveLength(1);
@@ -40,6 +68,17 @@ test("a bounded matrix preserves explicit empty selections and rejects an incomp
   expect(caseId(cases[0]!)).toBe(
     caseId({ ...cases[0]!, projectDir: "/different", projectName: "renamed" }),
   );
+});
+
+test("none sentinels produce the same server-only case as empty selections", () => {
+  const serverOnly = { ...selection, frontend: [], auth: "none", examples: [] } satisfies Selection;
+  const empty = [...configurations(serverOnly)];
+  const sentinels = [
+    ...configurations({ ...serverOnly, frontend: ["none"], addons: ["none"], examples: ["none"] }),
+  ];
+  expect(empty).toHaveLength(1);
+  expect(sentinels).toEqual(empty);
+  expect(caseId(sentinels[0]!)).toBe(caseId(empty[0]!));
 });
 
 test("resuming keeps failed resources pending until cleanup is explicitly recorded", () => {
@@ -57,6 +96,62 @@ test("resuming keeps failed resources pending until cleanup is explicitly record
   resumed.deleted(resumed.resources()[0]!);
   expect(resumed.resources()).toHaveLength(0);
   resumed.close();
+});
+
+test("cleanup attempts every resource, retains failures, and redacts distinct logs", async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), "bts-live-cleanup-"));
+  directories.push(directory);
+  const state = new RunState(directory, "cleanup-test");
+  state.resource("case", "neon", "deleted", directory);
+  state.resource("case", "vercel-intent", "retained", directory);
+  const previousSecret = process.env.BTS_TEST_API_KEY;
+  process.env.BTS_TEST_API_KEY = "cleanup-test-credential";
+  const commands = new Commands(directory, new AbortController().signal);
+  if (previousSecret === undefined) delete process.env.BTS_TEST_API_KEY;
+  else process.env.BTS_TEST_API_KEY = previousSecret;
+  const attempted: string[] = [];
+  try {
+    await expect(
+      cleanResources(state, commands, undefined, async (resource, sharedCommands) => {
+        attempted.push(resource.id);
+        await sharedCommands.run("cleanup", directory, process.execPath, [
+          "-e",
+          "console.log('cleanup-test-credential')",
+        ]);
+        if (resource.id === "retained")
+          throw new Error("cleanup-test-credential could not be removed");
+      }),
+    ).rejects.toThrow("Cleanup incomplete: [REDACTED] could not be removed");
+    expect(attempted).toEqual(["retained", "deleted"]);
+    expect(state.resources().map((resource) => resource.id)).toEqual(["retained"]);
+    for (const name of ["01-cleanup.log", "02-cleanup.log"])
+      expect(await Bun.file(path.join(directory, name)).text()).toBe("[REDACTED]");
+  } finally {
+    state.close();
+  }
+});
+
+test("a server-only verification succeeds without a browser installation", async () => {
+  const config = [
+    ...configurations({
+      ...selection,
+      frontend: ["none"],
+      api: "none",
+      auth: "none",
+      examples: [],
+    }),
+  ][0]!;
+  const server = Bun.serve({ port: 0, fetch: () => new Response("OK") });
+  let browserRequested = false;
+  try {
+    await verifyRuntime(config, { server: server.url.href }, "/unused", "production", async () => {
+      browserRequested = true;
+      throw new Error("Chromium is not installed");
+    });
+    expect(browserRequested).toBe(false);
+  } finally {
+    await server.stop(true);
+  }
 });
 
 test("command failures retain useful diagnostics without exposing registered credentials", async () => {

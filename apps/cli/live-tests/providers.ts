@@ -20,6 +20,17 @@ const deploymentOutput = z.object({
 });
 export type Deployment = z.infer<typeof deploymentOutput>;
 
+export function assertPreviewProtected(response: Response) {
+  const location = response.headers.get("location");
+  const vercelLogin =
+    [302, 303, 307, 308].includes(response.status) &&
+    location &&
+    URL.canParse(location) &&
+    ["vercel.com", "www.vercel.com"].includes(new URL(location).hostname);
+  if (![401, 403].includes(response.status) && !vercelLogin)
+    throw new Error(`Preview must require Deployment Protection; received HTTP ${response.status}`);
+}
+
 function vercelArgs(args: string[]) {
   const scope = process.env.BTS_LIVE_VERCEL_SCOPE;
   if (!scope) throw new Blocked("Set BTS_LIVE_VERCEL_SCOPE to the dedicated test team/account.");
@@ -221,10 +232,7 @@ export async function deployVercel(
       signal: AbortSignal.timeout(30_000),
     });
     await unprotected.body?.cancel();
-    if (![401, 403, 302, 303, 307, 308].includes(unprotected.status))
-      throw new Error(
-        `Preview must require Deployment Protection; received HTTP ${unprotected.status}`,
-      );
+    assertPreviewProtected(unprotected);
   }
   let url = result.url;
   if (stage === "production") {
@@ -246,7 +254,7 @@ export async function deployVercel(
   }
   const combined = config.webDeploy === "vercel" && config.serverDeploy === "vercel";
   return {
-    protectionBypass,
+    protectionBypass: stage === "preview" ? protectionBypass : undefined,
     deploymentUrl: result.url,
     web: config.webDeploy === "vercel" ? url : undefined,
     server:

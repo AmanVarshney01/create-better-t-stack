@@ -8,21 +8,21 @@ import { execa } from "execa";
 import { z } from "zod";
 
 import { readBtsConfig } from "../src/utils/bts-config";
-import { openBrowser, verificationBlockers, verifyBrowser } from "./browser";
+import { openBrowser, verificationBlockers } from "./browser";
+import { cleanResources } from "./cleanup";
 import { Blocked, Commands } from "./command";
 import { DatabaseAssertions, migrateDatabase } from "./database";
 import { startLocal } from "./local";
 import { caseId, configurations, selectionSchema } from "./matrix";
 import {
-  cleanup,
   captureVercelLogs,
   deployAlchemy,
   deployVercel,
   provisionDatabase,
   writeEnvironment,
 } from "./providers";
-import { verifyServer } from "./server";
 import { RunState, type Status } from "./state";
+import { verifyRuntime } from "./verification";
 
 const { values, positionals } = parseArgs({
   args: process.argv.slice(2),
@@ -86,6 +86,7 @@ const state = new RunState(
 const abort = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => abort.abort());
 let browser: Awaited<ReturnType<typeof openBrowser>> | undefined;
+const getBrowser: typeof openBrowser = async () => (browser ??= await openBrowser());
 const lockPath = path.join(directory, "runner.lock");
 const lock =
   action === "run" || action === "cleanup"
@@ -97,20 +98,6 @@ const lock =
       })
     : undefined;
 if (lock) await lock.writeFile(String(process.pid));
-
-async function cleanCase(id: string, commands: Commands) {
-  const resources = state.resources(id).reverse();
-  const failures: string[] = [];
-  for (const resource of resources) {
-    try {
-      await cleanup(resource, commands);
-      state.deleted(resource);
-    } catch (error) {
-      failures.push(error instanceof Error ? error.message : String(error));
-    }
-  }
-  if (failures.length) throw new Error(`Cleanup incomplete: ${failures.join("; ")}`);
-}
 
 async function executeCase(selection: ProjectConfig, id: string) {
   const previous = state.result(id);
@@ -126,14 +113,12 @@ async function executeCase(selection: ProjectConfig, id: string) {
   const project = path.join(caseDirectory, name);
   const config = { ...selection, projectName: name, relativePath: name, projectDir: project };
   const commands = new Commands(caseDirectory, abort.signal);
-  for (const [key, value] of Object.entries(process.env))
-    if (value && /TOKEN|SECRET|PASSWORD|API_KEY/.test(key)) commands.secret(value);
   let status: Status = "running";
   let detail = "";
   let database: DatabaseAssertions | undefined;
   state.record(id, config, status, detail, caseDirectory);
   try {
-    if (state.resources(id).length) await cleanCase(id, commands);
+    if (state.resources(id).length) await cleanResources(state, commands, id);
     const blockers = verificationBlockers(config);
     const targets = new Set([config.webDeploy, config.serverDeploy].filter((t) => t !== "none"));
     if (targets.has("vercel") && targets.size > 1)
@@ -184,7 +169,6 @@ async function executeCase(selection: ProjectConfig, id: string) {
     if (config.addons.some((addon) => ["biome", "oxlint", "vite-plus"].includes(addon)))
       await commands.run("check", project, config.packageManager, ["run", "check"]);
     await commands.run("check-types", project, config.packageManager, ["run", "check-types"]);
-    browser ??= await openBrowser();
     if (targets.has("vercel")) {
       for (const stage of ["production", "preview"] as const) {
         const deployment = await deployVercel(config, state, id, commands, stage);
@@ -195,24 +179,15 @@ async function executeCase(selection: ProjectConfig, id: string) {
         );
         const verificationErrors: unknown[] = [];
         try {
-          if (config.frontend.length)
-            await verifyBrowser(
-              browser,
-              config,
-              deployment,
-              caseDirectory,
-              stage,
-              database,
-              stage === "preview" ? "production" : undefined,
-            );
-          else
-            await verifyServer(
-              config,
-              deployment,
-              stage,
-              database,
-              stage === "preview" ? "production" : undefined,
-            );
+          await verifyRuntime(
+            config,
+            deployment,
+            caseDirectory,
+            stage,
+            getBrowser,
+            database,
+            stage === "preview" ? "production" : undefined,
+          );
         } catch (error) {
           verificationErrors.push(error);
         }
@@ -232,24 +207,15 @@ async function executeCase(selection: ProjectConfig, id: string) {
       await commands.run("build", project, config.packageManager, ["run", "build"]);
       for (const mode of ["development", "production"] as const) {
         const deployment = await startLocal(config, commands, mode);
-        if (config.frontend.length)
-          await verifyBrowser(
-            browser,
-            config,
-            deployment,
-            caseDirectory,
-            mode,
-            database,
-            mode === "production" ? "development" : undefined,
-          );
-        else
-          await verifyServer(
-            config,
-            deployment,
-            mode,
-            database,
-            mode === "production" ? "development" : undefined,
-          );
+        await verifyRuntime(
+          config,
+          deployment,
+          caseDirectory,
+          mode,
+          getBrowser,
+          database,
+          mode === "production" ? "development" : undefined,
+        );
         await commands.stopAll();
       }
     } else {
@@ -259,9 +225,7 @@ async function executeCase(selection: ProjectConfig, id: string) {
         JSON.stringify(deployment, null, 2),
         { mode: 0o600 },
       );
-      if (config.frontend.length)
-        await verifyBrowser(browser, config, deployment, caseDirectory, "alchemy");
-      else await verifyServer(config, deployment, "alchemy");
+      await verifyRuntime(config, deployment, caseDirectory, "alchemy", getBrowser);
     }
     status = "passed";
   } catch (error) {
@@ -282,7 +246,7 @@ async function executeCase(selection: ProjectConfig, id: string) {
     }
     if (!abort.signal.aborted && !(values["retain-failed"] && status === "failed")) {
       try {
-        await cleanCase(id, commands);
+        await cleanResources(state, commands, id);
       } catch (error) {
         status = "failed";
         detail += `\n${commands.redact(String(error))}`;
@@ -313,11 +277,7 @@ try {
       ),
     );
   else if (action === "cleanup") {
-    for (const resource of state.resources().reverse()) {
-      const commands = new Commands(directory, abort.signal);
-      await cleanup(resource, commands);
-      state.deleted(resource);
-    }
+    await cleanResources(state, new Commands(directory, abort.signal));
   } else {
     let count = 0;
     let complete = true;

@@ -87,7 +87,7 @@ export function* configurations(filter: Selection = {}): Generator<ProjectConfig
   const web = FRONTEND_VALUES.filter((f) => f !== "none" && !f.startsWith("native-"));
   const native = FRONTEND_VALUES.filter((f) => f.startsWith("native-"));
   const frontends = filter.frontend
-    ? [filter.frontend]
+    ? [filter.frontend.filter((frontend) => frontend !== "none")]
     : [
         [],
         ...web.map((f) => [f]),
@@ -159,7 +159,7 @@ export function* configurations(filter: Selection = {}): Generator<ProjectConfig
                               .isCompatible,
                         );
                         for (const addons of filter.addons
-                          ? [filter.addons]
+                          ? [filter.addons.filter((addon) => addon !== "none")]
                           : subsets(availableAddons)) {
                           const parsed = ProjectConfigSchema.safeParse({ ...base, addons });
                           if (
@@ -168,7 +168,7 @@ export function* configurations(filter: Selection = {}): Generator<ProjectConfig
                           )
                             continue;
                           for (const examples of filter.examples
-                            ? [filter.examples]
+                            ? [filter.examples.filter((example) => example !== "none")]
                             : subsets(EXAMPLES_VALUES.filter((e) => e !== "none"))) {
                             for (const packageManager of choices(
                               filter.packageManager,

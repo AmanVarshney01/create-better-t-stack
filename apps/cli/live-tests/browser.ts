@@ -3,9 +3,11 @@ import path from "node:path";
 
 import { type ProjectConfig } from "@better-t-stack/types";
 import { chromium, expect as baseExpect, type Browser } from "@playwright/test";
+import { z } from "zod";
 
 import { Blocked } from "./command";
 import type { DatabaseAssertions } from "./database";
+import { authorizeDeployment } from "./protection";
 import type { Deployment } from "./providers";
 
 const expect = baseExpect.configure({ timeout: 20_000 });
@@ -48,18 +50,41 @@ export async function openBrowser(): Promise<Browser> {
 // pages once they re-optimize, so visit every tested route before asserting
 async function warmUp(browser: Browser, config: ProjectConfig, web: string) {
   const context = await browser.newContext();
-  const page = await context.newPage();
   const routes = [
     "/",
     ...(config.auth === "better-auth" ? ["/login", "/dashboard"] : []),
     ...(config.examples.includes("todo") ? ["/todos"] : []),
   ];
   try {
-    for (let pass = 0; pass < 2; pass++)
-      for (const route of routes)
-        await page
-          .goto(`${web}${route}`, { waitUntil: "networkidle", timeout: 60_000 })
-          .catch(() => {});
+    for (const route of routes) {
+      const page = await context.newPage();
+      try {
+        const response = await page.goto(`${web}${route}`, { waitUntil: "load", timeout: 60_000 });
+        expect(response?.status(), `Dev warm-up ${route}`).toBe(200);
+        if (route === "/" && config.api !== "none")
+          await expect(
+            page.getByText(config.frontend.includes("nuxt") ? "Connected (OK)" : "Connected", {
+              exact: true,
+            }),
+          ).toBeVisible();
+        else if (route === "/login" || route === "/dashboard") {
+          await expect(page).toHaveURL(/\/login\/?$/);
+          await expect(page.getByLabel(/^Email\s*\*?$/)).toBeEditable();
+          await expect(
+            page.locator("form").getByRole("button", { name: /^Sign (In|Up)$/ }),
+          ).toBeEnabled();
+        } else if (route === "/todos")
+          await expect(
+            page.getByPlaceholder(
+              config.frontend.some((frontend) => ["svelte", "astro"].includes(frontend))
+                ? "New task..."
+                : "Add a new task...",
+            ),
+          ).toBeEditable();
+      } finally {
+        await page.close();
+      }
+    }
   } finally {
     await context.close();
   }
@@ -83,25 +108,6 @@ export async function verifyBrowser(
   const taskPlaceholder = config.frontend.some((f) => ["svelte", "astro"].includes(f))
     ? "New task..."
     : "Add a new task...";
-  const origins = new Set(
-    [deployment.web, deployment.server].filter(Boolean).map((url) => new URL(url!).origin),
-  );
-  const assetHeaders = (url: string) =>
-    deployment.protectionBypass && origins.has(new URL(url).origin)
-      ? { "x-vercel-protection-bypass": deployment.protectionBypass }
-      : undefined;
-  if (deployment.protectionBypass) {
-    await context.route(
-      (url) => origins.has(url.origin),
-      (route) =>
-        route.continue({
-          headers: {
-            ...route.request().headers(),
-            "x-vercel-protection-bypass": deployment.protectionBypass!,
-          },
-        }),
-    );
-  }
   await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
   const page = await context.newPage();
   page.setDefaultTimeout(20_000);
@@ -148,6 +154,7 @@ export async function verifyBrowser(
     }
   });
   try {
+    await authorizeDeployment(context.request, deployment);
     const home = await page.goto(deployment.web);
     expect(home?.status(), "Deployed home page").toBe(200);
     if (config.api !== "none")
@@ -186,7 +193,6 @@ export async function verifyBrowser(
         const serverRendered = await browser.newContext({
           javaScriptEnabled: false,
           storageState: await context.storageState(),
-          extraHTTPHeaders: assetHeaders(deployment.web),
         });
         try {
           const serverPage = await serverRendered.newPage();
@@ -293,19 +299,19 @@ export async function verifyBrowser(
       const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute("href");
       expect(manifestUrl, "PWA manifest link").toBeTruthy();
       const manifestHref = new URL(manifestUrl!, deployment.web).href;
-      const manifestResponse = await context.request.get(manifestHref, {
-        headers: assetHeaders(manifestHref),
-      });
+      const manifestResponse = await context.request.get(manifestHref);
       expect(manifestResponse.status(), "PWA manifest response").toBe(200);
-      const manifest = await manifestResponse.json();
+      const manifest = z
+        .object({
+          name: z.string(),
+          icons: z.array(z.object({ src: z.string() })),
+        })
+        .parse(await manifestResponse.json());
       expect(manifest.name).toBe(config.projectName);
       expect(manifest.icons.length).toBeGreaterThan(0);
       for (const icon of manifest.icons) {
         const iconUrl = new URL(icon.src, manifestResponse.url()).href;
-        expect(
-          (await context.request.get(iconUrl, { headers: assetHeaders(iconUrl) })).status(),
-          "PWA icon",
-        ).toBe(200);
+        expect((await context.request.get(iconUrl)).status(), "PWA icon").toBe(200);
       }
       await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
       const cachedUrls = await page.evaluate(async () => {

@@ -12,7 +12,10 @@ export class Commands {
   constructor(
     readonly directory: string,
     readonly signal: AbortSignal,
-  ) {}
+  ) {
+    for (const [key, value] of Object.entries(process.env))
+      if (value && /TOKEN|SECRET|PASSWORD|API_KEY/.test(key)) this.secret(value);
+  }
   secret(value: string) {
     if (value.length > 5) this.secrets.add(value);
     return value;
