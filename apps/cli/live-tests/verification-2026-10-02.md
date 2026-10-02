@@ -15,7 +15,7 @@ These selections cover the outstanding handoff batches; they do not certify the 
 
 ## Generated-build CI follow-up
 
-The first GitHub Actions run passed the main test suite but failed seven generated-build shards at Alchemy CLI startup. The pinned Effect platform release candidates resolved their transitive `@effect/platform-node-shared` caret dependency to the incompatible stable release. Generated Alchemy workspaces now override that dependency to match their Effect version, using the appropriate Bun/npm or pnpm workspace configuration.
+The first GitHub Actions run passed the main test suite but failed seven generated-build shards at Alchemy CLI startup. The pinned Effect platform release candidates resolved their transitive `@effect/platform-node-shared` caret dependency to the incompatible stable release. That run was fixed by matching the transitive RC through Bun/npm or pnpm overrides. This historical override is removed by the October 3 stable Effect update below.
 
 After the fix, `workers-clerk-hono` (Bun) and `tanstack-start-axiom-pnpm` passed fresh installation, Alchemy CLI startup, typechecks, and builds. Twelve dependency-generation regression cases cover Cloudflare, Prisma hosting, Axiom, and stacks without Alchemy across Bun, npm, and pnpm. The full GitHub generated-build matrix must also pass before merge.
 
@@ -98,3 +98,39 @@ Final audit Vercel reruns (Better Auth 1.7.7 and the scoped-cookie runner):
 Both fixtures passed all four deployment stages, including authentication, persisted todos, direct database assertions and cleanup. Nuxt additionally passed its authenticated dashboard/private RPC checks with JavaScript disabled. Production ran against its public alias without bypass credentials; preview required a real Vercel bypass cookie and denied unauthenticated access. Both result databases contain zero pending resources; Prisma Postgres has its requested two-hour TTL.
 
 An earlier audit attempt incorrectly expected an authorization cookie on the public production alias. It failed visibly and cleaned up resources; authorization is now confined to protected previews. The final passing rows above include that correction.
+
+## October 3 follow-up: latest Alchemy and framework loading
+
+Alchemy and frontend-frameworks use the latest published `2.0.0-beta.80`; Effect, platform-node and platform-bun use stable `4.0.0`, matching its official peers. Generated overrides are removed. The framework package is now included only when its website adapter is used. Kit 2 Svelte apps use the documented Prisma Compute custom build and official Node adapter instead of the Kit 3-only website adapter.
+
+React Router and Svelte dashboard auth and billing load through framework route loaders with generated route types and inferred responses. Nuxt uses its documented `createUseFetch` factory. Separate-origin API cookies use browser route loading; same-origin/fullstack configurations use server loading. Svelte fullstack tests prove unauthenticated server redirects and authenticated HTML without JavaScript.
+
+The runner's route warm-up is removed. Cold-start failures were reproduced in React Router, Nuxt and Solid, then fixed through Vite's supported dependency-discovery configuration. React Router/Solid scan source entries; Nuxt includes generated auth/RPC imports as its official optimizer-hint plugin recommends. Cold verification continues to fail on broken API connections, auth transitions and navigation errors.
+
+Fresh generated build samples passed install, typechecks and builds:
+
+- `prisma-react-router-web`: Bun and npm; Alchemy CLI startup and isolated production artifact checks.
+- `prisma-sveltekit-web`: pnpm; Alchemy CLI startup and isolated `build/index.js` without `node_modules`.
+- `solid-v2-hono-workers-cloudflare`: Bun; Alchemy CLI startup, Cloudflare build and all workspace typechecks.
+- React Router and Svelte Polar browser-loader samples, plus `react-router-server-auth-polar-types` and `svelte-server-auth-polar-types` for server loaders.
+- `nuxt-auth-todo-ai`: install, typechecks, production build and HTTP runtime probe.
+
+Final CLI smoke suite: **1,117 passed, 60 skipped, zero failures** (22,006 assertions). Focused dependency/deployment/auth-loader regressions: **147 passed, zero failures**. Website/shared tests: **86 passed**. The isolated runner regressions passed all eight tests; the opt-in bypass-cookie browser regression passed all 40 assertions. Root formatting/lint, CLI-test and generator typechecks, CLI/generator build/publint also passed.
+
+Final cold browser selections (Bun, Better Auth 1.7.7, development and production; no addons or payments):
+
+| Frontend     | Backend | API  | SQLite ORM | Result directory |
+| ------------ | ------- | ---- | ---------- | ---------------- |
+| react-router | hono    | orpc | drizzle    | `e2cd93ba382d`   |
+| react-router | hono    | trpc | drizzle    | `f7d92720dbcf`   |
+| react-router | hono    | none | drizzle    | `52ebcce0566e`   |
+| svelte       | hono    | orpc | drizzle    | `86831162dace`   |
+| svelte       | self    | orpc | drizzle    | `5d6f4dd6800c`   |
+| nuxt         | self    | orpc | prisma     | `56e163f144dd`   |
+| solid        | hono    | orpc | drizzle    | `15ced1e2216d`   |
+| solid        | self    | orpc | drizzle    | `040a6b9672bb`   |
+| nuxt         | hono    | orpc | drizzle    | `06b96062ad7f`   |
+
+**All nine passed without route warm-up.** API fixtures cover auth, todo CRUD, persistence and direct database checks; the API-free React Router fixture covers auth. Failed cold-start attempts remain recorded separately. Installed dependencies from completed fixtures were removed after the machine exhausted disk space; generated source, logs, traces and result databases remain.
+
+No new remote Alchemy or Vercel deployment is claimed by this follow-up. Existing October 2 Vercel proof is listed above. Cloudflare live deployment still requires the dedicated provider profile/account, and Polar checkout/webhooks require sandbox credentials. The generated-build and local runtime results cover their recorded combinations.

@@ -22,10 +22,11 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
       const result = await createVirtual({
         projectName: `alchemy-${deployment}-${packageManager}`,
         frontend: ["next"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
+        backend: deployment === "prisma" ? "none" : "hono",
+        runtime: deployment === "prisma" ? "none" : "bun",
+        database: deployment === "prisma" ? "none" : "sqlite",
+        orm: deployment === "prisma" ? "none" : "drizzle",
+        api: deployment === "prisma" ? "none" : "orpc",
         auth: "none",
         webDeploy: deployment === "cloudflare" || deployment === "prisma" ? deployment : "none",
         addons: deployment === "axiom" ? ["axiom"] : ["none"],
@@ -61,4 +62,29 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
       }
     });
   }
+}
+
+for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+  test(`Svelte Kit 2 uses the Node artifact without the Kit 3 adapter with ${packageManager}`, async () => {
+    const result = await createVirtual({
+      projectName: "prisma-svelte-node",
+      frontend: ["svelte"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      webDeploy: "prisma",
+      packageManager,
+      install: false,
+      git: false,
+    });
+    if (result.isErr()) throw result.error;
+    const files = collectFiles(result.value.root, result.value.root.path);
+    const infra = infraSchema.parse(JSON.parse(files.get("packages/infra/package.json")!));
+    expect(infra.devDependencies.alchemy).toBeDefined();
+    expect(infra.devDependencies["@alchemy.run/frontend-frameworks"]).toBeUndefined();
+    expect(infra.devDependencies["@vercel/nft"]).toBeUndefined();
+  });
 }

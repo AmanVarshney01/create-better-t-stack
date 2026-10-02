@@ -1317,7 +1317,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const frontend = sample.config.frontend ?? [];
   const entrypoint = frontend.includes("react-router")
     ? "build/server/index.js"
-    : frontend.includes("svelte") && sample.config.backend !== "none"
+    : frontend.includes("svelte")
       ? "build/index.js"
       : frontend.includes("solid")
         ? ".output/server/index.mjs"
