@@ -31,15 +31,11 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
-{{#if (eq webDeploy "cloudflare")}}
-	const env = platform?.env ?? ENV;
-
-{{/if}}
+const handle: RequestHandler = async ({ request }) => {
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env,
+		env: ENV,
 {{/if}}
 	});
 

@@ -279,21 +279,39 @@ export async function deployAlchemy(
   const directory = path.join(config.projectDir, "packages/infra");
   const stage = `test-${id.slice(0, 12)}`;
   state.resource(id, "alchemy", stage, directory);
-  const stdout = await commands.run(
-    "alchemy-deploy",
-    directory,
-    config.packageManager,
-    ["run", "deploy", "--stage", stage, "--yes"],
-    { CI: "" },
-  );
-  // Alchemy prints the stack's declared web/server outputs after deployment.
-  const web = stdout.match(/\bweb:\s*["'](https?:\/\/[^"']+)["']/)?.[1];
-  const server = stdout.match(/\bserver:\s*["'](https?:\/\/[^"']+)["']/)?.[1];
-  const output = deploymentOutput.parse({ web, server });
-  if (!output.web && !output.server)
-    throw new Error(
-      "Alchemy deployment returned no usable web/server URL; inspect deployment log.",
+  const deploy = async (name: string) => {
+    const stdout = await commands.run(
+      name,
+      directory,
+      config.packageManager,
+      ["run", "deploy", "--stage", stage, "--yes"],
+      { CI: "" },
     );
+    // Alchemy prints the stack's declared web/server outputs after deployment.
+    const web = stdout.match(/\bweb:\s*["'](https?:\/\/[^"']+)["']/)?.[1];
+    const server = stdout.match(/\bserver:\s*["'](https?:\/\/[^"']+)["']/)?.[1];
+    const output = deploymentOutput.parse({ web, server });
+    if (!output.web && !output.server)
+      throw new Error(
+        "Alchemy deployment returned no usable web/server URL; inspect deployment log.",
+      );
+    return output;
+  };
+  const output = await deploy("alchemy-deploy");
+  if (output.web && output.server && config.backend !== "self") {
+    const envFile = path.join(config.projectDir, "apps/server/.env");
+    const source = await readFile(envFile, "utf8");
+    const origin = JSON.stringify(new URL(output.web).origin);
+    const pattern = /^CORS_ORIGIN=.*$/m;
+    const content = pattern.test(source)
+      ? source.replace(pattern, `CORS_ORIGIN=${origin}`)
+      : `${source}\nCORS_ORIGIN=${origin}\n`;
+    await writeFile(envFile, content, { mode: 0o600 });
+    const configured = await deploy("alchemy-deploy-configured");
+    if (configured.web !== output.web || configured.server !== output.server)
+      throw new Error("Alchemy deployment URLs changed while configuring the allowed origin.");
+    return configured;
+  }
   return output;
 }
 

@@ -1,6 +1,3 @@
-{{#if (eq webDeploy "cloudflare")}}
-/// <reference path="../../../packages/env/env.d.ts" />
-{{/if}}
 {{#if (and (eq backend "self") (eq api "orpc"))}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
@@ -17,16 +14,7 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
-{{#if (eq webDeploy "cloudflare")}}
-		interface Platform {
-			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf: IncomingRequestCfProperties;
-		}
-{{else}}
 		// interface Platform {}
-{{/if}}
 	}
 }
 

@@ -170,7 +170,7 @@ export function getPrismaWebsiteFramework(config: ProjectConfig): string | undef
       case "astro":
         return "Astro";
       case "svelte":
-        // Alchemy's framework adapter requires Kit 3. Kit 2 uses its Node server artifact.
+        // Svelte deployments use the adapter-node artifact through Compute's custom build.
         return;
       case "tanstack-start":
         return "TanStackStart";
