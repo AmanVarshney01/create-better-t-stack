@@ -31,6 +31,9 @@ export default defineConfig({
     tailwindcss(),
     sveltekit({
       preprocess: vitePreprocess(),
+{{#if (eq webDeploy "docker")}}
+      paths: { origin: process.env.ORIGIN },
+{{/if}}
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
       adapter: adapter({ pages: "build", assets: "build", fallback: "index.html" }),
 {{else if (eq webDeploy "vercel")}}

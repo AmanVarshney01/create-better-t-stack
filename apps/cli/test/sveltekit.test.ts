@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 import { Project, Node } from "ts-morph";
+import { parse } from "yaml";
 import { z } from "zod";
 
 import { createVirtual, type CreateInput } from "../src";
@@ -52,6 +53,61 @@ const targets = [
 }>;
 
 describe("SvelteKit configuration", () => {
+  it("prepares the ignored SQLite directory for the generated Docker build URL", async () => {
+    const files = await generate({
+      backend: "self",
+      api: "orpc",
+      auth: "better-auth",
+      database: "sqlite",
+      orm: "drizzle",
+      webDeploy: "docker",
+    });
+    expect(files.get("apps/web/.env")).toContain("file:../../.data/local.db");
+    expect(files.get(".dockerignore")).toMatch(/^\.data$/m);
+    expect(files.get("apps/web/Dockerfile")).toContain("RUN mkdir -p /app/.data");
+  });
+
+  it("passes a configurable Docker build origin to adapter-node", async () => {
+    const files = await generate({ webDeploy: "docker" });
+    const compose = z
+      .object({
+        services: z.object({
+          web: z.object({ build: z.object({ args: z.object({ ORIGIN: z.string() }) }) }),
+        }),
+      })
+      .parse(parse(files.get("docker-compose.yml")!));
+    expect(compose.services.web.build.args.ORIGIN).toBe("${ORIGIN:-http://localhost:3001}");
+    expect(files.get("apps/web/Dockerfile")).toContain("ARG ORIGIN=http://localhost:3001");
+    expect(files.get("apps/web/vite.config.ts")).toContain("paths: { origin: process.env.ORIGIN }");
+    for (const webDeploy of ["none", "cloudflare", "vercel", "prisma"] as const) {
+      const other = await generate({ webDeploy });
+      expect(other.get("apps/web/vite.config.ts")).not.toContain("process.env.ORIGIN");
+    }
+  });
+
+  it("keeps Docker session and CORS origins aligned with the web build", async () => {
+    for (const backend of ["self", "hono"] as const) {
+      const files = await generate({
+        backend,
+        runtime: backend === "self" ? "none" : "bun",
+        api: "orpc",
+        auth: "better-auth",
+        database: "postgres",
+        orm: "drizzle",
+        dbSetup: "docker",
+        webDeploy: "docker",
+        serverDeploy: backend === "self" ? "none" : "docker",
+      });
+      const service = z.object({ environment: z.record(z.string(), z.string()).optional() });
+      const compose = z
+        .object({ services: z.record(z.string(), service) })
+        .parse(parse(files.get("docker-compose.yml")!));
+      const environment = compose.services[backend === "self" ? "web" : "server"]!.environment!;
+      expect(environment.CORS_ORIGIN).toBe("${ORIGIN:-http://localhost:3001}");
+      if (backend === "self") expect(environment.BETTER_AUTH_URL).toBe(environment.CORS_ORIGIN);
+    }
+  });
+
   for (const target of targets) {
     it(`configures the ${target.adapter} adapter in Vite for ${target.addons?.[0] ?? target.webDeploy}`, async () => {
       const files = await generate({ webDeploy: target.webDeploy, addons: target.addons ?? [] });

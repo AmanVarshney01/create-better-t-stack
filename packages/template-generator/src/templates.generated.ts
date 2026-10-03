@@ -16335,8 +16335,11 @@ services:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
         - server_env
 {{/if}}
-{{#if (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))}}
+{{#if (or (includes frontend "svelte") (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))}}
       args:
+{{#if (includes frontend "svelte")}}
+        ORIGIN: \${ORIGIN:-http://localhost:3001}
+{{/if}}
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
 {{/if}}
@@ -16366,8 +16369,13 @@ services:
       AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
 {{/if}}
 {{#if (eq auth "better-auth")}}
+{{#if (includes frontend "svelte")}}
+      BETTER_AUTH_URL: \${ORIGIN:-http://localhost:3001}
+      CORS_ORIGIN: \${ORIGIN:-http://localhost:3001}
+{{else}}
       BETTER_AUTH_URL: http://localhost:3001
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
 {{/if}}
 {{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
       DATABASE_URL: file:/data/local.db
@@ -16469,7 +16477,11 @@ services:
       AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
 {{/if}}
 {{#if (eq webDeploy "docker")}}
+{{#if (includes frontend "svelte")}}
+      CORS_ORIGIN: \${ORIGIN:-http://localhost:3001}
+{{else}}
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
 {{/if}}
 {{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
       DATABASE_URL: file:/data/local.db
@@ -17004,7 +17016,12 @@ ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
 ARG PUBLIC_CONVEX_URL
 ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
 {{/if}}
+ARG ORIGIN=http://localhost:3001
+ENV ORIGIN=\${ORIGIN}
 ENV NODE_ENV=production
+{{#if (and (eq backend "self") (eq database "sqlite") (eq dbSetup "none"))}}
+RUN mkdir -p /app/.data
+{{/if}}
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 {{#if (eq orm "prisma")}}
 ENV DATABASE_URL=
@@ -33529,6 +33546,9 @@ export default defineConfig({
     tailwindcss(),
     sveltekit({
       preprocess: vitePreprocess(),
+{{#if (eq webDeploy "docker")}}
+      paths: { origin: process.env.ORIGIN },
+{{/if}}
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
       adapter: adapter({ pages: "build", assets: "build", fallback: "index.html" }),
 {{else if (eq webDeploy "vercel")}}
