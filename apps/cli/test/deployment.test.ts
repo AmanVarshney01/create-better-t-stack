@@ -783,7 +783,7 @@ describe("Deployment Configurations", () => {
       }
 
       const files = collectFiles(result.value.root, result.value.root.path);
-      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const svelteConfig = files.get("apps/web/vite.config.ts");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
 
       // Vercel docs recommend the explicit adapter over adapter-auto
@@ -1628,7 +1628,7 @@ describe("Deployment Configurations", () => {
       }
 
       const files = collectFiles(result.value.root, result.value.root.path);
-      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const svelteConfig = files.get("apps/web/vite.config.ts");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
       const webDockerfile = files.get("apps/web/Dockerfile");
 

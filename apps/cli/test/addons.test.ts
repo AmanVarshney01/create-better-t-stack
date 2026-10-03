@@ -1050,7 +1050,7 @@ describe("Addon Configurations", () => {
         frontend: "svelte",
         api: "orpc",
         path: "apps/web/src/hooks.server.ts",
-        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+        expected: "createAuthMiddleware(auth,",
       },
       {
         frontend: "tanstack-start",
@@ -1088,6 +1088,10 @@ describe("Addon Configurations", () => {
             'import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";',
           );
           expect(authFile).not.toContain("createAuthMiddleware(");
+        } else if (webCase.frontend === "svelte") {
+          expect(authFile).toContain('import { createAuthMiddleware } from "evlog/better-auth";');
+          expect(authFile).not.toContain("as BetterAuthInstance");
+          expect(authFile).not.toContain("as Handle");
         } else {
           expect(authFile).toContain(
             'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
@@ -1120,7 +1124,7 @@ describe("Addon Configurations", () => {
         frontend: "svelte",
         api: "orpc",
         path: "apps/web/src/hooks.server.ts",
-        expected: "createAuthMiddleware((await createAuth(authEnv)) as BetterAuthInstance",
+        expected: "createAuthMiddleware(await createAuth(authEnv),",
         insideMarker: "const evlogAuthHandle",
       },
       {
@@ -1481,15 +1485,12 @@ describe("Addon Configurations", () => {
                 ? 'import { env } from "./env.server";'
                 : `import {\n  ${namedImport},\n} from './env.server';`,
             )
-            .replaceAll("?? ENV", `?? ${local}`),
+            .replaceAll("createAuth(ENV)", `createAuth(${local})`),
         );
         const envPath = join(projectDir, "apps/web/src/env.server.ts");
         await writeFile(
           envPath,
-          (await readFile(envPath, "utf-8")).replace(
-            "export const ENV",
-            `export const ${imported}`,
-          ),
+          (await readFile(envPath, "utf-8")).replace("env as ENV", `env as ${imported}`),
         );
 
         const result = await add({ projectDir, addons: ["evlog"], install: false });

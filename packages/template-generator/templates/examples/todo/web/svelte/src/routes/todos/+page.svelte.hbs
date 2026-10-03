@@ -162,7 +162,7 @@
 {{else}}
 <script lang="ts">
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	{{/if}}
 	import { createQuery, createMutation } from '@tanstack/svelte-query';
 

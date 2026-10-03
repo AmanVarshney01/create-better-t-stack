@@ -1180,20 +1180,16 @@ if (typeof window !== "undefined") {
 const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
-{{#if (eq webDeploy "cloudflare")}}
-		const env = event.platform?.env ?? ENV;
-
-{{/if}}
 		return createContext({
 			headers: event.request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-			env,
+			env: ENV,
 {{/if}}
 		});
 	},
 });
 
-// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so #lib/orpc.ts can
 // reuse the in-process server client during SSR and fall back to HTTP in the browser.
 globalThis.$client = serverClient;
 `],
@@ -1230,15 +1226,11 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
-{{#if (eq webDeploy "cloudflare")}}
-	const env = platform?.env ?? ENV;
-
-{{/if}}
+const handle: RequestHandler = async ({ request }) => {
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env,
+		env: ENV,
 {{/if}}
 	});
 
@@ -6055,7 +6047,7 @@ export const POST = handle;
   ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
 import "./lib/orpc.server";
 {{/if}}
-import { building } from "$app/environment";
+import { building } from "$app/env";
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -6065,7 +6057,7 @@ import { ENV } from "./env.server";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 import { svelteKitHandler } from "better-auth/svelte-kit";
-import type { Handle } from "@sveltejs/kit";
+import type { Handle } from "@sveltejs/kit/hooks";
 
 export const handle: Handle = async ({ event, resolve }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -6074,8 +6066,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const authEnv = event.platform?.env ?? ENV;
-	const authInstance = await createAuth(authEnv);
+	const authInstance = await createAuth(ENV);
 {{else}}
 	const authInstance = await createAuth();
 {{/if}}
@@ -6117,7 +6108,7 @@ export const Route = createFileRoute('/api/auth/$')({
   },
 })
 `],
-  ["auth/better-auth/loaders/svelte/dashboard.ts.hbs", `import { authClient } from '$lib/auth-client';
+  ["auth/better-auth/loaders/svelte/dashboard.ts.hbs", `import { authClient } from '#lib/auth-client.ts';
 import type { BetterFetchOption } from 'better-auth/client';
 import { redirect } from '@sveltejs/kit';
 {{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
@@ -12223,7 +12214,7 @@ export default function Login() {
   ["auth/better-auth/web/svelte/src/components/SignInForm.svelte.hbs", `<script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
 	import { z } from 'zod';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 
 	const session = authClient.useSession();
@@ -12340,7 +12331,7 @@ export default function Login() {
   ["auth/better-auth/web/svelte/src/components/SignUpForm.svelte.hbs", `<script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
 	import { z } from 'zod';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 
 	const session = authClient.useSession();
@@ -12486,7 +12477,7 @@ export default function Login() {
 </div>
 `],
   ["auth/better-auth/web/svelte/src/components/UserMenu.svelte.hbs", `<script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 
 	const sessionQuery = authClient.useSession();
@@ -12566,10 +12557,10 @@ export const authClient = createAuthClient({
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
 	import type { PageProps } from './$types';
 	{{#if (eq payments "polar")}}
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	{{/if}}
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
 	let { data }: PageProps = $props();
@@ -17301,6 +17292,10 @@ export async function getEnvAsync() {
 }
 
 export const ENV = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../cloudflare-env.d.ts" />
+export type { CloudflareEnv } from "../cloudflare-env.d.ts";
+export { env as ENV } from "cloudflare:workers";
 {{else if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "../cloudflare-env.d.ts";
 export type { CloudflareEnv } from "../cloudflare-env.d.ts";
@@ -25846,7 +25841,7 @@ export default function Todos() {
 {{else}}
 <script lang="ts">
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	{{/if}}
 	import { createQuery, createMutation } from '@tanstack/svelte-query';
 
@@ -33219,6 +33214,11 @@ vite.config.ts.timestamp-*
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"engines": { "node": ">=22.17.0" },
+	"imports": {
+		"#lib": "./src/lib/index.ts",
+		"#lib/*": "./src/lib/*"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
@@ -33230,16 +33230,16 @@ vite.config.ts.timestamp-*
 	},
 	"devDependencies": {
 		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/adapter-static": "^4.0.0",
 		{{else if (eq webDeploy "prisma")}}
-		"@sveltejs/adapter-node": "^5.5.7",
+		"@sveltejs/adapter-node": "^6.0.0",
 		{{else}}
-		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/adapter-auto": "^8.0.0",
 		{{/if}}
-		"@sveltejs/kit": "^2.70.3",
-		"@sveltejs/vite-plugin-svelte": "^7.3.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tailwindcss/vite": "^4.3.3",
-		"svelte": "^5.57.0",
+		"svelte": "^5.57.1",
 		"svelte-check": "^4.7.6",
 		"tailwindcss": "^4.3.3",
 		"vite": "^8.2.2"
@@ -33253,10 +33253,7 @@ body {
   @apply bg-neutral-950 text-neutral-100;
 }
 `],
-  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (eq webDeploy "cloudflare")}}
-/// <reference path="../../../packages/env/env.d.ts" />
-{{/if}}
-{{#if (and (eq backend "self") (eq api "orpc"))}}
+  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (and (eq backend "self") (eq api "orpc"))}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
 {{/if}}
@@ -33272,16 +33269,7 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
-{{#if (eq webDeploy "cloudflare")}}
-		interface Platform {
-			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf: IncomingRequestCfProperties;
-		}
-{{else}}
 		// interface Platform {}
-{{/if}}
 	}
 }
 
@@ -33331,14 +33319,14 @@ export {};
 	<hr class="border-neutral-800" />
 </div>
 `],
-  ["frontend/svelte/src/lib/index.ts", `// place files you want to import through the \`$lib\` alias in this folder.
+  ["frontend/svelte/src/lib/index.ts", `// place files you want to import through the \`#lib\` alias in this folder.
 export {};
 `],
   ["frontend/svelte/src/routes/+layout.svelte.hbs", `{{#if (eq backend "convex")}}
 <script lang="ts">
 	import '../app.css';
     import Header from '../components/Header.svelte';
-    import { PUBLIC_CONVEX_URL } from '$env/static/public';
+    import { PUBLIC_CONVEX_URL } from '$app/env/public';
 	import { setupConvex } from 'convex-svelte';
 
 	const { children } = $props();
@@ -33357,7 +33345,7 @@ export {};
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
 	import '../app.css';
-    import { queryClient } from '$lib/orpc';
+    import { queryClient } from '#lib/orpc.ts';
     import Header from '../components/Header.svelte';
 
 	const { children } = $props();
@@ -33436,7 +33424,7 @@ const TITLE_TEXT = \`
 {{else}}
 <script lang="ts">
 {{#if (eq api "orpc")}}
-import { orpc } from "$lib/orpc";
+import { orpc } from "#lib/orpc.ts";
 import { createQuery } from "@tanstack/svelte-query";
 const healthCheck = createQuery(() => orpc.healthCheck.queryOptions());
 {{/if}}
@@ -33483,56 +33471,13 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-import adapter from '@sveltejs/adapter-static';
-{{else if (eq webDeploy "cloudflare")}}
-import adapter from '@sveltejs/adapter-cloudflare';
-{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
-import adapter from '@sveltejs/adapter-node';
-{{else if (eq webDeploy "vercel")}}
-import adapter from '@sveltejs/adapter-vercel';
-{{else}}
-import adapter from '@sveltejs/adapter-auto';
-{{/if}}
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
-
-	kit: {
-{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		// adapter-static emits files Electrobun and Tauri can bundle directly.
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: 'index.html'
-		})
-{{else if (eq webDeploy "cloudflare")}}
-		adapter: adapter()
-{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
-		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
-		adapter: adapter()
-{{else if (eq webDeploy "vercel")}}
-		adapter: adapter({ runtime: 'nodejs24.x' })
-{{else}}
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
-{{/if}}
-	}
-};
-
-export default config;
-`],
   ["frontend/svelte/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   "references": [{ "path": "../../packages/api" }],
   {{/if}}
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "$app/tsconfig",
+	"include": ["src", "test", "*"],
+	"exclude": ["src/service-worker"],
 	"compilerOptions": {
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     "disableSourceOfProjectReferenceRedirect": true,
@@ -33546,13 +33491,8 @@ export default config;
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"{{#if (eq webDeploy "cloudflare")}},
-			"types": ["@cloudflare/workers-types"]{{/if}}
+			"types": ["$app/types", "@cloudflare/workers-types"]{{/if}}
 	}
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
-	// from the referenced tsconfig.json - TypeScript does not merge them in
 }
 `],
   ["frontend/svelte/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
@@ -33560,6 +33500,18 @@ import { varlockVitePlugin } from "@varlock/vite-integration";
 {{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from "@sveltejs/adapter-static";
+{{else if (eq webDeploy "cloudflare")}}
+import adapter from "@sveltejs/adapter-cloudflare";
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
+import adapter from "@sveltejs/adapter-node";
+{{else if (eq webDeploy "vercel")}}
+import adapter from "@sveltejs/adapter-vercel";
+{{else}}
+import adapter from "@sveltejs/adapter-auto";
+{{/if}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { unwasm } from "unwasm/plugin";
@@ -33574,7 +33526,16 @@ export default defineConfig({
     unwasm({ esmImport: true }),
 {{/if}}
     tailwindcss(),
-    sveltekit(),
+    sveltekit({
+      preprocess: vitePreprocess(),
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+      adapter: adapter({ pages: "build", assets: "build", fallback: "index.html" }),
+{{else if (eq webDeploy "vercel")}}
+      adapter: adapter({ runtime: "nodejs24.x" }),
+{{else}}
+      adapter: adapter(),
+{{/if}}
+    }),
   ],
 {{#if (eq webDeploy "prisma")}}
   // Prisma Compute uploads only the build artifact, so keep the official
@@ -35620,4 +35581,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 532;
+export const TEMPLATE_COUNT = 531;

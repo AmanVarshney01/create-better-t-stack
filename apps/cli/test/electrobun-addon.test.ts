@@ -143,7 +143,7 @@ describe("Electrobun addon scaffolding", () => {
         api: "orpc",
         expectedOutputDir: 'const webBuildDir = "../web/build";',
         expectedPort: "const DEV_SERVER_PORT = 5173;",
-        expectedWebConfigPath: "svelte.config.js",
+        expectedWebConfigPath: "vite.config.ts",
         expectedWebConfig: ["@sveltejs/adapter-static", 'fallback: "index.html"'],
       },
       {

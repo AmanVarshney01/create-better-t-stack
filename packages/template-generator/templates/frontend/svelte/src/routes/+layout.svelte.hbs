@@ -2,7 +2,7 @@
 <script lang="ts">
 	import '../app.css';
     import Header from '../components/Header.svelte';
-    import { PUBLIC_CONVEX_URL } from '$env/static/public';
+    import { PUBLIC_CONVEX_URL } from '$app/env/public';
 	import { setupConvex } from 'convex-svelte';
 
 	const { children } = $props();
@@ -21,7 +21,7 @@
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
 	import '../app.css';
-    import { queryClient } from '$lib/orpc';
+    import { queryClient } from '#lib/orpc.ts';
     import Header from '../components/Header.svelte';
 
 	const { children } = $props();

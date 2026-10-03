@@ -45,7 +45,7 @@ const TITLE_TEXT = `
 {{else}}
 <script lang="ts">
 {{#if (eq api "orpc")}}
-import { orpc } from "$lib/orpc";
+import { orpc } from "#lib/orpc.ts";
 import { createQuery } from "@tanstack/svelte-query";
 const healthCheck = createQuery(() => orpc.healthCheck.queryOptions());
 {{/if}}

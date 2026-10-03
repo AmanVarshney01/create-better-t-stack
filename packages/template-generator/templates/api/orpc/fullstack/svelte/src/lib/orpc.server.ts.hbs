@@ -13,19 +13,15 @@ if (typeof window !== "undefined") {
 const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
-{{#if (eq webDeploy "cloudflare")}}
-		const env = event.platform?.env ?? ENV;
-
-{{/if}}
 		return createContext({
 			headers: event.request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-			env,
+			env: ENV,
 {{/if}}
 		});
 	},
 });
 
-// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so #lib/orpc.ts can
 // reuse the in-process server client during SSR and fall back to HTTP in the browser.
 globalThis.$client = serverClient;
