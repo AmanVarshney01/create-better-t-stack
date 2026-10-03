@@ -165,6 +165,16 @@ async function executeCase(selection: ProjectConfig, id: string) {
     if (databaseUrl) {
       await migrateDatabase(config, commands);
       database = new DatabaseAssertions(databaseUrl);
+    } else if (
+      config.orm === "drizzle" &&
+      (usesAlchemyManagedDatabase(config) || config.dbSetup === "d1")
+    ) {
+      await commands.run(
+        "migration-generate",
+        path.join(project, "packages/db"),
+        config.packageManager,
+        ["run", "db:generate"],
+      );
     }
     if (config.addons.some((addon) => ["biome", "oxlint", "vite-plus"].includes(addon)))
       await commands.run("check", project, config.packageManager, ["run", "check"]);
