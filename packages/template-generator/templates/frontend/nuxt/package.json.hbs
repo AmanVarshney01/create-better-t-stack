@@ -7,7 +7,7 @@
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}nuxt prepare && vue-tsc -b{{else}}nuxt typecheck{{/if}}",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "{{#if (or (eq webDeploy "none") (eq webDeploy "docker"))}}node .output/server/index.mjs{{else}}nuxt preview{{/if}}",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

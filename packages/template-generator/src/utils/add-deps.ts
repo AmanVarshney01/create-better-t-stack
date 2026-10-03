@@ -16,9 +16,10 @@ export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
 
-  "better-auth": "1.7.5",
-  "@better-auth/drizzle-adapter": "1.7.5",
-  "@better-auth/expo": "1.7.5",
+  "better-auth": "1.7.7",
+  "@better-auth/core": "1.7.7",
+  "@better-auth/drizzle-adapter": "1.7.7",
+  "@better-auth/expo": "1.7.7",
 
   "@clerk/backend": "^3.17.1",
   "@clerk/express": "^2.1.66",
@@ -149,7 +150,7 @@ export const dependencyVersionMap = {
   "@tanstack/svelte-form": "^1.33.5",
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).
-  "@tanstack/solid-query": "6.0.0-rc.3",
+  "@tanstack/solid-query": "6.0.0-rc.5",
   "@tanstack/query-core": "5.101.4",
 
   wrangler: "^4.129.0",
@@ -159,16 +160,16 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-node": "^5.5.7",
   "@sveltejs/adapter-vercel": "^6.3.4",
   "@cloudflare/workers-types": "^5.20260906.1",
-  "@alchemy.run/frontend-frameworks": "2.0.0-beta.79",
+  "@alchemy.run/frontend-frameworks": "2.0.0-beta.80",
   "@astrojs/node": "^11.1.5",
   "@astrojs/vercel": "^11.0.10",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
   "@vercel/nft": "^1.11.0",
-  alchemy: "2.0.0-beta.79",
-  effect: "4.0.0-rc.115",
-  "@effect/platform-node": "4.0.0-rc.115",
-  "@effect/platform-bun": "4.0.0-rc.115",
+  alchemy: "2.0.0-beta.80",
+  effect: "4.0.0",
+  "@effect/platform-node": "4.0.0",
+  "@effect/platform-bun": "4.0.0",
 
   "babel-preset-expo": "~57.0.10",
   varlock: "1.18.0",

@@ -5,6 +5,6 @@
     "rootDir": "../..",
     "types": ["bun", "node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "live-tests/**/*.ts"],
   "exclude": ["node_modules", "dist", ".smoke"]
 }

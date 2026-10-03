@@ -1,3 +1,23 @@
+{{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+import { createRequire } from "node:module";
+import { z } from "zod";
+
+// libsql loads its platform binding by a computed name, which file tracing can't follow
+const libsqlRequire = createRequire(import.meta.resolve("libsql"));
+const libsqlPackage = z.object({
+  optionalDependencies: z.record(z.string(), z.string()),
+}).parse(libsqlRequire("./package.json"));
+const libsqlBindings = Object.keys(libsqlPackage.optionalDependencies).flatMap(
+  (name) => {
+    try {
+      return [libsqlRequire.resolve(name)];
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "MODULE_NOT_FOUND") return [];
+      throw error;
+    }
+  },
+);
+{{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
 import { fileURLToPath } from "node:url";
 
@@ -53,11 +73,32 @@ export default defineNuxtConfig({
     localApiEndpoint: "/_nuxt_icon",
   },
   {{/if}}
+{{#if (or (and (eq auth "better-auth") (ne backend "convex")) (and (eq api "orpc") (ne backend "convex") (ne backend "none")))}}
+  vite: {
+    optimizeDeps: {
+      include: [
+{{#if (and (eq auth "better-auth") (ne backend "convex"))}}
+        "better-auth/vue",
+{{/if}}
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+        "@orpc/client",
+        "@orpc/client/fetch",
+        "@orpc/tanstack-query",
+        "@tanstack/vue-query",
+        "@tanstack/vue-query-devtools",
+{{/if}}
+      ],
+    },
+  },
+{{/if}}
   devServer: {
     port: 3001
   },
-  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")) (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma"))))}}
   nitro: {
+    {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+    externals: { traceInclude: libsqlBindings },
+    {{/if}}
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     typescript: {
       tsConfig: { references: [apiReference] },

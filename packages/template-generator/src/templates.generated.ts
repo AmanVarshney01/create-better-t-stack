@@ -995,21 +995,11 @@ export default defineNuxtPlugin(() => {
   };
 });
 `],
-  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
-import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-{{else}}
-import { createRouterClient } from "@orpc/server";
-import { appRouter } from "@{{projectName}}/api/routers/index";
-import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
-{{#if (eq webDeploy "cloudflare")}}
-import type { CloudflareEnv } from "../../src/env.server";
-{{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-{{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -1018,29 +1008,13 @@ export default defineNuxtPlugin(() => {
   }
 
   const rpcLink = new RPCLink({
-    url: "/rpc",
+    url: new URL("/rpc", useRequestURL()).href,
     fetch(request, init) {
       return event.fetch(request, init);
     },
   });
 
   const client: AppRouterClient = createORPCClient(rpcLink);
-{{else}}
-export default defineNuxtPlugin(async () => {
-  const event = useRequestEvent();
-
-  const context = await createContext({
-    headers: event?.headers ?? new Headers(),
-    {{#if (eq webDeploy "cloudflare")}}
-    env: (event?.context.cloudflare as { env: CloudflareEnv }).env,
-    {{/if}}
-  });
-
-  const client = createRouterClient(appRouter, {
-    context,
-  });
-{{/if}}
-
   const orpc = createTanstackQueryUtils(client);
 
   return {
@@ -1642,17 +1616,19 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
+{{> getServerUrlSpaces}}
+
 export default defineNuxtPlugin(() => {
-  const event = useRequestEvent();
   const requestURL = useRequestURL();
   const config = useRuntimeConfig();
   const serverUrl =
     (import.meta.server && config.serverUrl) || config.public.serverUrl;
-  const rpcUrl = new URL(\`\${serverUrl.replace(/\\/$/, "")}/rpc\`, requestURL.origin).href;
+  const resolvedServerUrl = {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}getServerUrl(serverUrl){{else}}serverUrl.replace(/\\/$/, ""){{/if}};
+  const rpcUrl = new URL(\`\${resolvedServerUrl}/rpc\`, requestURL.origin).href;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
-    headers: () => event?.headers ?? {},
+    headers: import.meta.server ? useRequestHeaders(["cookie"]) : {},
     {{#if (eq auth "better-auth")}}
     fetch(url, options) {
         return fetch(url, {
@@ -6141,6 +6117,40 @@ export const Route = createFileRoute('/api/auth/$')({
   },
 })
 `],
+  ["auth/better-auth/loaders/svelte/dashboard.ts.hbs", `import { authClient } from '$lib/auth-client';
+import type { BetterFetchOption } from 'better-auth/client';
+import { redirect } from '@sveltejs/kit';
+{{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
+import type { PageServerLoad } from './$types';
+
+export const load = (async ({ fetch, request{{#if (eq backend "self")}}, url{{/if}} }) => {
+{{else}}
+import type { PageLoad } from './$types';
+
+// The session cookie belongs to the separate API origin and is available in the browser.
+export const ssr = false;
+
+export const load = (async ({ fetch }) => {
+{{/if}}
+  const fetchOptions = {
+    customFetchImpl: fetch,
+{{#if (eq backend "self")}}
+    baseURL: new URL('/api/auth', url).toString(),
+{{/if}}
+{{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
+    headers: { cookie: request.headers.get('cookie') ?? '' },
+    signal: request.signal,
+{{/if}}
+    throw: true,
+  } satisfies BetterFetchOption;
+  const session = await authClient.getSession({ fetchOptions });
+  if (!session) redirect(307, '/login');
+{{#if (eq payments "polar")}}
+  const customerState = await authClient.customer.state({ fetchOptions });
+{{/if}}
+  return { user: session.user{{#if (eq payments "polar")}}, customerState{{/if}} };
+}) satisfies {{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}PageServerLoad{{else}}PageLoad{{/if}};
+`],
   ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -9265,7 +9275,7 @@ import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-  baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
+  baseURL: {{#if (eq webDeploy "vercel")}}\`\${getServerUrl(ENV.PUBLIC_SERVER_URL)}/auth\`{{else}}new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(){{/if}},
 {{else}}
   baseURL: ENV.PUBLIC_SERVER_URL,
 {{/if}}
@@ -9447,6 +9457,7 @@ const loading = ref(false)
 const fields: AuthFormField[] = [
   {
     name: 'email',
+    id: 'sign-in-email',
     type: 'email',
     label: 'Email',
     placeholder: 'Enter your email',
@@ -9454,6 +9465,7 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'password',
+    id: 'sign-in-password',
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
@@ -9530,6 +9542,7 @@ const loading = ref(false)
 const fields: AuthFormField[] = [
   {
     name: 'name',
+    id: 'sign-up-name',
     type: 'text',
     label: 'Name',
     placeholder: 'Enter your name',
@@ -9537,6 +9550,7 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'email',
+    id: 'sign-up-email',
     type: 'email',
     label: 'Email',
     placeholder: 'Enter your email',
@@ -9544,6 +9558,7 @@ const fields: AuthFormField[] = [
   },
   {
     name: 'password',
+    id: 'sign-up-password',
     type: 'password',
     label: 'Password',
     placeholder: 'Enter your password',
@@ -9651,19 +9666,16 @@ const handleSignOut = async () => {
   </div>
 </template>
 `],
-  ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async (to, from) => {
-  if (import.meta.server) return;
-
+  ["auth/better-auth/web/nuxt/app/composables/useAuthFetch.ts.hbs", `export const useAuthFetch = createUseFetch({ credentials: "include" });
+`],
+  ["auth/better-auth/web/nuxt/app/composables/useAuthSession.ts.hbs", `export function useAuthSession() {
   const { $authClient } = useNuxtApp();
-  const session = $authClient.useSession();
-
-  if (session.value.isPending) {
-    return;
-  }
-
-  if (!session.value.data) {
-    return navigateTo("/login");
-  }
+  return $authClient.useSession(useAuthFetch);
+}
+`],
+  ["auth/better-auth/web/nuxt/app/middleware/auth.ts.hbs", `export default defineNuxtRouteMiddleware(async () => {
+  const { data: session } = await useAuthSession();
+  if (!session.value) return navigateTo("/login");
 });
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
@@ -9681,7 +9693,7 @@ definePageMeta({
   middleware: ['auth']
 })
 
-const session = $authClient.useSession()
+const { data: session } = await useAuthSession()
 
 {{#if (eq payments "polar")}}
 const customerState = ref<CustomerState | null>(null)
@@ -9690,13 +9702,17 @@ const customerState = ref<CustomerState | null>(null)
 {{#if (eq api "orpc")}}
 const privateData = useQuery({
   ...$orpc.privateData.queryOptions(),
-  enabled: computed(() => !!session.value?.data?.user)
+  enabled: computed(() => !!session.value?.user)
+})
+
+onServerPrefetch(async () => {
+  if (session.value?.user) await privateData.suspense()
 })
 {{/if}}
 
 {{#if (eq payments "polar")}}
 onMounted(async () => {
-  if (session.value?.data) {
+  if (session.value) {
     const { data } = await $authClient.customer.state()
     customerState.value = data ?? null
   }
@@ -9712,7 +9728,7 @@ const hasProSubscription = computed(() =>
   <UContainer class="py-8">
     <UPageHeader
       title="Dashboard"
-      :description="session?.data?.user ? \`Welcome back, \${session.data.user.name}!\` : 'Loading...'"
+      :description="session?.user ? \`Welcome back, \${session.user.name}!\` : 'Loading...'"
     />
 
     <div class="mt-6 space-y-4">
@@ -9771,15 +9787,16 @@ const hasProSubscription = computed(() =>
 </template>
 `],
   ["auth/better-auth/web/nuxt/app/pages/login.vue.hbs", `<script setup lang="ts">
-const { $authClient } = useNuxtApp();
 import SignInForm from "~/components/SignInForm.vue";
 import SignUpForm from "~/components/SignUpForm.vue";
 
-const session = $authClient.useSession();
+const { data: session } = await useAuthSession();
 const showSignIn = ref(true);
+const hydrated = ref(false);
+onMounted(() => { hydrated.value = true; });
 
 watchEffect(() => {
-  if (!session?.value.isPending && session?.value.data) {
+  if (session.value) {
     navigateTo("/dashboard", { replace: true });
   }
 });
@@ -9787,14 +9804,10 @@ watchEffect(() => {
 
 <template>
   <UContainer class="py-8">
-    <div v-if="session.isPending" class="flex flex-col items-center justify-center gap-4 py-12">
-      <UIcon name="i-lucide-loader-2" class="animate-spin text-4xl text-primary" />
-      <span class="text-muted">Loading...</span>
-    </div>
-    <div v-else-if="!session.data">
+    <fieldset v-if="!session" :disabled="!hydrated">
       <SignInForm v-if="showSignIn" @switch-to-sign-up="showSignIn = false" />
       <SignUpForm v-else @switch-to-sign-in="showSignIn = true" />
-    </div>
+    </fieldset>
   </UContainer>
 </template>
 `],
@@ -9803,20 +9816,25 @@ watchEffect(() => {
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
+{{> getServerUrlSpaces}}
+
 export default defineNuxtPlugin(() => {
   {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
   const rawServerUrl = (import.meta.server && config.serverUrl) || config.public.serverUrl;
   // Same-origin paths like /api need an absolute base, and better-auth derives
   // its route matching from this URL's path, so it must be exactly /api/auth
-  const serverOrigin = rawServerUrl.startsWith("/")
+  const serverOrigin = {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}getServerUrl(rawServerUrl);{{else}}rawServerUrl.startsWith("/")
     ? (import.meta.server ? useRequestURL() : window.location).origin + rawServerUrl
-    : rawServerUrl;
+    : rawServerUrl;{{/if}}
   {{/if}}
 
   const authClient = createAuthClient({
+    fetchOptions: {
+      headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
+    },
     {{#if (ne backend "self")}}
-    baseURL: new URL("/api/auth", serverOrigin).toString(),
+    baseURL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}\`\${serverOrigin}/auth\`{{else}}new URL("/api/auth", serverOrigin).toString(){{/if}},
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -9845,7 +9863,7 @@ import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-  baseURL: new URL("/api/auth", getServerUrl({{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}})).toString(),
+  baseURL: {{#if (eq webDeploy "vercel")}}\`\${getServerUrl({{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}})}/auth\`{{else}}new URL("/api/auth", getServerUrl({{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}})).toString(){{/if}},
 {{else}}
   baseURL: {{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}},
 {{/if}}
@@ -10404,7 +10422,7 @@ export default function SignInForm({
   onSwitchToSignUp: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10418,7 +10436,8 @@ export default function SignInForm({
           password: value.password,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign in successful");
           },
@@ -10540,7 +10559,7 @@ export default function SignUpForm({
   onSwitchToSignIn: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10556,7 +10575,8 @@ export default function SignUpForm({
           name: value.name,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign up successful");
           },
@@ -10748,9 +10768,6 @@ export default function UserMenu() {
 }
 `],
   ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
-{{/if}}
-{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -10763,45 +10780,44 @@ import { trpc } from "@/utils/trpc";
 {{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import type { BetterFetchOption } from "better-auth/client";
+import { redirect } from "react-router";
+import type { Route } from "./+types/dashboard";
 
-export default function Dashboard() {
-  const { data: session, isPending } = authClient.useSession();
-  const navigate = useNavigate();
-  {{#if (eq payments "polar")}}
-  const [customerState, setCustomerState] = useState<CustomerState | null>(null);
-  {{/if}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+export async function loader({ request }: Route.LoaderArgs) {
+{{else}}
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+{{/if}}
+  const fetchOptions = {
+    signal: request.signal,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+    headers: { cookie: request.headers.get("cookie") ?? "" },
+{{/if}}
+    throw: true,
+  } satisfies BetterFetchOption;
+  const session = await authClient.getSession({ fetchOptions });
+  if (!session) throw redirect("/login");
+{{#if (eq payments "polar")}}
+  const customerState = await authClient.customer.state({ fetchOptions });
+{{/if}}
+  return { user: session.user{{#if (eq payments "polar")}}, customerState{{/if}} };
+}
 
-  {{#if (eq api "orpc")}}
+{{#unless (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+export function HydrateFallback() {
+  return <div>Loading...</div>;
+}
+
+{{/unless}}
+export default function Dashboard({ loaderData }: Route.ComponentProps) {
+  const { user{{#if (eq payments "polar")}}, customerState{{/if}} } = loaderData;
+{{#if (eq api "orpc")}}
   const privateData = useQuery(orpc.privateData.queryOptions());
-  {{/if}}
-  {{#if (eq api "trpc")}}
+{{/if}}
+{{#if (eq api "trpc")}}
   const privateData = useQuery(trpc.privateData.queryOptions());
-  {{/if}}
-
-  useEffect(() => {
-    if (!session && !isPending) {
-      navigate("/login");
-    }
-  }, [session, isPending, navigate]);
-
-  {{#if (eq payments "polar")}}
-  useEffect(() => {
-    async function fetchCustomerState() {
-      if (session) {
-        const { data } = await authClient.customer.state();
-        setCustomerState(data ?? null);
-      }
-    }
-
-    fetchCustomerState();
-  }, [session]);
-  {{/if}}
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
+{{/if}}
 
   {{#if (eq payments "polar")}}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
@@ -10810,7 +10826,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
+      <p>Welcome {user.name}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
@@ -11857,7 +11873,7 @@ function RouteComponent() {
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onSettled, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
@@ -11870,6 +11886,10 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   const navigate = useNavigate();
   const [error, setError] = createSignal<string>();
   const [isSubmitting, setIsSubmitting] = createSignal(false);
+  const [hydrated, setHydrated] = createSignal(false);
+  onSettled(() => {
+    setHydrated(true);
+  });
 
   const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault();
@@ -11904,7 +11924,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   return (
     <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
-      <form onSubmit={submit} class="space-y-4">
+      <form method="post" onSubmit={submit} class="space-y-4">
         <div class="space-y-2">
           <label for="email">Email</label>
           <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
@@ -11924,7 +11944,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         <button
           type="submit"
           class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-          disabled={isSubmitting()}
+          disabled={!hydrated() || isSubmitting()}
         >
           {isSubmitting() ? "Submitting..." : "Sign In"}
         </button>
@@ -11943,7 +11963,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onSettled, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
@@ -11957,6 +11977,10 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   const navigate = useNavigate();
   const [error, setError] = createSignal<string>();
   const [isSubmitting, setIsSubmitting] = createSignal(false);
+  const [hydrated, setHydrated] = createSignal(false);
+  onSettled(() => {
+    setHydrated(true);
+  });
 
   const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault();
@@ -11991,7 +12015,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   return (
     <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
-      <form onSubmit={submit} class="space-y-4">
+      <form method="post" onSubmit={submit} class="space-y-4">
         <div class="space-y-2">
           <label for="name">Name</label>
           <input id="name" name="name" minlength="2" required class="w-full rounded border p-2" />
@@ -12015,7 +12039,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         <button
           type="submit"
           class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-          disabled={isSubmitting()}
+          disabled={!hydrated() || isSubmitting()}
         >
           {isSubmitting() ? "Submitting..." : "Sign Up"}
         </button>
@@ -12095,7 +12119,12 @@ import { createSignal, onSettled } from "solid-js";
 export { authClient };
 
 export function useSession() {
-	const [session, setSession] = createSignal(authClient.useSession.get());
+	// Start from the pending state the server rendered so hydration matches, then follow the store
+	const [session, setSession] = createSignal<ReturnType<typeof authClient.useSession.get>>({
+		...authClient.useSession.get(),
+		data: null,
+		isPending: true,
+	});
 	onSettled(() => authClient.useSession.subscribe(setSession));
 	return session;
 }
@@ -12197,6 +12226,8 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
 
 	const validationSchema = z.object({
@@ -12210,7 +12241,10 @@ export default function Login() {
 				await authClient.signIn.email(
 					{ email: value.email, password: value.password },
 					{
-						onSuccess: () => goto('/dashboard'),
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
+						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign in failed. Please try again.');
 						},
@@ -12309,6 +12343,8 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
 
 	const validationSchema = z.object({
@@ -12328,8 +12364,9 @@ export default function Login() {
 						name: value.name,
 					},
 					{
-						onSuccess: () => {
-							goto('/dashboard');
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
 						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign up failed. Please try again.');
@@ -12516,7 +12553,7 @@ import { polarClient } from "@polar-sh/better-auth/client";
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-  baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
+  baseURL: {{#if (eq webDeploy "vercel")}}\`\${getServerUrl(ENV.PUBLIC_SERVER_URL)}/auth\`{{else}}new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(){{/if}},
 {{else}}
   baseURL: ENV.PUBLIC_SERVER_URL,
 {{/if}}
@@ -12527,57 +12564,30 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
-{{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
-{{/if}}
-
-	import { goto } from '$app/navigation';
+	import type { PageProps } from './$types';
+	{{#if (eq payments "polar")}}
 	import { authClient } from '$lib/auth-client';
+	{{/if}}
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
-	{{#if (eq payments "polar")}}
-	let customerState = $state<CustomerState | null>(null);
-	{{/if}}
-
-	const sessionQuery = authClient.useSession();
+	let { data }: PageProps = $props();
 
 	{{#if (eq api "orpc")}}
 	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
-
-	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.data) {
-			goto('/login');
-		}
-	});
-
-	{{#if (eq payments "polar")}}
-	$effect(() => {
-		if ($sessionQuery.data) {
-			authClient.customer.state().then(({ data }) => {
-				customerState = data ?? null;
-			});
-		}
-	});
-	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending}
-	<div>Loading...</div>
-{:else if !$sessionQuery.data}
-	<div>Redirecting to login...</div>
-{:else}
 	<div>
 		<h1>Dashboard</h1>
-		<p>Welcome {$sessionQuery.data.user.name}</p>
+		<p>Welcome {data.user.name}</p>
 		{{#if (eq api "orpc")}}
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {(customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
-		{#if (customerState?.activeSubscriptions?.length ?? 0) > 0}
+		<p>Plan: {(data.customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (data.customerState?.activeSubscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -12588,7 +12598,6 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 		{/if}
 		{{/if}}
 	</div>
-{/if}
 `],
   ["auth/better-auth/web/svelte/src/routes/login/+page.svelte.hbs", `<script lang="ts">
 	import SignInForm from '../../components/SignInForm.svelte';
@@ -15353,9 +15362,10 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
-    "@solidjs/signals": "2.0.0-rc.7",
-    "@solidjs/compiler": "2.0.0-rc.7",
-    "@solidjs/babel-plugin": "2.0.0-rc.7"
+    "solid-js": "2.0.0-rc.13",
+    "@solidjs/signals": "2.0.0-rc.13",
+    "@solidjs/compiler": "2.0.0-rc.13",
+    "@solidjs/babel-plugin": "2.0.0-rc.13"
   },
 {{/if}}
   "scripts": {}
@@ -24276,7 +24286,10 @@ import Layout from "../layouts/Layout.astro";
 </script>
 `],
   ["examples/todo/web/nuxt/app/pages/todos.vue.hbs", `<script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+
+const hydrated = ref(false)
+onMounted(() => { hydrated.value = true })
 {{#if (eq backend "convex")}}
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import type { Id } from "@{{ projectName }}/backend/convex/_generated/dataModel";
@@ -24371,16 +24384,19 @@ function handleDeleteTodo(id: number) {
           autocomplete="off"
           class="flex-1"
           {{#if (eq backend "convex")}}
-          :disabled="isCreatePending"
+          :disabled="!hydrated || isCreatePending"
+          {{else}}
+          :disabled="!hydrated"
           {{/if}}
         />
         <UButton
           type="submit"
           {{#if (eq backend "convex")}}
           :loading="isCreatePending"
-          :disabled="!newTodoText.trim()"
+          :disabled="!hydrated || !newTodoText.trim()"
           {{else}}
           :loading="createMutation.isPending.value"
+          :disabled="!hydrated || !newTodoText.trim()"
           {{/if}}
         >
           Add
@@ -24419,6 +24435,7 @@ function handleDeleteTodo(id: number) {
         >
           <div class="flex items-center gap-3">
             <UCheckbox
+              :disabled="!hydrated"
               :model-value="todo.completed"
               @update:model-value="() => handleToggleTodo(todo._id, todo.completed)"
               :id="\`todo-\${todo._id}\`"
@@ -24438,6 +24455,7 @@ function handleDeleteTodo(id: number) {
             square
             @click="handleDeleteTodo(todo._id)"
             aria-label="Delete todo"
+            :disabled="!hydrated"
             icon="i-lucide-trash-2"
           />
         </li>
@@ -24474,6 +24492,7 @@ function handleDeleteTodo(id: number) {
         >
           <div class="flex items-center gap-3">
             <UCheckbox
+              :disabled="!hydrated"
               :model-value="todo.completed"
               @update:model-value="() => handleToggleTodo(todo.id, todo.completed)"
               :id="\`todo-\${todo.id}\`"
@@ -24493,6 +24512,7 @@ function handleDeleteTodo(id: number) {
             square
             @click="handleDeleteTodo(todo.id)"
             aria-label="Delete todo"
+            :disabled="!hydrated"
             icon="i-lucide-trash-2"
           />
         </li>
@@ -30173,7 +30193,12 @@ const items = computed<NavigationMenuItem[]>(() => [
     <template #right>
       <UColorModeButton />
       {{#if (eq auth "better-auth")}}
-      <UserMenu />
+      <ClientOnly>
+        <UserMenu />
+        <template #fallback>
+          <USkeleton class="h-9 w-24" />
+        </template>
+      </ClientOnly>
       {{/if}}
     </template>
 
@@ -30298,7 +30323,27 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+import { createRequire } from "node:module";
+import { z } from "zod";
+
+// libsql loads its platform binding by a computed name, which file tracing can't follow
+const libsqlRequire = createRequire(import.meta.resolve("libsql"));
+const libsqlPackage = z.object({
+  optionalDependencies: z.record(z.string(), z.string()),
+}).parse(libsqlRequire("./package.json"));
+const libsqlBindings = Object.keys(libsqlPackage.optionalDependencies).flatMap(
+  (name) => {
+    try {
+      return [libsqlRequire.resolve(name)];
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "MODULE_NOT_FOUND") return [];
+      throw error;
+    }
+  },
+);
+{{/if}}
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
 import { fileURLToPath } from "node:url";
 
 const apiReference = { path: fileURLToPath(new URL("../../packages/api", import.meta.url)) };
@@ -30353,11 +30398,32 @@ export default defineNuxtConfig({
     localApiEndpoint: "/_nuxt_icon",
   },
   {{/if}}
+{{#if (or (and (eq auth "better-auth") (ne backend "convex")) (and (eq api "orpc") (ne backend "convex") (ne backend "none")))}}
+  vite: {
+    optimizeDeps: {
+      include: [
+{{#if (and (eq auth "better-auth") (ne backend "convex"))}}
+        "better-auth/vue",
+{{/if}}
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+        "@orpc/client",
+        "@orpc/client/fetch",
+        "@orpc/tanstack-query",
+        "@tanstack/vue-query",
+        "@tanstack/vue-query-devtools",
+{{/if}}
+      ],
+    },
+  },
+{{/if}}
   devServer: {
     port: 3001
   },
-  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")) (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma"))))}}
   nitro: {
+    {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+    externals: { traceInclude: libsqlBindings },
+    {{/if}}
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     typescript: {
       tsConfig: { references: [apiReference] },
@@ -30403,7 +30469,7 @@ export default defineNuxtConfig({
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}nuxt prepare && vue-tsc -b{{else}}nuxt typecheck{{/if}}",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "{{#if (or (eq webDeploy "none") (eq webDeploy "docker"))}}node .output/server/index.mjs{{else}}nuxt preview{{/if}}",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -31070,7 +31136,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31427,6 +31493,9 @@ import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{el
 export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}({ command }) => ({{/if}}{
   resolve: {
     tsconfigPaths: true,
+  },
+  optimizeDeps: {
+    entries: ["src/**/*.{ts,tsx}"],
   },
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
@@ -32791,14 +32860,14 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.23",
-    "@solidjs/web": "2.0.0-rc.7",
-    "solid-js": "2.0.0-rc.7"
+    "@solidjs/router": "2.0.0-next.34",
+    "@solidjs/web": "2.0.0-rc.13",
+    "solid-js": "2.0.0-rc.13"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.39",
+    "@solidjs/vite-plugin": "3.0.0-next.47",
     "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.3.0",
+    "filesystem-routing": "0.4.0",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
     "nitro": "3.0.260903-beta"{{/unless}}
@@ -33069,6 +33138,9 @@ export default defineConfig(({ command }) => {
 {{else}}
 export default defineConfig({
 {{/if}}
+  optimizeDeps: {
+    entries: ["src/**/*.tsx"],
+  },
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
@@ -33504,7 +33576,7 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
   ],
-{{#if (and (eq webDeploy "prisma") (ne backend "none"))}}
+{{#if (eq webDeploy "prisma")}}
   // Prisma Compute uploads only the build artifact, so keep the official
   // adapter-node output self-contained instead of requiring node_modules.
   ssr: {
@@ -35548,4 +35620,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 529;
+export const TEMPLATE_COUNT = 532;

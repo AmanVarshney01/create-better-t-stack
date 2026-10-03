@@ -75,6 +75,15 @@ export class VirtualFileSystem {
     }
   }
 
+  deleteDirectory(dirPath: string): boolean {
+    try {
+      this._fs.rmdirSync(this.normalizePath(dirPath));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   listDir(dirPath: string): string[] {
     try {
       return (this._fs.readdirSync(this.normalizePath(dirPath) || "/") as string[]).sort();

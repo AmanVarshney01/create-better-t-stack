@@ -37,6 +37,9 @@ export default defineConfig(({ command }) => {
 {{else}}
 export default defineConfig({
 {{/if}}
+  optimizeDeps: {
+    entries: ["src/**/*.tsx"],
+  },
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),

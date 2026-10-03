@@ -374,7 +374,8 @@ describe("Alchemy providers", () => {
       if (frontend === "nuxt") {
         expect(frameworkConfig).toContain("wasm: true");
         expect(frameworkConfig).toContain("'pg-native': 'unenv/mock/proxy'");
-        expect(nuxtServerPlugin).toContain('url: "/rpc"');
+        // RPCLink needs an absolute URL during SSR
+        expect(nuxtServerPlugin).toContain('new URL("/rpc", useRequestURL())');
         expect(nuxtServerPlugin).toContain("event.fetch(request, init)");
         expect(nuxtServerPlugin).not.toContain("createRouterClient");
       }

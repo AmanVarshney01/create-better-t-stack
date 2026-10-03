@@ -2156,9 +2156,12 @@ describe("Client URL selection", () => {
     { frontend: "tanstack-router", api: "orpc", deploy: "none" },
     { frontend: "next", api: "orpc", deploy: "none" },
     { frontend: "next", api: "trpc", deploy: "vercel" },
+    { frontend: "next", api: "orpc", deploy: "vercel" },
     { frontend: "next", api: "orpc", deploy: "docker" },
     { frontend: "svelte", api: "orpc", deploy: "none" },
+    { frontend: "svelte", api: "orpc", deploy: "vercel" },
     { frontend: "astro", api: "orpc", deploy: "none" },
+    { frontend: "astro", api: "orpc", deploy: "vercel" },
     { frontend: "tanstack-router", api: "trpc", deploy: "vercel" },
     { frontend: "tanstack-router", api: "orpc", deploy: "docker" },
   ] as const;
@@ -2207,7 +2210,6 @@ export const urls = [authClient.baseURL, ${rpcExpression}];`)
         "createAuthClient",
         "ENV",
         "window",
-        "globalThis",
         "process",
         `${executable}\nreturn urls;`,
       );
@@ -2233,14 +2235,24 @@ export const urls = [authClient.baseURL, ${rpcExpression}];`)
           (options: { baseURL: string }) => options,
           { [envKey]: publicUrl },
           windowValue,
-          {
-            process: { env: processEnv },
-          },
-          { env: { [envKey]: publicUrl } },
+          { env: { ...processEnv, [envKey]: publicUrl } },
         );
         expect(urls).toEqual([
           deploy === "none" ? publicUrl : `${origin}/api/auth`,
           `${origin}${deploy === "vercel" ? "/api" : ""}/${api === "trpc" ? "trpc" : "rpc"}`,
+        ]);
+      }
+      if (deploy === "vercel") {
+        const binding = "https://internal.example.test/service-server/";
+        const urls = evaluate(
+          (options: { baseURL: string }) => options,
+          { [envKey]: publicUrl },
+          undefined,
+          { env: { ...processEnv, [envKey]: publicUrl, SERVER_URL: binding } },
+        );
+        expect(urls).toEqual([
+          `${binding}api/auth`,
+          `${binding}api/${api === "trpc" ? "trpc" : "rpc"}`,
         ]);
       }
       if (deploy !== "vercel") {

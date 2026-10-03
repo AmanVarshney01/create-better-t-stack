@@ -227,6 +227,19 @@ export async function processAuthTemplates(
       "apps/web",
       config,
     );
+    if (authProvider === "better-auth") {
+      const serverLoader =
+        config.backend === "self" ||
+        (config.webDeploy === config.serverDeploy &&
+          ["vercel", "docker"].includes(config.webDeploy));
+      processSingleTemplate(
+        vfs,
+        templates,
+        "auth/better-auth/loaders/svelte/dashboard.ts",
+        `apps/web/src/routes/dashboard/+page${serverLoader ? ".server" : ""}.ts`,
+        config,
+      );
+    }
   } else if (hasSolidWeb) {
     if (config.backend === "self" && authProvider === "better-auth") {
       processTemplatesFromPrefix(

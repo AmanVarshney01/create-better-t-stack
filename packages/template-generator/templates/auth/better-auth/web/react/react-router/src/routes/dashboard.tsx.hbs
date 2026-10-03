@@ -1,7 +1,4 @@
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
-{{/if}}
-{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -14,45 +11,44 @@ import { trpc } from "@/utils/trpc";
 {{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import type { BetterFetchOption } from "better-auth/client";
+import { redirect } from "react-router";
+import type { Route } from "./+types/dashboard";
 
-export default function Dashboard() {
-  const { data: session, isPending } = authClient.useSession();
-  const navigate = useNavigate();
-  {{#if (eq payments "polar")}}
-  const [customerState, setCustomerState] = useState<CustomerState | null>(null);
-  {{/if}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+export async function loader({ request }: Route.LoaderArgs) {
+{{else}}
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+{{/if}}
+  const fetchOptions = {
+    signal: request.signal,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+    headers: { cookie: request.headers.get("cookie") ?? "" },
+{{/if}}
+    throw: true,
+  } satisfies BetterFetchOption;
+  const session = await authClient.getSession({ fetchOptions });
+  if (!session) throw redirect("/login");
+{{#if (eq payments "polar")}}
+  const customerState = await authClient.customer.state({ fetchOptions });
+{{/if}}
+  return { user: session.user{{#if (eq payments "polar")}}, customerState{{/if}} };
+}
 
-  {{#if (eq api "orpc")}}
+{{#unless (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+export function HydrateFallback() {
+  return <div>Loading...</div>;
+}
+
+{{/unless}}
+export default function Dashboard({ loaderData }: Route.ComponentProps) {
+  const { user{{#if (eq payments "polar")}}, customerState{{/if}} } = loaderData;
+{{#if (eq api "orpc")}}
   const privateData = useQuery(orpc.privateData.queryOptions());
-  {{/if}}
-  {{#if (eq api "trpc")}}
+{{/if}}
+{{#if (eq api "trpc")}}
   const privateData = useQuery(trpc.privateData.queryOptions());
-  {{/if}}
-
-  useEffect(() => {
-    if (!session && !isPending) {
-      navigate("/login");
-    }
-  }, [session, isPending, navigate]);
-
-  {{#if (eq payments "polar")}}
-  useEffect(() => {
-    async function fetchCustomerState() {
-      if (session) {
-        const { data } = await authClient.customer.state();
-        setCustomerState(data ?? null);
-      }
-    }
-
-    fetchCustomerState();
-  }, [session]);
-  {{/if}}
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
+{{/if}}
 
   {{#if (eq payments "polar")}}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
@@ -61,7 +57,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
+      <p>Welcome {user.name}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}

@@ -12,6 +12,9 @@ export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy
   resolve: {
     tsconfigPaths: true,
   },
+  optimizeDeps: {
+    entries: ["src/**/*.{ts,tsx}"],
+  },
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
