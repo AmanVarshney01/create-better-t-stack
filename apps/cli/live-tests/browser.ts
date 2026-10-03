@@ -78,7 +78,7 @@ export async function verifyBrowser(
   const cancelledNavigations: string[] = [];
   const cancelledSessionRequests: { url: string; afterResponse: number }[] = [];
   const requests: { url: string; status: number }[] = [];
-  const activationStatuses: number[] = [];
+  const activationStatuses: { url: string; status: number | undefined }[] = [];
   page.on("pageerror", (error) => errors.push(`${page.url()}: ${error.message}`));
   page.on("console", (message) => {
     if (/hydration.*(mismatch|failed)/i.test(message.text()))
@@ -117,22 +117,27 @@ export async function verifyBrowser(
   });
   try {
     await authorizeDeployment(context.request, deployment);
+    let homeStatus: number | undefined;
     if (stage === "alchemy") {
-      await expect
-        .poll(
-          async () => {
-            const response = await context.request.get(webUrl, { timeout: 10_000 });
-            const status = response.status();
-            activationStatuses.push(status);
-            await response.dispose();
-            return status;
-          },
-          { message: "Deployed web endpoint becomes ready", timeout: 60_000 },
-        )
-        .toBe(200);
+      const urls = new Set([deployment.server, webUrl].flatMap((url) => (url ? [url] : [])));
+      for (const url of urls) {
+        await expect
+          .poll(
+            async () => {
+              const response = await page.goto(url, { timeout: 10_000 });
+              const status = response?.status();
+              activationStatuses.push({ url, status });
+              if (url === webUrl) homeStatus = status;
+              return status;
+            },
+            { message: "Deployed endpoint becomes ready in the browser", timeout: 60_000 },
+          )
+          .toBe(200);
+      }
+    } else {
+      homeStatus = (await page.goto(webUrl))?.status();
     }
-    const home = await page.goto(webUrl);
-    expect(home?.status(), "Deployed home page").toBe(200);
+    expect(homeStatus, "Deployed home page").toBe(200);
     if (config.api !== "none")
       await expect(
         page.getByText(config.frontend.includes("nuxt") ? "Connected (OK)" : "Connected", {
