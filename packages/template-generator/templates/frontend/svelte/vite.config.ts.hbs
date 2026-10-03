@@ -42,9 +42,10 @@ export default defineConfig({
   ],
 {{#if (eq webDeploy "prisma")}}
   // Prisma Compute uploads only the build artifact, so keep the official
-  // adapter-node output self-contained instead of requiring node_modules.
+  // adapter-node output self-contained. The adapter respects noExternal rules
+  // when deciding which production dependencies to externalize.
   ssr: {
-    noExternal: true,
+    noExternal: [/.*/],
   },
 {{/if}}
 });

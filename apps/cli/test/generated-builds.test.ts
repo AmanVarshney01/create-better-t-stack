@@ -1399,39 +1399,46 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const runtimeRoot = await fs.mkdtemp(path.join(tmpdir(), "bts-prisma-artifact-"));
   const artifactDirectory = entrypoint.split("/")[0]!;
   await fs.copy(path.join(webDir, artifactDirectory), path.join(runtimeRoot, artifactDirectory));
-  const port = await getAvailablePort();
-  const runtime = execa("bun", [entrypoint], {
-    cwd: runtimeRoot,
-    all: true,
-    reject: false,
-    env: {
-      ...process.env,
-      HOST: "127.0.0.1",
-      NODE_ENV: "production",
-      PORT: String(port),
-    },
-  });
-
-  let failure: unknown;
+  const runtimes = frontend.includes("svelte") ? ["bun", "node"] : ["bun"];
   try {
-    for (const pathname of ["/"]) {
-      const response = await fetchWhenReady(`http://127.0.0.1:${port}${pathname}`);
-      expect(response?.status).toBe(200);
-    }
-  } catch (error) {
-    failure = error;
-  } finally {
-    runtime.kill("SIGTERM");
-  }
+    for (const command of runtimes) {
+      const port = await getAvailablePort();
+      const runtime = execa(command, [entrypoint], {
+        cwd: runtimeRoot,
+        all: true,
+        reject: false,
+        env: {
+          ...process.env,
+          HOST: "127.0.0.1",
+          NODE_ENV: "production",
+          PORT: String(port),
+        },
+      });
 
-  const result = await runtime;
-  await fs.remove(runtimeRoot);
-  if (failure) {
-    throw new Error(
-      [`Generated Prisma runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
-        .filter(Boolean)
-        .join("\n\n"),
-    );
+      let failure: unknown;
+      try {
+        const response = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+        expect(response?.status).toBe(200);
+      } catch (error) {
+        failure = error;
+      } finally {
+        runtime.kill("SIGTERM");
+      }
+
+      const result = await runtime;
+      if (failure) {
+        throw new Error(
+          [
+            `Generated Prisma runtime probe failed (${command}): ${String(failure)}`,
+            formatOutput(result.all),
+          ]
+            .filter(Boolean)
+            .join("\n\n"),
+        );
+      }
+    }
+  } finally {
+    await fs.remove(runtimeRoot);
   }
 }
 
