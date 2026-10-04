@@ -169,6 +169,49 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (nextStack.backend === "nest") {
+    const applyNestOverride = <K extends keyof StackState>(key: K, value: StackState[K]) => {
+      if (nextStack[key] === value) return;
+      nextStack[key] = value;
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: `${getCategoryDisplayName(key)} set to '${value}' (Nest.js constraint)`,
+      });
+    };
+
+    applyNestOverride("api", "none");
+    applyNestOverride("payments", "none");
+    if (nextStack.runtime !== "bun" && nextStack.runtime !== "node") {
+      applyNestOverride("runtime", "bun");
+    }
+    if (nextStack.auth !== "better-auth" && nextStack.auth !== "none") {
+      applyNestOverride("auth", "none");
+    }
+    if (
+      nextStack.serverDeploy !== "docker" &&
+      nextStack.serverDeploy !== "vercel" &&
+      nextStack.serverDeploy !== "none"
+    ) {
+      applyNestOverride("serverDeploy", "none");
+    }
+    if (nextStack.dbSetup === "d1") {
+      applyNestOverride("dbSetup", "none");
+    }
+    if (nextStack.database === "none") {
+      applyNestOverride("orm", "none");
+    } else if (nextStack.database !== "mongodb" || nextStack.orm !== "mongoose") {
+      applyNestOverride("orm", "prisma");
+    }
+
+    if (nextStack.examples.includes("ai")) {
+      nextStack.examples = nextStack.examples.filter((example) => example !== "ai");
+      if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+      changed = true;
+      changes.push({ category: "examples", message: "AI removed (not supported by Nest.js)" });
+    }
+  }
+
   if (isSelfHostedFullstackBackend(nextStack.backend)) {
     const frontend = getSelfBackendFrontend(nextStack.backend);
     if (frontend && !nextStack.webFrontend.includes(frontend)) {
@@ -594,6 +637,38 @@ export const getDisabledReason = (
     return "No backend selected";
   }
 
+  if (currentStack.backend === "nest") {
+    if (category === "runtime" && optionId !== "bun" && optionId !== "node") {
+      return "Nest.js currently requires the Bun or Node.js runtime";
+    }
+    if (category === "orm" && optionId === "drizzle") {
+      return "Nest.js currently supports Prisma or Mongoose";
+    }
+    if (category === "api" && optionId !== "none") {
+      return "Nest.js does not support a generated API layer yet";
+    }
+    if (category === "auth" && optionId === "clerk") {
+      return "Nest.js currently supports Better Auth only";
+    }
+    if (category === "payments" && optionId !== "none") {
+      return "Nest.js does not support payments yet";
+    }
+    if (category === "dbSetup" && optionId === "d1") {
+      return "D1 requires the Cloudflare Workers runtime";
+    }
+    if (
+      category === "serverDeploy" &&
+      optionId !== "none" &&
+      optionId !== "docker" &&
+      optionId !== "vercel"
+    ) {
+      return "Nest.js supports Docker or Vercel server deployment";
+    }
+    if (category === "examples" && optionId === "ai") {
+      return "The AI example is not supported by Nest.js yet";
+    }
+  }
+
   const fullstackFrontend = getSelfBackendFrontend(currentStack.backend);
   if (fullstackFrontend) {
     const name =
@@ -637,6 +712,7 @@ export const getDisabledReason = (
     if (
       currentStack.runtime === "workers" &&
       optionId !== "none" &&
+      optionId !== "nest" &&
       !supportsRuntimeBackend(currentStack.runtime, getStackBackend(optionId))
     ) {
       return "Workers runtime only works with Hono";

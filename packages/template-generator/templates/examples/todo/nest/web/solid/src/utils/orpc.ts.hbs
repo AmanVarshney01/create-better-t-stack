@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/solid-query";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 
 type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
 type Todo = { id: TodoId; text: string; completed: boolean };
-const serverUrl = env.VITE_SERVER_URL.replace(/\/$/, "");
+const serverUrl = ENV.VITE_SERVER_URL.replace(/\/$/, "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(`${serverUrl}${path}`, { ...init, credentials: "include" });
@@ -13,7 +13,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 const mutationOptions = <TInput, TOutput>(mutationFn: (input: TInput) => Promise<TOutput>, options: Record<string, unknown> = {}) => ({ mutationFn, ...options });
 
-export const queryClient = new QueryClient();
+export function createQueryClient() {
+	return new QueryClient();
+}
+
+export const queryClient = createQueryClient();
 export const orpc = {
 	healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
 	todo: {

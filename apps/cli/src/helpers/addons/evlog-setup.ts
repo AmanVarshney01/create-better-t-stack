@@ -405,12 +405,21 @@ export function addEvlogServerSetup(
   return nextContent;
 }
 
-function addEvlogNestModuleSetup(content: string) {
-  let nextContent = prependMissingImports(content, ['import { EvlogModule } from "evlog/nestjs";']);
-  if (nextContent.includes("EvlogModule.forRoot()")) return nextContent;
+function addEvlogNestModuleSetup(content: string, fsDrain: boolean) {
+  const moduleSetup = fsDrain
+    ? `EvlogModule.forRoot({ drain: ${NODE_DEV_FS_DRAIN_EXPRESSION} })`
+    : "EvlogModule.forRoot()";
+  let nextContent = prependMissingImports(content, [
+    'import { EvlogModule } from "evlog/nestjs";',
+    ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+  ]);
+  if (nextContent.includes(moduleSetup)) return nextContent;
+  if (fsDrain && nextContent.includes("EvlogModule.forRoot()")) {
+    return nextContent.replace("EvlogModule.forRoot()", moduleSetup);
+  }
+  if (nextContent.includes("EvlogModule.forRoot(")) return nextContent;
 
-  nextContent = nextContent.replace("imports: [", "imports: [EvlogModule.forRoot(), ");
-  return nextContent;
+  return nextContent.replace("imports: [", `imports: [${moduleSetup}, `);
 }
 
 function addNuxtEvlogSetup(content: string, serviceName: string) {
@@ -1363,7 +1372,7 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
         if (config.backend === "nest") {
           await updateFileIfExists(
             path.join(config.projectDir, "apps/server/src/app.module.ts"),
-            addEvlogNestModuleSetup,
+            (content) => addEvlogNestModuleSetup(content, shouldWireEvlogServerFsDrain(config)),
           );
         }
       }

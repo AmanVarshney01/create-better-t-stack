@@ -1,9 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
-import { env } from "@{{projectName}}/env/web";
+{{#unless (includes frontend "next")}}
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+{{/unless}}
 
 type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
 type Todo = { id: TodoId; text: string; completed: boolean };
-const serverUrl = env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}.replace(/\/$/, "");
+const serverUrl = {{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}}.replace(/\/$/, "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(`${serverUrl}${path}`, { ...init, credentials: "include" });

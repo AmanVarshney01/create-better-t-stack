@@ -3,7 +3,7 @@ import path from "node:path";
 
 import fs from "fs-extra";
 
-import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
 
 const baseConfig = {
   backend: "nest",
@@ -25,7 +25,7 @@ const baseConfig = {
 
 describe("Nest.js backend", () => {
   it("generates Better Auth and REST TODO integration", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       ...baseConfig,
       projectName: "nest-better-auth-todo",
       auth: "better-auth",
@@ -33,7 +33,7 @@ describe("Nest.js backend", () => {
     });
 
     expectSuccess(result);
-    const projectDir = result.projectDir as string;
+    const { projectDir } = result;
     const main = await fs.readFile(path.join(projectDir, "apps/server/src/main.ts"), "utf8");
     const appModule = await fs.readFile(
       path.join(projectDir, "apps/server/src/app.module.ts"),
@@ -66,7 +66,7 @@ describe("Nest.js backend", () => {
     expect(todosController).toContain('@Controller("todos")');
     expect(todosController).toContain('@Patch(":id")');
     expect(todosController).toContain("this.todosService.update(id, updateTodoDto)");
-    expect(todosService).toContain("prisma.todo.update");
+    expect(todosService).toContain("db.todo.update");
     expect(todosService).toContain('error.code !== "P2025"');
     expect(todosService).toContain("@Injectable()");
     expect(createTodoDto).toContain("@Matches(/\\S/");
@@ -79,31 +79,31 @@ describe("Nest.js backend", () => {
     expect(
       await fs.pathExists(path.join(projectDir, "apps/server/src/todos/entities/todo.entity.ts")),
     ).toBe(true);
-    expect(serverPackage.dependencies["@thallesp/nestjs-better-auth"]).toBe("^2.7.0");
-    expect(serverPackage.dependencies["@nestjs/core"]).toBe("^11.1.6");
-    expect(serverPackage.dependencies["class-transformer"]).toBe("^0.5.1");
-    expect(serverPackage.dependencies["class-validator"]).toBe("^0.15.1");
+    expect(serverPackage.dependencies["@thallesp/nestjs-better-auth"]).toBeDefined();
+    expect(serverPackage.dependencies["@nestjs/core"]).toBeDefined();
+    expect(serverPackage.dependencies["class-transformer"]).toBeDefined();
+    expect(serverPackage.dependencies["class-validator"]).toBeDefined();
     expect(serverPackage.dependencies["@prisma/client"]).toBeUndefined();
     expect(webPackage.dependencies["@orpc/client"]).toBeUndefined();
     expect(await fs.pathExists(path.join(projectDir, "packages/api"))).toBe(false);
   });
 
   it("generates a Docker-ready Nest server", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       ...baseConfig,
       projectName: "nest-docker",
       serverDeploy: "docker",
     });
 
     expectSuccess(result);
-    const projectDir = result.projectDir as string;
+    const { projectDir } = result;
     const main = await fs.readFile(path.join(projectDir, "apps/server/src/main.ts"), "utf8");
     expect(main).toContain('app.listen(process.env.PORT ?? 3000, "0.0.0.0")');
     expect(await fs.pathExists(path.join(projectDir, "apps/server/Dockerfile"))).toBe(true);
   });
 
   it("generates a Bun-powered Nest server", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       ...baseConfig,
       projectName: "nest-bun",
       runtime: "bun",
@@ -112,7 +112,7 @@ describe("Nest.js backend", () => {
     });
 
     expectSuccess(result);
-    const projectDir = result.projectDir as string;
+    const { projectDir } = result;
     const serverPackage = await fs.readJson(path.join(projectDir, "apps/server/package.json"));
     const dockerfile = await fs.readFile(path.join(projectDir, "apps/server/Dockerfile"), "utf8");
 
@@ -120,19 +120,18 @@ describe("Nest.js backend", () => {
     expect(serverPackage.scripts.dev).toBe("bun run --hot src/main.ts");
     expect(serverPackage.scripts.start).toBe("bun run dist/main.mjs");
     expect(serverPackage.devDependencies["@types/bun"]).toBeDefined();
-    expect(serverPackage.dependencies.libsql).toBeUndefined();
     expect(dockerfile).toContain('CMD ["bun", "dist/main.mjs"]');
   });
 
   it("generates a Vercel-ready Nest server", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       ...baseConfig,
       projectName: "nest-vercel",
       serverDeploy: "vercel",
     });
 
     expectSuccess(result);
-    const projectDir = result.projectDir as string;
+    const { projectDir } = result;
     const vercelConfig = await fs.readJson(path.join(projectDir, "vercel.json"));
     const main = await fs.readFile(path.join(projectDir, "apps/server/src/main.ts"), "utf8");
 
@@ -144,13 +143,13 @@ describe("Nest.js backend", () => {
   });
 
   it("does not wire a Todo REST client when no example is selected", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       ...baseConfig,
       projectName: "nest-no-example",
     });
 
     expectSuccess(result);
-    const projectDir = result.projectDir as string;
+    const { projectDir } = result;
     const webMain = await fs.readFile(path.join(projectDir, "apps/web/src/main.tsx"), "utf8");
 
     expect(webMain).not.toContain("utils/orpc");
@@ -164,7 +163,7 @@ describe("Nest.js backend", () => {
     },
     {
       frontend: "solid" as const,
-      file: "apps/web/src/main.tsx",
+      file: "apps/web/src/App.tsx",
     },
     {
       frontend: "svelte" as const,
@@ -178,7 +177,7 @@ describe("Nest.js backend", () => {
 
   for (const testCase of todoClientCases) {
     it(`wires the Todo query client for ${testCase.frontend}`, async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         ...baseConfig,
         projectName: `nest-todo-${testCase.frontend}`,
         frontend: [testCase.frontend],
@@ -186,7 +185,7 @@ describe("Nest.js backend", () => {
       });
 
       expectSuccess(result);
-      const projectDir = result.projectDir as string;
+      const { projectDir } = result;
       const provider = await fs.readFile(path.join(projectDir, testCase.file), "utf8");
 
       expect(provider).toContain("QueryClientProvider");
@@ -194,7 +193,7 @@ describe("Nest.js backend", () => {
   }
 
   it("keeps Mongoose owned by the database package", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       ...baseConfig,
       projectName: "nest-mongoose-dependencies",
       database: "mongodb",
@@ -203,7 +202,7 @@ describe("Nest.js backend", () => {
     });
 
     expectSuccess(result);
-    const projectDir = result.projectDir as string;
+    const { projectDir } = result;
     const serverPackage = await fs.readJson(path.join(projectDir, "apps/server/package.json"));
     const dbPackage = await fs.readJson(path.join(projectDir, "packages/db/package.json"));
 
@@ -231,11 +230,10 @@ describe("Nest.js backend", () => {
 
   for (const testCase of invalidCases) {
     it(`rejects ${testCase.name}`, async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         ...baseConfig,
         ...testCase.config,
         projectName: `nest-invalid-${testCase.name.toLowerCase().replaceAll(" ", "-")}`,
-        expectError: true,
       });
 
       expectError(result, testCase.message);

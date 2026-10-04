@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { ValidationPipe } from "@nestjs/common";
 {{/if}}
 import { NestFactory } from "@nestjs/core";
-import { env } from "@{{projectName}}/env/server";
+import { ENV } from "./env.server";
 
 import { AppModule } from "./app.module";
 
@@ -14,7 +14,7 @@ async function bootstrap() {
 {{/if}}
 	});
 	app.enableCors({
-		origin: env.CORS_ORIGIN,
+		origin: ENV.CORS_ORIGIN,
 		methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 		credentials: true,

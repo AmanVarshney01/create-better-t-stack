@@ -3,19 +3,19 @@ import { Loading } from "solid-js";
 import Header from "~/components/header";
 import Loader from "~/components/loader";
 import { Router } from "~/router";
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { createQueryClient } from "~/utils/orpc";
 {{/if}}
 import "./styles.css";
 
 export default function App() {
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   const queryClient = createQueryClient();
 {{/if}}
 
   return (
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
     <QueryClientProvider client={queryClient}>
 {{/if}}
       <Router>
@@ -29,7 +29,7 @@ export default function App() {
           </>
         )}
       </Router>
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
     </QueryClientProvider>
 {{/if}}
   );

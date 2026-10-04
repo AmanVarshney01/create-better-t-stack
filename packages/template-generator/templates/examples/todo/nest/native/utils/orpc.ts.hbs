@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 
 type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
 type Todo = { id: TodoId; text: string; completed: boolean };
-const serverUrl = env.EXPO_PUBLIC_SERVER_URL.replace(/\/$/, "");
+const serverUrl = ENV.EXPO_PUBLIC_SERVER_URL.replace(/\/$/, "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(`${serverUrl}${path}`, { ...init, credentials: "include" });

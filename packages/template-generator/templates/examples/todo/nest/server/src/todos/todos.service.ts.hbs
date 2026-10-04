@@ -3,9 +3,10 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { BadRequestException } from "@nestjs/common";
 {{/unless}}
 {{#if (eq orm "prisma")}}
-import prisma, { Prisma } from "@{{projectName}}/db";
+import { Prisma } from "@{{projectName}}/db";
+import { db } from "@{{projectName}}/app-services";
 {{else}}
-import "@{{projectName}}/db";
+import "@{{projectName}}/app-services";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 {{/if}}
 
@@ -29,7 +30,7 @@ function parseTodoId(value: string): TodoId {
 export class TodosService {
 	async findAll(): Promise<TodoEntity[]> {
 {{#if (eq orm "prisma")}}
-		return (await prisma.todo.findMany({ orderBy: { id: "asc" } })) as TodoEntity[];
+		return (await db.todo.findMany({ orderBy: { id: "asc" } })) as TodoEntity[];
 {{else}}
 		return (await Todo.find().sort({ id: 1 }).lean()) as TodoEntity[];
 {{/if}}
@@ -37,7 +38,7 @@ export class TodosService {
 
 	async create(createTodoDto: CreateTodoDto): Promise<TodoEntity> {
 {{#if (eq orm "prisma")}}
-		return (await prisma.todo.create({ data: { text: createTodoDto.text.trim() } })) as TodoEntity;
+		return (await db.todo.create({ data: { text: createTodoDto.text.trim() } })) as TodoEntity;
 {{else}}
 		return (await Todo.create({ text: createTodoDto.text.trim() })) as TodoEntity;
 {{/if}}
@@ -47,7 +48,7 @@ export class TodosService {
 		const id = parseTodoId(value);
 {{#if (eq orm "prisma")}}
 		try {
-			return await prisma.todo.update({
+			return await db.todo.update({
 				where: { id },
 				data: { completed: updateTodoDto.completed },
 			});
@@ -72,7 +73,7 @@ export class TodosService {
 		const id = parseTodoId(value);
 {{#if (eq orm "prisma")}}
 		try {
-			return await prisma.todo.delete({ where: { id } });
+			return await db.todo.delete({ where: { id } });
 		} catch (error) {
 			if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2025") {
 				throw error;

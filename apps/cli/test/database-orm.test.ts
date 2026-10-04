@@ -5,91 +5,43 @@ import { expectError, expectSuccess, runCreateTest } from "./test-utils";
 
 describe("Database and ORM Combinations", () => {
   describe("Nest.js ORM constraints", () => {
-    it("should support Nest.js with Prisma", async () => {
-      const result = await runTRPCTest({
-        projectName: "nest-prisma-orm",
-        database: "sqlite",
-        orm: "prisma",
-        backend: "nest",
-        runtime: "node",
-        frontend: ["tanstack-router"],
-        auth: "none",
-        api: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        packageManager: "pnpm",
-        install: false,
+    for (const { database, orm } of [
+      { database: "sqlite", orm: "prisma" },
+      { database: "mongodb", orm: "mongoose" },
+    ] as const) {
+      it(`should support Nest.js with ${orm}`, async () => {
+        const result = await runCreateTest({
+          projectName: `nest-${orm}-orm`,
+          backend: "nest",
+          runtime: "node",
+          database,
+          orm,
+          api: "none",
+        });
+
+        expectSuccess(result);
       });
-
-      expectSuccess(result);
-    });
-
-    it("should support Nest.js with Mongoose", async () => {
-      const result = await runTRPCTest({
-        projectName: "nest-mongoose-orm",
-        database: "mongodb",
-        orm: "mongoose",
-        backend: "nest",
-        runtime: "node",
-        frontend: ["tanstack-router"],
-        auth: "none",
-        api: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        packageManager: "pnpm",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
+    }
 
     it("should reject Nest.js with Drizzle", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "nest-drizzle-orm",
-        database: "sqlite",
-        orm: "drizzle",
         backend: "nest",
         runtime: "node",
-        frontend: ["tanstack-router"],
-        auth: "none",
+        orm: "drizzle",
         api: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        packageManager: "pnpm",
-        install: false,
-        expectError: true,
       });
 
       expectError(result, "Nest.js requires Prisma or Mongoose ORM");
     });
 
     it("should reject an API layer until Nest.js adapters are implemented", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "nest-api-layer",
-        database: "sqlite",
-        orm: "prisma",
         backend: "nest",
         runtime: "node",
-        frontend: ["tanstack-router"],
-        auth: "none",
+        orm: "prisma",
         api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        packageManager: "pnpm",
-        install: false,
-        expectError: true,
       });
 
       expectError(result, "Nest.js does not support an API layer yet");
