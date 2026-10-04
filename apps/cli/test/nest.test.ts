@@ -63,7 +63,7 @@ describe("Nest.js backend", () => {
     expect(appModule).toContain("AuthModule.forRoot({ auth })");
     expect(appModule).toContain("TodosModule");
     expect(appController).toContain("@AllowAnonymous()");
-    expect(todosController).toContain('@Controller("todos")');
+    expect(todosController).toContain('@Controller("/todos")');
     expect(todosController).toContain('@Patch(":id")');
     expect(todosController).toContain("this.todosService.update(id, updateTodoDto)");
     expect(todosService).toContain("db.todo.update");
@@ -140,6 +140,33 @@ describe("Nest.js backend", () => {
       entrypoint: "src/main.ts",
     });
     expect(main).toContain("app.listen(process.env.PORT ?? 3000)");
+  });
+
+  it("serves Nest routes under the shared Vercel /api path", async () => {
+    const result = await runCreateTest({
+      ...baseConfig,
+      projectName: "nest-vercel-shared",
+      auth: "better-auth",
+      examples: ["todo"],
+      webDeploy: "vercel",
+      serverDeploy: "vercel",
+    });
+
+    expectSuccess(result);
+    const { projectDir } = result;
+    const vercelConfig = await fs.readJson(path.join(projectDir, "vercel.json"));
+    const appController = await fs.readFile(
+      path.join(projectDir, "apps/server/src/app.controller.ts"),
+      "utf8",
+    );
+    const todosController = await fs.readFile(
+      path.join(projectDir, "apps/server/src/todos/todos.controller.ts"),
+      "utf8",
+    );
+
+    expect(Object.keys(vercelConfig.services.server.functions)).toEqual(["src/main.ts"]);
+    expect(appController).toContain('@Get("/api/health")');
+    expect(todosController).toContain('@Controller("/api/todos")');
   });
 
   it("does not wire a Todo REST client when no example is selected", async () => {

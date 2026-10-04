@@ -70,10 +70,11 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   if (hasServer) {
+    const entrypoint = backend === "nest" ? "src/main.ts" : "src/index.ts";
     services.server = {
       root: "apps/server",
       framework: backend === "nest" ? "nestjs" : backend,
-      entrypoint: backend === "nest" ? "src/main.ts" : "src/index.ts",
+      entrypoint,
       installCommand,
       // Vercel compiles the entrypoint itself; a dist bundle would be deployed apart
       // from apps/server/node_modules, which bun and pnpm installs rely on
@@ -81,7 +82,7 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
       functions: {
         // varlock/auto-load runs the Varlock CLI, which file tracing can't follow.
         // Paths are relative to the repository root, the function's working directory
-        "src/index.ts": {
+        [entrypoint]: {
           includeFiles:
             "{package.json,apps/server/.env.schema,node_modules/.bin/varlock,node_modules/varlock/**}",
         },

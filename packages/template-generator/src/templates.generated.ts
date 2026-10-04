@@ -15306,7 +15306,7 @@ import { AppService } from "./app.service";
 export class AppController {
 	constructor(private readonly appService: AppService) {}
 
-	@Get("health")
+	@Get("{{apiPrefix webDeploy serverDeploy}}/health")
 {{#if (eq auth "better-auth")}}
 	@AllowAnonymous()
 {{/if}}
@@ -23921,7 +23921,7 @@ import { UpdateTodoDto } from "./dto/update-todo.dto";
 import type { TodoEntity } from "./entities/todo.entity";
 import { TodosService } from "./todos.service";
 
-@Controller("todos")
+@Controller("{{apiPrefix webDeploy serverDeploy}}/todos")
 {{#if (eq auth "better-auth")}}
 @AllowAnonymous()
 {{/if}}

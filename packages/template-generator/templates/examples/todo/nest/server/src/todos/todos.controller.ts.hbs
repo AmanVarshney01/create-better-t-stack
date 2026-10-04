@@ -8,7 +8,7 @@ import { UpdateTodoDto } from "./dto/update-todo.dto";
 import type { TodoEntity } from "./entities/todo.entity";
 import { TodosService } from "./todos.service";
 
-@Controller("todos")
+@Controller("{{apiPrefix webDeploy serverDeploy}}/todos")
 {{#if (eq auth "better-auth")}}
 @AllowAnonymous()
 {{/if}}
