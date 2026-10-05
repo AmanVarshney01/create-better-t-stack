@@ -30426,7 +30426,6 @@ export default defineNuxtConfig({
         "@orpc/client/fetch",
         "@orpc/tanstack-query",
         "@tanstack/vue-query",
-        "@tanstack/vue-query > @vue/devtools-api",
         "@tanstack/vue-query-devtools",
 {{/if}}
       ],
