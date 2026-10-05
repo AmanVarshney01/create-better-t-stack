@@ -30417,6 +30417,7 @@ export default defineNuxtConfig({
       include: [
 {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
         "better-auth/vue",
+        "zod",
 {{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
         "@orpc/client",
