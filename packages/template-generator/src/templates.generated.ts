@@ -9826,6 +9826,8 @@ export default defineNuxtPlugin(() => {
     },
     {{#if (ne backend "self")}}
     baseURL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}\`\${serverOrigin}/auth\`{{else}}new URL("/api/auth", serverOrigin).toString(){{/if}},
+    {{else}}
+    baseURL: useRequestURL().origin,
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -30424,6 +30426,7 @@ export default defineNuxtConfig({
         "@orpc/client/fetch",
         "@orpc/tanstack-query",
         "@tanstack/vue-query",
+        "@tanstack/vue-query > @vue/devtools-api",
         "@tanstack/vue-query-devtools",
 {{/if}}
       ],

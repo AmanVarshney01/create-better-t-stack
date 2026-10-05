@@ -9,7 +9,7 @@ import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./te
 describe("Authentication Configurations", () => {
   describe("Better-Auth Provider", () => {
     it.each(["self", "hono"] as const)(
-      "classifies browser-visible auth origins as public for %s",
+      "classifies Nuxt browser-visible auth origins as public for %s",
       async (backend) => {
         const result = await runCreateTest({
           projectName: `auth-origin-schema-${backend}`,

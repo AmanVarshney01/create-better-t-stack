@@ -87,7 +87,8 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
       );
       continue;
     }
-    const isAuthOrigin = key === "BETTER_AUTH_URL" || key === "CORS_ORIGIN";
+    const isAuthOrigin =
+      config.frontend.includes("nuxt") && (key === "BETTER_AUTH_URL" || key === "CORS_ORIGIN");
     const isPublic =
       /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key) || isAuthOrigin;
     let type = "string(minLength=1)";

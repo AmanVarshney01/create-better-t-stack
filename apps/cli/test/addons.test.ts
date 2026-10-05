@@ -1023,7 +1023,7 @@ describe("Addon Configurations", () => {
       expectDocsWithEvlogAuth(authMiddleware);
       expectParseableTypeScript(authMiddleware);
 
-      expect(authClient).not.toContain("baseURL:");
+      expect(authClient).toContain("baseURL: useRequestURL().origin");
       expect(authClient).not.toContain("as string");
       expectParseableTypeScript(authClient);
 
