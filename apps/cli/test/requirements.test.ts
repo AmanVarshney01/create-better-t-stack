@@ -174,13 +174,13 @@ describe("local tool requirements", () => {
   it("honors Nuxt's supported Node release lines", () => {
     const project = config({ frontend: ["nuxt"], packageManager: "pnpm" });
 
-    for (const version of ["22.19.0", "24.11.0", "26.0.0"]) {
+    for (const version of ["22.22.3", "24.15.0", "26.0.0"]) {
       expect(
         validateLocalToolVersions(project, { pnpm: "10.26.0", node: version }, "node").isOk(),
       ).toBe(true);
     }
 
-    for (const version of ["22.18.0", "23.11.0", "24.10.0", "25.1.0"]) {
+    for (const version of ["22.22.2", "23.11.0", "24.14.0", "25.1.0"]) {
       expect(
         validateLocalToolVersions(project, { pnpm: "10.26.0", node: version }, "node").isErr(),
       ).toBe(true);
