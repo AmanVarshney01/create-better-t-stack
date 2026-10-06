@@ -3,6 +3,8 @@ import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { Node, Project, SyntaxKind } from "ts-morph";
+
 import { add, type Addons, type Backend, type Frontend } from "../src";
 import { getCompatibleAddons } from "../src/utils/compatibility-rules";
 import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
@@ -1449,6 +1451,54 @@ describe("Addon Configurations", () => {
         'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
       );
       expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
+    });
+
+    it("adds evlog after the configured SvelteKit plugin and preserves unrelated plugin lists", async () => {
+      const created = await runCreateTest({
+        projectName: "evlog-svelte-configured-plugins",
+        frontend: ["svelte"],
+        backend: "self",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        addons: [],
+        examples: [],
+      });
+      expectSuccess(created);
+      const configPath = join(created.projectDir, "apps/web/vite.config.ts");
+      await writeFile(
+        configPath,
+        `const unrelated = { plugins: [] };\n${await readFile(configPath, "utf8")}`,
+      );
+      expect(
+        (await add({ projectDir: created.projectDir, addons: ["evlog"], install: false }))?.success,
+      ).toBe(true);
+      const updated = await readFile(configPath, "utf8");
+      expectParseableTypeScript(updated);
+      const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+        "vite.config.ts",
+        updated,
+      );
+      const unrelated = source
+        .getVariableDeclarationOrThrow("unrelated")
+        .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+      expect(unrelated.getPropertyOrThrow("plugins").getText()).toBe("plugins: []");
+      const kitCall = source
+        .getDescendants()
+        .find(
+          (node) => Node.isCallExpression(node) && node.getExpression().getText() === "sveltekit",
+        );
+      if (!kitCall || !Node.isCallExpression(kitCall))
+        throw new Error("Expected configured Kit plugin");
+      const plugins = kitCall
+        .getParentIfKindOrThrow(SyntaxKind.ArrayLiteralExpression)
+        .getElements();
+      const evlog = plugins[plugins.indexOf(kitCall) + 1];
+      expect(evlog && Node.isCallExpression(evlog) && evlog.getExpression().getText()).toBe(
+        "evlog",
+      );
     });
 
     it.each([

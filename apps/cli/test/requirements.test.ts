@@ -4,7 +4,6 @@ import type { ProjectConfig } from "../src/types";
 import {
   PACKAGE_MANAGER_VERSION_RANGES,
   getBaselineRequirements,
-  getLocalVersionRequirements,
   getLocalToolRecommendations,
   validateLocalToolVersions,
   validateRequirements,
@@ -133,21 +132,25 @@ describe("local tool requirements", () => {
     expect(result.isErr() ? result.error.message : "").toContain("create-better-t-stack");
   });
 
-  it("does not require Node tooling when Bun owns the install and runtime", () => {
-    const requirements = getLocalVersionRequirements(config({ frontend: ["solid"] }), "bun");
-
-    expect(requirements).toEqual([
-      {
-        tool: "bun",
-        range: ">=1.3.3",
-        reason: "Varlock requires Bun 1.3.3 or newer",
-      },
-    ]);
+  it("checks Node tooling even when Bun runs the generated scripts", () => {
+    const project = config({ frontend: ["solid"] });
+    const unsupported = validateLocalToolVersions(
+      project,
+      { bun: "1.4.0", node: "23.11.0" },
+      "bun",
+    );
+    expect(unsupported.isErr()).toBe(true);
+    expect(unsupported.isErr() ? unsupported.error.message : "").toContain("Solid");
+    expect(validateLocalToolVersions(project, { bun: "1.4.0", node: "24.0.0" }, "bun").isOk()).toBe(
+      true,
+    );
+    expect(validateLocalToolVersions(project, { bun: "1.4.0" }, "bun").isErr()).toBe(true);
   });
 
   it.each([
     ["astro", "22.11.0", "22.12.0", "Astro 7"],
     ["react-router", "22.21.0", "22.22.0", "React Router 8"],
+    ["svelte", "22.16.0", "22.17.0", "SvelteKit 3"],
     ["solid", "23.11.0", "24.0.0", "Solid"],
     ["native-bare", "22.12.0", "22.13.0", "React Native 0.86"],
   ] as const)(
@@ -171,21 +174,32 @@ describe("local tool requirements", () => {
     },
   );
 
-  it("honors Nuxt's supported Node release lines", () => {
-    const project = config({ frontend: ["nuxt"], packageManager: "pnpm" });
+  it.each(["bun", "pnpm"] as const)(
+    "honors Nuxt's supported Node release lines with %s",
+    (packageManager) => {
+      const project = config({ frontend: ["nuxt"], packageManager });
 
-    for (const version of ["22.22.3", "24.15.0", "26.0.0"]) {
-      expect(
-        validateLocalToolVersions(project, { pnpm: "10.26.0", node: version }, "node").isOk(),
-      ).toBe(true);
-    }
+      for (const version of ["22.22.3", "24.15.0", "26.0.0"]) {
+        expect(
+          validateLocalToolVersions(
+            project,
+            { bun: "1.4.0", pnpm: "10.26.0", node: version },
+            "bun",
+          ).isOk(),
+        ).toBe(true);
+      }
 
-    for (const version of ["22.22.2", "23.11.0", "24.14.0", "25.1.0"]) {
-      expect(
-        validateLocalToolVersions(project, { pnpm: "10.26.0", node: version }, "node").isErr(),
-      ).toBe(true);
-    }
-  });
+      for (const version of ["22.22.2", "23.11.0", "24.14.0", "25.1.0"]) {
+        expect(
+          validateLocalToolVersions(
+            project,
+            { bun: "1.4.0", pnpm: "10.26.0", node: version },
+            "bun",
+          ).isErr(),
+        ).toBe(true);
+      }
+    },
+  );
 
   it("combines backend and addon requirements", () => {
     const project = config({
