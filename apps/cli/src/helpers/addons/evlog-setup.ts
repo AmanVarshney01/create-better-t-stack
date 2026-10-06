@@ -430,14 +430,20 @@ function addSvelteViteEvlogSetup(content: string, serviceName: string) {
       node.name.getText(source) === "plugins" &&
       ts.isArrayLiteralExpression(node.initializer)
     ) {
-      insertion = node.initializer.getStart(source) + 1;
-      return;
+      const kitPlugin = node.initializer.elements.find(
+        (element) =>
+          ts.isCallExpression(element) && element.expression.getText(source) === "sveltekit",
+      );
+      if (kitPlugin) {
+        insertion = kitPlugin.getEnd();
+        return;
+      }
     }
     ts.forEachChild(node, visit);
   }
   visit(source);
   if (insertion === undefined) return nextContent;
-  return `${nextContent.slice(0, insertion)}\n    evlog({ service: ${JSON.stringify(serviceName)} }),${nextContent.slice(insertion)}`;
+  return `${nextContent.slice(0, insertion)},\n    evlog({ service: ${JSON.stringify(serviceName)} })${nextContent.slice(insertion)}`;
 }
 
 function getSvelteEvlogHooksCall(fsDrain: boolean, axiom = false) {
