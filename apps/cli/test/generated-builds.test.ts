@@ -66,6 +66,77 @@ const baseConfig = {
 
 const buildSamples: BuildSample[] = [
   {
+    name: "sveltekit-auth-evlog",
+    config: {
+      ...baseConfig,
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["evlog"],
+      examples: ["todo"],
+    },
+  },
+  {
+    name: "sveltekit-cloudflare-d1",
+    config: {
+      ...baseConfig,
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: [],
+      examples: ["todo"],
+      webDeploy: "cloudflare",
+    },
+  },
+  ...(
+    [
+      { name: "sveltekit-default", packageManagers: ["bun", "npm", "pnpm"] },
+      { name: "sveltekit-vercel", webDeploy: "vercel" },
+      { name: "sveltekit-cloudflare", webDeploy: "cloudflare" },
+      { name: "sveltekit-desktop", addons: ["tauri"] },
+      { name: "sveltekit-convex", backend: "convex" },
+      { name: "sveltekit-fullstack", backend: "self", api: "orpc", addons: ["evlog"] },
+    ] satisfies Array<{
+      name: string;
+      packageManagers?: BuildSample["packageManagers"];
+      webDeploy?: CreateInput["webDeploy"];
+      addons?: CreateInput["addons"];
+      backend?: CreateInput["backend"];
+      api?: CreateInput["api"];
+    }>
+  ).map(
+    (sample) =>
+      ({
+        name: sample.name,
+        packageManagers: "packageManagers" in sample ? sample.packageManagers : ["bun"],
+        config: {
+          ...baseConfig,
+          frontend: ["svelte"],
+          backend: "backend" in sample ? sample.backend : "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "api" in sample ? sample.api : "none",
+          auth: "none",
+          payments: "none",
+          addons: "addons" in sample ? sample.addons : [],
+          examples: [],
+          webDeploy: "webDeploy" in sample ? sample.webDeploy : "none",
+        },
+      }) satisfies BuildSample,
+  ),
+  {
     name: "react-router-server-auth-polar-types",
     packageManagers: ["bun"],
     config: {
@@ -1328,39 +1399,46 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const runtimeRoot = await fs.mkdtemp(path.join(tmpdir(), "bts-prisma-artifact-"));
   const artifactDirectory = entrypoint.split("/")[0]!;
   await fs.copy(path.join(webDir, artifactDirectory), path.join(runtimeRoot, artifactDirectory));
-  const port = await getAvailablePort();
-  const runtime = execa("bun", [entrypoint], {
-    cwd: runtimeRoot,
-    all: true,
-    reject: false,
-    env: {
-      ...process.env,
-      HOST: "127.0.0.1",
-      NODE_ENV: "production",
-      PORT: String(port),
-    },
-  });
-
-  let failure: unknown;
+  const runtimes = frontend.includes("svelte") ? ["bun", "node"] : ["bun"];
   try {
-    for (const pathname of ["/"]) {
-      const response = await fetchWhenReady(`http://127.0.0.1:${port}${pathname}`);
-      expect(response?.status).toBe(200);
-    }
-  } catch (error) {
-    failure = error;
-  } finally {
-    runtime.kill("SIGTERM");
-  }
+    for (const command of runtimes) {
+      const port = await getAvailablePort();
+      const runtime = execa(command, [entrypoint], {
+        cwd: runtimeRoot,
+        all: true,
+        reject: false,
+        env: {
+          ...process.env,
+          HOST: "127.0.0.1",
+          NODE_ENV: "production",
+          PORT: String(port),
+        },
+      });
 
-  const result = await runtime;
-  await fs.remove(runtimeRoot);
-  if (failure) {
-    throw new Error(
-      [`Generated Prisma runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
-        .filter(Boolean)
-        .join("\n\n"),
-    );
+      let failure: unknown;
+      try {
+        const response = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+        expect(response?.status).toBe(200);
+      } catch (error) {
+        failure = error;
+      } finally {
+        runtime.kill("SIGTERM");
+      }
+
+      const result = await runtime;
+      if (failure) {
+        throw new Error(
+          [
+            `Generated Prisma runtime probe failed (${command}): ${String(failure)}`,
+            formatOutput(result.all),
+          ]
+            .filter(Boolean)
+            .join("\n\n"),
+        );
+      }
+    }
+  } finally {
+    await fs.remove(runtimeRoot);
   }
 }
 
@@ -1587,6 +1665,26 @@ export type TypeBoundaryProbeClient = RouterClient<typeof typeBoundaryProbe>;\n`
   };
 }
 
+async function writeSvelteHookTypeChecks(sample: SelectedBuildSample, projectDir: string) {
+  if (
+    !sample.config.frontend?.includes("svelte") ||
+    !sample.config.addons?.some((addon) => addon === "evlog" || addon === "axiom")
+  )
+    return;
+  const probe = path.join(projectDir, "apps/web/src/hooks-typecheck.ts");
+  await fs.outputFile(
+    probe,
+    `import type { Handle, HandleServerError } from "@sveltejs/kit/hooks";
+import { handle, handleError } from "./hooks.server";
+
+// Check the generated hooks against Kit's public types, including dependency returns.
+export const checkedHandle: Handle = handle;
+export const checkedHandleError: HandleServerError = handleError;
+`,
+  );
+  return () => fs.remove(probe);
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -1628,6 +1726,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             ]);
           }
           const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
+          const restoreSvelteHookTypes = await writeSvelteHookTypeChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(
               path.join(projectDir, "apps/web/app/pages/ssr-auth-probe.vue"),
@@ -1646,6 +1745,7 @@ try {
           } finally {
             // Build and boot the scaffold without the compile-only custom auth field.
             await restoreTypeFixtures?.();
+            await restoreSvelteHookTypes?.();
           }
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);

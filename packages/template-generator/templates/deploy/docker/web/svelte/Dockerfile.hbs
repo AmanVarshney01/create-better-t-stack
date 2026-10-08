@@ -24,7 +24,12 @@ ENV PUBLIC_SERVER_URL=${PUBLIC_SERVER_URL}
 ARG PUBLIC_CONVEX_URL
 ENV PUBLIC_CONVEX_URL=${PUBLIC_CONVEX_URL}
 {{/if}}
+ARG ORIGIN=http://localhost:3001
+ENV ORIGIN=${ORIGIN}
 ENV NODE_ENV=production
+{{#if (and (eq backend "self") (eq database "sqlite") (eq dbSetup "none"))}}
+RUN mkdir -p /app/.data
+{{/if}}
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 {{#if (eq orm "prisma")}}
 ENV DATABASE_URL=

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 
+import { inc, minVersion, satisfies, subset } from "semver";
 import yaml from "yaml";
 import { z } from "zod";
 
@@ -51,11 +52,17 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
         const version = (name: string) => {
           const value = infra.devDependencies[name];
           const resolved = value === "catalog:" ? catalog?.[name] : value;
-          expect(resolved).toBeString();
-          return resolved;
+          return z.string().parse(resolved);
         };
-        expect(version("@effect/platform-node")).toBe(version("effect"));
-        expect(version("@effect/platform-bun")).toBe(version("effect"));
+        const effectRange = version("effect");
+        for (const platform of ["@effect/platform-node", "@effect/platform-bun"]) {
+          expect(subset(version(platform), effectRange)).toBe(true);
+        }
+        const minimumEffect = minVersion(effectRange);
+        if (!minimumEffect) throw new Error("Expected a valid Effect dependency range");
+        const nextPatch = inc(minimumEffect, "patch");
+        if (!nextPatch) throw new Error("Expected a compatible Effect patch version");
+        expect(satisfies(nextPatch, effectRange)).toBe(true);
         if (deployment === "prisma") {
           expect(version("@alchemy.run/frontend-frameworks")).toBe(version("alchemy"));
         }
@@ -65,7 +72,7 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
 }
 
 for (const packageManager of ["bun", "npm", "pnpm"] as const) {
-  test(`Svelte Kit 2 uses the Node artifact without the Kit 3 adapter with ${packageManager}`, async () => {
+  test(`Svelte Compute uses the standalone Node artifact with ${packageManager}`, async () => {
     const result = await createVirtual({
       projectName: "prisma-svelte-node",
       frontend: ["svelte"],
