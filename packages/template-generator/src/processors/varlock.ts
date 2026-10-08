@@ -87,7 +87,10 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
       );
       continue;
     }
-    const isPublic = /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key);
+    const isAuthOrigin =
+      config.frontend.includes("nuxt") && (key === "BETTER_AUTH_URL" || key === "CORS_ORIGIN");
+    const isPublic =
+      /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key) || isAuthOrigin;
     let type = "string(minLength=1)";
     if (key === "BETTER_AUTH_SECRET") type = "string(minLength=32)";
     else if ((key.endsWith("URL") && key !== "DATABASE_URL") || key === "CORS_ORIGIN") type = "url";
@@ -112,7 +115,12 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
     }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
-    lines.push(`# ${isPublic ? "@public " : ""}@type=${type}`, `${key}=${value}`, "");
+    // Auth origins are visible in browser requests and must still resolve at runtime.
+    lines.push(
+      `# ${isPublic ? "@public " : ""}${isAuthOrigin ? "@dynamic " : ""}@type=${type}`,
+      `${key}=${value}`,
+      "",
+    );
   }
   return lines.join("\n");
 }

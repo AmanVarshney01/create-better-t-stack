@@ -179,7 +179,7 @@ describe("local tool requirements", () => {
     (packageManager) => {
       const project = config({ frontend: ["nuxt"], packageManager });
 
-      for (const version of ["22.19.0", "24.11.0", "26.0.0"]) {
+      for (const version of ["22.22.3", "24.15.0", "26.0.0"]) {
         expect(
           validateLocalToolVersions(
             project,
@@ -189,7 +189,7 @@ describe("local tool requirements", () => {
         ).toBe(true);
       }
 
-      for (const version of ["22.18.0", "23.11.0", "24.10.0", "25.1.0"]) {
+      for (const version of ["22.22.2", "23.11.0", "24.14.0", "25.1.0"]) {
         expect(
           validateLocalToolVersions(
             project,
