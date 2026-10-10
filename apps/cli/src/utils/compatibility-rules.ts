@@ -213,7 +213,7 @@ export function validateDockerServerDeploy(
 
   if (backend && backend !== "none" && !SERVER_BACKENDS.includes(backend)) {
     return validationErr(
-      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
+      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia, nest). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
     );
   }
 
@@ -235,7 +235,7 @@ export function validateVercelServerDeploy(
 
   if (backend && backend !== "none" && !SERVER_BACKENDS.includes(backend)) {
     return validationErr(
-      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
+      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia, nest). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
     );
   }
 
@@ -448,7 +448,7 @@ export function validateExamplesCompatibility(
         "The 'todo' example requires a database. Cannot use --examples todo when database is 'none'.",
       );
     }
-    if (api === "none") {
+    if (api === "none" && backend !== "nest") {
       return validationErr(
         "The 'todo' example requires an API layer (tRPC or oRPC). Cannot use --examples todo when api is 'none'.",
       );
@@ -473,6 +473,10 @@ export function validateExamplesCompatibility(
 
   if (examplesArr.includes("ai") && backend === "none") {
     return validationErr("The 'ai' example requires a backend.");
+  }
+
+  if (examplesArr.includes("ai") && backend === "nest") {
+    return validationErr("The 'ai' example is not supported with the Nest.js backend yet.");
   }
 
   // Convex AI example only supports React-based frontends

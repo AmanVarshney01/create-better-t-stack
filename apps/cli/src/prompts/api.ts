@@ -12,7 +12,7 @@ export async function getApiChoice(
   backend?: Backend,
   previousValue?: API,
 ) {
-  if (backend === "convex" || backend === "none") {
+  if (backend === "convex" || backend === "none" || backend === "nest") {
     return "none";
   }
 

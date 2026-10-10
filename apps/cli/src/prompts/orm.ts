@@ -43,8 +43,10 @@ export async function getORMChoice(
     return orm;
   }
 
-  const options = [ormOptions.drizzle, ormOptions.prisma, ormOptions.mongoose].filter((option) =>
-    supportsOrmDatabase(option.value, database ?? "sqlite"),
+  const options = [ormOptions.drizzle, ormOptions.prisma, ormOptions.mongoose].filter(
+    (option) =>
+      supportsOrmDatabase(option.value, database ?? "sqlite") &&
+      (backend !== "nest" || option.value !== "drizzle"),
   );
 
   const response = await navigableSelect<ORM>({

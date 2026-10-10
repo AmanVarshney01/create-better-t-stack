@@ -1,5 +1,6 @@
 import type { DatabaseConfig } from "./config";
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";

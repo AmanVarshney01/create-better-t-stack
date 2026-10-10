@@ -543,6 +543,7 @@ function generateFeaturesList(
     express: "- **Express** - Fast, unopinionated web framework",
     fastify: "- **Fastify** - Fast, low-overhead web framework",
     elysia: "- **Elysia** - Type-safe, high-performance framework",
+    nest: "- **Nest.js** - Scalable Node.js server-side framework",
   } satisfies Record<string, string>;
 
   if (hasOwnKey(backendFeatures, backend)) {

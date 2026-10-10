@@ -4,6 +4,50 @@ import type { Database, ORM } from "../src/types";
 import { expectError, expectSuccess, runCreateTest } from "./test-utils";
 
 describe("Database and ORM Combinations", () => {
+  describe("Nest.js ORM constraints", () => {
+    for (const { database, orm } of [
+      { database: "sqlite", orm: "prisma" },
+      { database: "mongodb", orm: "mongoose" },
+    ] as const) {
+      it(`should support Nest.js with ${orm}`, async () => {
+        const result = await runCreateTest({
+          projectName: `nest-${orm}-orm`,
+          backend: "nest",
+          runtime: "node",
+          database,
+          orm,
+          api: "none",
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should reject Nest.js with Drizzle", async () => {
+      const result = await runCreateTest({
+        projectName: "nest-drizzle-orm",
+        backend: "nest",
+        runtime: "node",
+        orm: "drizzle",
+        api: "none",
+      });
+
+      expectError(result, "Nest.js requires Prisma or Mongoose ORM");
+    });
+
+    it("should reject an API layer until Nest.js adapters are implemented", async () => {
+      const result = await runCreateTest({
+        projectName: "nest-api-layer",
+        backend: "nest",
+        runtime: "node",
+        orm: "prisma",
+        api: "trpc",
+      });
+
+      expectError(result, "Nest.js does not support an API layer yet");
+    });
+  });
+
   describe("Valid Database-ORM Combinations", () => {
     const validCombinations: Array<{ database: Database; orm: ORM }> = [
       // SQLite combinations

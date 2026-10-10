@@ -49,7 +49,7 @@ export const FULLSTACK_FRONTENDS = [
 
 export type FullstackFrontend = (typeof FULLSTACK_FRONTENDS)[number];
 
-export const SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia"];
+export const SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia", "nest"];
 const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
@@ -71,7 +71,7 @@ export const DESKTOP_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = [
   "react-router",
 ];
 const evlogCompatibilityMessage =
-  "The observability addons support Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
+  "The observability addons support Hono, Express, Fastify, Elysia, Nest.js (evlog only), or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
 
 export const ADDON_COMPATIBILITY = {
   pwa: ["tanstack-router", "react-router", "solid", "next"],
@@ -152,6 +152,7 @@ export function allowedApisForFrontends(frontends: readonly Frontend[] = []): AP
 export function isExampleTodoAllowed(backend?: Backend, database?: Database, api?: API) {
   // Convex handles its own data layer, no need for database or API
   if (backend === "convex") return true;
+  if (backend === "nest") return database !== "none";
   // Todo requires both database and API to communicate
   if (database === "none" || api === "none") return false;
   return true;
@@ -160,6 +161,7 @@ export function isExampleTodoAllowed(backend?: Backend, database?: Database, api
 export function isExampleAIAllowed(backend?: Backend, frontends: readonly Frontend[] = []) {
   return (
     backend !== "none" &&
+    backend !== "nest" &&
     !frontends.some(
       (frontend) =>
         AI_INCOMPATIBLE_FRONTENDS.some((value) => value === frontend) ||
@@ -202,6 +204,13 @@ export function validateAddonCompatibility(
     return {
       isCompatible: false,
       reason: evlogCompatibilityMessage,
+    };
+  }
+
+  if (addon === "axiom" && backend === "nest") {
+    return {
+      isCompatible: false,
+      reason: "axiom addon is not supported with the Nest.js backend yet. Use evlog instead.",
     };
   }
 
@@ -264,6 +273,7 @@ export function supportsClerkBackend(
   frontends: readonly Frontend[] = [],
 ) {
   if (!backend) return true;
+  if (backend === "nest") return false;
   if (backend === "self")
     return (
       frontends.length === 0 ||

@@ -274,7 +274,7 @@ export function processVarlock(
     root.scripts["auth:generate"] = `cd ${server} && ${config.packageManager} run auth:generate`;
   }
   vfs.writeJson("package.json", root);
-  if (["express", "fastify"].includes(config.backend) && config.auth === "better-auth") {
+  if (["express", "fastify", "nest"].includes(config.backend) && config.auth === "better-auth") {
     addPackageDependency({
       vfs,
       packagePath: `${server}/package.json`,

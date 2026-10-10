@@ -66,6 +66,58 @@ const baseConfig = {
 
 const buildSamples: BuildSample[] = [
   {
+    name: "nest-minimal",
+    packageManagers: ["pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nest",
+      runtime: "node",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
+    name: "nest-prisma",
+    packageManagers: ["bun", "npm", "pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nest",
+      runtime: "node",
+      database: "sqlite",
+      orm: "prisma",
+      api: "none",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo", "evlog"],
+      examples: ["todo"],
+      serverDeploy: "vercel",
+    },
+  },
+  {
+    name: "nest-mongoose",
+    packageManagers: ["npm", "pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nest",
+      runtime: "node",
+      database: "mongodb",
+      orm: "mongoose",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+    },
+  },
+  {
     name: "react-router-server-auth-polar-types",
     packageManagers: ["bun"],
     config: {

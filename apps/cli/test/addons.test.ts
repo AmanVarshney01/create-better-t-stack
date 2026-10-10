@@ -807,6 +807,7 @@ describe("Addon Configurations", () => {
       express: 'import { evlog } from "evlog/express";',
       fastify: 'import { evlog } from "evlog/fastify";',
       elysia: 'import { evlog } from "evlog/elysia";',
+      nest: 'import { EvlogModule } from "evlog/nestjs";',
       convex: "",
       self: "",
       none: "",
@@ -842,6 +843,39 @@ describe("Addon Configurations", () => {
         expect(gitignore).toContain(".evlog/");
       });
     }
+
+    it("should wire the evlog module for nest", async () => {
+      const result = await runCreateTest({
+        projectName: "evlog-nest",
+        addons: ["evlog"],
+        backend: "nest",
+        orm: "prisma",
+        api: "none",
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const serverMain = await readFile(join(projectDir, "apps/server/src/main.ts"), "utf-8");
+      const appModule = await readFile(join(projectDir, "apps/server/src/app.module.ts"), "utf-8");
+      const serverPackageJson = await readFile(
+        join(projectDir, "apps/server/package.json"),
+        "utf-8",
+      );
+
+      expect(serverMain).toContain('import { initLogger } from "evlog";');
+      expect(serverMain).toContain('env: { service: "evlog-nest-server" }');
+      expect(appModule).toContain(backendSnippets.nest);
+      expect(appModule).toContain('import { createFsDrain } from "evlog/fs";');
+      expect(appModule).toContain("EvlogModule.forRoot({");
+      expect(appModule).toContain(
+        'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
+      );
+      expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
+      const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
+      expect(gitignore).toContain(".evlog/");
+    });
 
     it("should keep the Node file system drain out of Cloudflare Workers", async () => {
       const result = await runCreateTest({
@@ -1447,6 +1481,49 @@ describe("Addon Configurations", () => {
       expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
     });
 
+    it("should patch an existing Nest server when evlog is added later", async () => {
+      const created = await runCreateTest({
+        projectName: "evlog-add-existing-nest",
+        addons: ["none"],
+        frontend: ["none"],
+        backend: "nest",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        api: "none",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        packageManager: "bun",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["evlog"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const serverMain = await readFile(join(projectDir, "apps/server/src/main.ts"), "utf-8");
+      const appModule = await readFile(join(projectDir, "apps/server/src/app.module.ts"), "utf-8");
+      const serverPackageJson = await readFile(
+        join(projectDir, "apps/server/package.json"),
+        "utf-8",
+      );
+
+      expect(serverMain).toContain('import { initLogger } from "evlog";');
+      expect(appModule).toContain('import { EvlogModule } from "evlog/nestjs";');
+      expect(appModule).toContain("EvlogModule.forRoot({ drain:");
+      expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
+    });
     it.each([
       { imported: "env", local: "env" },
       { imported: "env", local: "localEnv" },

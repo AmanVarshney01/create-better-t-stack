@@ -1,0 +1,7 @@
+import { IsString, Matches } from "class-validator";
+
+export class CreateTodoDto {
+	@IsString()
+	@Matches(/\S/, { message: "text must contain a non-whitespace character" })
+	text!: string;
+}

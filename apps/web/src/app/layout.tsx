@@ -103,6 +103,7 @@ export const metadata: Metadata = {
     "Prisma",
     "hono",
     "elysia",
+    "Nest.js",
     "turborepo",
     "trpc",
     "orpc",

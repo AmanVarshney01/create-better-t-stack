@@ -12,7 +12,7 @@ export async function getPaymentsChoice(
 ) {
   if (payments !== undefined) return payments;
 
-  if (backend === "none") {
+  if (backend === "none" || backend === "nest") {
     return "none" as Payments;
   }
 

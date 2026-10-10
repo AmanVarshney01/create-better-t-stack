@@ -14471,12 +14471,12 @@ next-env.d.ts
 `],
   ["backend/server/base/package.json.hbs", `{
 	"name": "server",
-	"main": "src/index.ts",
+	"main": "src/{{#if (eq backend 'nest')}}main{{else}}index{{/if}}.ts",
 	"type": "module",
 	"scripts": {
 		"build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsdown",
 		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit",
-		"compile": "bun build --compile --no-compile-autoload-dotenv --minify --sourcemap --bytecode ./src/index.ts --outfile server"
+		"compile": "bun build --compile --no-compile-autoload-dotenv --minify --sourcemap --bytecode ./src/{{#if (eq backend 'nest')}}main{{else}}index{{/if}}.ts --outfile server"
 	},
 	"dependencies": {},
 	{{#if (eq dbSetup 'supabase')}}
@@ -14498,7 +14498,9 @@ next-env.d.ts
       "@/*": ["./src/*"]
     },
     "jsx": "react-jsx"{{#if (eq backend "hono")}},
-    "jsxImportSource": "hono/jsx"{{/if}}
+    "jsxImportSource": "hono/jsx"{{else if (eq backend "nest")}},
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true{{/if}}
   }
 }
 `],
@@ -14508,7 +14510,7 @@ import { unwasm } from "unwasm/plugin";
 {{/if}}
 
 export default defineConfig({
-  entry: "./src/index.ts",
+  entry: "./src/{{#if (eq backend 'nest')}}main{{else}}index{{/if}}.ts",
   format: "esm",
   outDir: "./dist",
   clean: true,
@@ -15293,6 +15295,84 @@ export default app;
 {{/if}}
 {{/if}}
 `],
+  ["backend/server/nest/src/app.controller.ts.hbs", `import { Controller, Get } from "@nestjs/common";
+{{#if (eq auth "better-auth")}}
+import { AllowAnonymous } from "@thallesp/nestjs-better-auth";
+{{/if}}
+
+import { AppService } from "./app.service";
+
+@Controller()
+export class AppController {
+	constructor(private readonly appService: AppService) {}
+
+	@Get("{{apiPrefix webDeploy serverDeploy}}/health")
+{{#if (eq auth "better-auth")}}
+	@AllowAnonymous()
+{{/if}}
+	getHealth() {
+		return this.appService.getHealth();
+	}
+}
+`],
+  ["backend/server/nest/src/app.module.ts.hbs", `import { Module } from "@nestjs/common";
+{{#if (eq auth "better-auth")}}
+import { AuthModule } from "@thallesp/nestjs-better-auth";
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+{{#if (includes examples "todo")}}
+import { TodosModule } from "./todos/todos.module";
+{{/if}}
+
+@Module({
+	imports: [{{#if (eq auth "better-auth")}}AuthModule.forRoot({ auth }){{#if (includes examples "todo")}}, {{/if}}{{/if}}{{#if (includes examples "todo")}}TodosModule{{/if}}],
+	controllers: [AppController],
+	providers: [AppService],
+})
+export class AppModule {}
+`],
+  ["backend/server/nest/src/app.service.ts.hbs", `import { Injectable } from "@nestjs/common";
+
+@Injectable()
+export class AppService {
+	getHealth() {
+		return { status: "ok" };
+	}
+}
+`],
+  ["backend/server/nest/src/main.ts.hbs", `import "reflect-metadata";
+{{#if (includes examples "todo")}}
+import { ValidationPipe } from "@nestjs/common";
+{{/if}}
+import { NestFactory } from "@nestjs/core";
+import { ENV } from "./env.server";
+
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule, {
+{{#if (eq auth "better-auth")}}
+		bodyParser: false,
+{{/if}}
+	});
+	app.enableCors({
+		origin: ENV.CORS_ORIGIN,
+		methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+		credentials: true,
+	});
+{{#if (includes examples "todo")}}
+	app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+{{/if}}
+
+	await app.listen(process.env.PORT ?? 3000{{#if (eq serverDeploy "docker")}}, "0.0.0.0"{{/if}});
+}
+
+void bootstrap();
+`],
   ["base/_gitignore", `# Dependencies
 node_modules
 .pnp
@@ -15815,6 +15895,7 @@ datasource db {
 `],
   ["db/prisma/mongodb/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 export function createPrismaClient(env: DatabaseConfig) {
   return new PrismaClient({ datasourceUrl: env.DATABASE_URL });
@@ -15944,6 +16025,7 @@ datasource db {
   ["db/prisma/mysql/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
@@ -15972,6 +16054,7 @@ export function createPrismaClient(env: DatabaseConfig) {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
@@ -16148,6 +16231,7 @@ datasource db {
   ["db/prisma/postgres/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { neonConfig } from "@neondatabase/serverless";
@@ -16187,6 +16271,7 @@ export function createPrismaClient(env: DatabaseConfig) {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
@@ -16267,6 +16352,7 @@ datasource db {
 `],
   ["db/prisma/sqlite/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
@@ -16633,9 +16719,9 @@ EXPOSE 3000
 
 WORKDIR /app/apps/server
 {{#if (eq runtime "bun")}}
-CMD ["bun", "dist/index.mjs"]
+CMD ["bun", "dist/{{#if (eq backend "nest")}}main{{else}}index{{/if}}.mjs"]
 {{else}}
-CMD ["node", "dist/index.mjs"]
+CMD ["node", "dist/{{#if (eq backend "nest")}}main{{else}}index{{/if}}.mjs"]
 {{/if}}
 `],
   ["deploy/docker/web/astro/Dockerfile.hbs", `FROM node:24-slim AS base
@@ -23776,6 +23862,337 @@ export default function TodosScreen() {
   );
 }
 `],
+  ["examples/todo/nest/native/utils/orpc.ts.hbs", `import { QueryClient } from "@tanstack/react-query";
+import { ENV } from "../src/env";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = ENV.EXPO_PUBLIC_SERVER_URL.replace(/\\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(\`\${serverUrl}\${path}\`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || \`Request failed: \${response.status}\`);
+	return response.json() as Promise<T>;
+}
+
+const mutationOptions = <TInput, TOutput>(mutationFn: (input: TInput) => Promise<TOutput>, options: Record<string, unknown> = {}) => ({ mutationFn, ...options });
+
+export const queryClient = new QueryClient();
+export const orpc = {
+	healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
+	todo: {
+		getAll: { queryOptions: () => ({ queryKey: ["todos"], queryFn: () => request<Todo[]>("/todos") }) },
+		create: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }), options) },
+		toggle: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId; completed: boolean }) => request<Todo>(\`/todos/\${input.id}\`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }), options) },
+		delete: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId }) => request<Todo>(\`/todos/\${input.id}\`, { method: "DELETE" }), options) },
+	},
+};
+`],
+  ["examples/todo/nest/server/src/todos/dto/create-todo.dto.ts.hbs", `import { IsString, Matches } from "class-validator";
+
+export class CreateTodoDto {
+	@IsString()
+	@Matches(/\\S/, { message: "text must contain a non-whitespace character" })
+	text!: string;
+}
+`],
+  ["examples/todo/nest/server/src/todos/dto/update-todo.dto.ts.hbs", `import { IsBoolean } from "class-validator";
+
+export class UpdateTodoDto {
+	@IsBoolean()
+	completed!: boolean;
+}
+`],
+  ["examples/todo/nest/server/src/todos/entities/todo.entity.ts.hbs", `export class TodoEntity {
+	id!: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+	text!: string;
+	completed!: boolean;
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+`],
+  ["examples/todo/nest/server/src/todos/todos.controller.ts.hbs", `import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+{{#if (eq auth "better-auth")}}
+import { AllowAnonymous } from "@thallesp/nestjs-better-auth";
+{{/if}}
+
+import { CreateTodoDto } from "./dto/create-todo.dto";
+import { UpdateTodoDto } from "./dto/update-todo.dto";
+import type { TodoEntity } from "./entities/todo.entity";
+import { TodosService } from "./todos.service";
+
+@Controller("{{apiPrefix webDeploy serverDeploy}}/todos")
+{{#if (eq auth "better-auth")}}
+@AllowAnonymous()
+{{/if}}
+export class TodosController {
+	constructor(private readonly todosService: TodosService) {}
+
+	@Get()
+	findAll(): Promise<TodoEntity[]> {
+		return this.todosService.findAll();
+	}
+
+	@Post()
+	create(@Body() createTodoDto: CreateTodoDto): Promise<TodoEntity> {
+		return this.todosService.create(createTodoDto);
+	}
+
+	@Patch(":id")
+	update(@Param("id") id: string, @Body() updateTodoDto: UpdateTodoDto): Promise<TodoEntity> {
+		return this.todosService.update(id, updateTodoDto);
+	}
+
+	@Delete(":id")
+	remove(@Param("id") id: string): Promise<TodoEntity> {
+		return this.todosService.remove(id);
+	}
+}
+`],
+  ["examples/todo/nest/server/src/todos/todos.module.ts.hbs", `import { Module } from "@nestjs/common";
+
+import { TodosController } from "./todos.controller";
+import { TodosService } from "./todos.service";
+
+@Module({
+	controllers: [TodosController],
+	providers: [TodosService],
+})
+export class TodosModule {}
+`],
+  ["examples/todo/nest/server/src/todos/todos.service.ts.hbs", `import { Injectable, NotFoundException } from "@nestjs/common";
+{{#unless (or (eq orm "mongoose") (eq database "mongodb"))}}
+import { BadRequestException } from "@nestjs/common";
+{{/unless}}
+{{#if (eq orm "prisma")}}
+import { Prisma } from "@{{projectName}}/db";
+import { db } from "@{{projectName}}/app-services";
+{{else}}
+import "@{{projectName}}/app-services";
+import { Todo } from "@{{projectName}}/db/models/todo.model";
+{{/if}}
+
+import type { CreateTodoDto } from "./dto/create-todo.dto";
+import type { UpdateTodoDto } from "./dto/update-todo.dto";
+import type { TodoEntity } from "./entities/todo.entity";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+
+function parseTodoId(value: string): TodoId {
+{{#if (or (eq orm "mongoose") (eq database "mongodb"))}}
+	return value;
+{{else}}
+	const id = Number(value);
+	if (!Number.isInteger(id)) throw new BadRequestException("Invalid todo id");
+	return id;
+{{/if}}
+}
+
+@Injectable()
+export class TodosService {
+	async findAll(): Promise<TodoEntity[]> {
+{{#if (eq orm "prisma")}}
+		return (await db.todo.findMany({ orderBy: { id: "asc" } })) as TodoEntity[];
+{{else}}
+		return (await Todo.find().sort({ id: 1 }).lean()) as TodoEntity[];
+{{/if}}
+	}
+
+	async create(createTodoDto: CreateTodoDto): Promise<TodoEntity> {
+{{#if (eq orm "prisma")}}
+		return (await db.todo.create({ data: { text: createTodoDto.text.trim() } })) as TodoEntity;
+{{else}}
+		return (await Todo.create({ text: createTodoDto.text.trim() })) as TodoEntity;
+{{/if}}
+	}
+
+	async update(value: string, updateTodoDto: UpdateTodoDto): Promise<TodoEntity> {
+		const id = parseTodoId(value);
+{{#if (eq orm "prisma")}}
+		try {
+			return await db.todo.update({
+				where: { id },
+				data: { completed: updateTodoDto.completed },
+			});
+		} catch (error) {
+			if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2025") {
+				throw error;
+			}
+			throw new NotFoundException("Todo not found");
+		}
+{{else}}
+		const todo = await Todo.findOneAndUpdate(
+			{ id },
+			{ completed: updateTodoDto.completed },
+			{ new: true },
+		).lean();
+		if (!todo) throw new NotFoundException("Todo not found");
+		return todo;
+{{/if}}
+	}
+
+	async remove(value: string): Promise<TodoEntity> {
+		const id = parseTodoId(value);
+{{#if (eq orm "prisma")}}
+		try {
+			return await db.todo.delete({ where: { id } });
+		} catch (error) {
+			if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2025") {
+				throw error;
+			}
+			throw new NotFoundException("Todo not found");
+		}
+{{else}}
+		const todo = await Todo.findOneAndDelete({ id }).lean();
+		if (!todo) throw new NotFoundException("Todo not found");
+		return todo;
+{{/if}}
+	}
+}
+`],
+  ["examples/todo/nest/web/astro/src/lib/orpc.ts.hbs", `import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = ENV.PUBLIC_SERVER_URL.replace(/\\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(\`\${serverUrl}\${path}\`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || \`Request failed: \${response.status}\`);
+	return response.json() as Promise<T>;
+}
+
+export const orpc = {
+	healthCheck: () => request("/health"),
+	todo: {
+		getAll: () => request<Todo[]>("/todos"),
+		create: (input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }),
+		toggle: (input: { id: TodoId; completed: boolean }) => request<Todo>(\`/todos/\${input.id}\`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }),
+		delete: (input: { id: TodoId }) => request<Todo>(\`/todos/\${input.id}\`, { method: "DELETE" }),
+	},
+};
+`],
+  ["examples/todo/nest/web/nuxt/app/plugins/orpc.ts.hbs", `import { defineNuxtPlugin } from "#app";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+
+export default defineNuxtPlugin(() => {
+	const config = useRuntimeConfig();
+	const serverUrl = ((import.meta.server && config.serverUrl) || config.public.serverUrl).replace(/\\/$/, "");
+	const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+		return $fetch<T>(\`\${serverUrl}\${path}\`, { ...init, credentials: "include" });
+	};
+	const mutationOptions = <TInput, TOutput>(mutationFn: (input: TInput) => Promise<TOutput>, options: Record<string, unknown> = {}) => ({ mutationFn, ...options });
+
+	return { provide: { orpc: {
+		healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
+		todo: {
+			getAll: { queryOptions: () => ({ queryKey: ["todos"], queryFn: () => request<Todo[]>("/todos") }) },
+			create: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { text: string }) => request<Todo>("/todos", { method: "POST", body: JSON.stringify(input), headers: { "Content-Type": "application/json" } }), options) },
+			toggle: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId; completed: boolean }) => request<Todo>(\`/todos/\${input.id}\`, { method: "PATCH", body: JSON.stringify({ completed: input.completed }), headers: { "Content-Type": "application/json" } }), options) },
+			delete: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId }) => request<Todo>(\`/todos/\${input.id}\`, { method: "DELETE" }), options) },
+		},
+	} } };
+});
+`],
+  ["examples/todo/nest/web/nuxt/app/plugins/vue-query.ts.hbs", `import { VueQueryPlugin } from "@tanstack/vue-query";
+
+export default defineNuxtPlugin((nuxtApp) => {
+	nuxtApp.vueApp.use(VueQueryPlugin);
+});
+`],
+  ["examples/todo/nest/web/react/src/utils/orpc.ts.hbs", `import { QueryClient } from "@tanstack/react-query";
+{{#unless (includes frontend "next")}}
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+{{/unless}}
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = {{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}}.replace(/\\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(\`\${serverUrl}\${path}\`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || \`Request failed: \${response.status}\`);
+	return response.json() as Promise<T>;
+}
+
+const mutationOptions = <TInput, TOutput>(
+	mutationFn: (input: TInput) => Promise<TOutput>,
+	options: Record<string, unknown> = {},
+) => ({ mutationFn, ...options });
+
+export function createQueryClient() {
+	return new QueryClient();
+}
+
+export const queryClient = createQueryClient();
+export const orpc = {
+	healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
+	todo: {
+		getAll: { queryOptions: () => ({ queryKey: ["todos"], queryFn: () => request<Todo[]>("/todos") }) },
+		create: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }), options) },
+		toggle: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId; completed: boolean }) => request<Todo>(\`/todos/\${input.id}\`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }), options) },
+		delete: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId }) => request<Todo>(\`/todos/\${input.id}\`, { method: "DELETE" }), options) },
+	},
+};
+`],
+  ["examples/todo/nest/web/solid/src/utils/orpc.ts.hbs", `import { QueryClient } from "@tanstack/solid-query";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = ENV.VITE_SERVER_URL.replace(/\\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(\`\${serverUrl}\${path}\`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || \`Request failed: \${response.status}\`);
+	return response.json() as Promise<T>;
+}
+
+const mutationOptions = <TInput, TOutput>(mutationFn: (input: TInput) => Promise<TOutput>, options: Record<string, unknown> = {}) => ({ mutationFn, ...options });
+
+export function createQueryClient() {
+	return new QueryClient();
+}
+
+export const queryClient = createQueryClient();
+export const orpc = {
+	healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
+	todo: {
+		getAll: { queryOptions: () => ({ queryKey: ["todos"], queryFn: () => request<Todo[]>("/todos") }) },
+		create: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }), options) },
+		toggle: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId; completed: boolean }) => request<Todo>(\`/todos/\${input.id}\`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }), options) },
+		delete: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId }) => request<Todo>(\`/todos/\${input.id}\`, { method: "DELETE" }), options) },
+	},
+};
+`],
+  ["examples/todo/nest/web/svelte/src/lib/orpc.ts.hbs", `import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{else}}.generated{{/if}}";
+import { QueryClient } from "@tanstack/svelte-query";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = ENV.PUBLIC_SERVER_URL.replace(/\\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(\`\${serverUrl}\${path}\`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || \`Request failed: \${response.status}\`);
+	return response.json() as Promise<T>;
+}
+
+const mutationOptions = <TInput, TOutput>(mutationFn: (input: TInput) => Promise<TOutput>, options: Record<string, unknown> = {}) => ({ mutationFn, ...options });
+
+export const queryClient = new QueryClient();
+export const orpc = {
+	healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
+	todo: {
+		getAll: { queryOptions: () => ({ queryKey: ["todos"], queryFn: () => request<Todo[]>("/todos") }) },
+		create: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }), options) },
+		toggle: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId; completed: boolean }) => request<Todo>(\`/todos/\${input.id}\`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }), options) },
+		delete: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId }) => request<Todo>(\`/todos/\${input.id}\`, { method: "DELETE" }), options) },
+	},
+};
+`],
   ["examples/todo/server/drizzle/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
 import z from "zod";
@@ -26402,12 +26819,12 @@ yarn-error.*
   ["frontend/native/bare/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { ENV } from "../src/env";
 {{/if}}
@@ -26428,9 +26845,9 @@ import { ENV } from "../src/env";
     import { tokenCache } from "@clerk/expo/token-cache";
   {{/if}}
 {{else}}
-  {{#unless (eq api "none")}}
+  {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
     import { QueryClientProvider } from "@tanstack/react-query";
-  {{/unless}}
+  {{/if}}
 {{/if}}
 
 import { Stack } from "expo-router";
@@ -26440,7 +26857,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
 {{/if}}
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { NAV_THEME } from "@/lib/constants";
@@ -26472,7 +26889,7 @@ const styles = StyleSheet.create({
   },
 });
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -26537,7 +26954,7 @@ export default function RootLayout() {
       {{else}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-            {{#unless (eq api "none")}}
+            {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
               <ClerkApiAuthBridge />
               <QueryClientProvider client={queryClient}>
                 <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
@@ -26562,10 +26979,10 @@ export default function RootLayout() {
                   </Stack>
                 </GestureHandlerRootView>
               </ThemeProvider>
-            {{/unless}}
+            {{/if}}
           </ClerkProvider>
         {{else}}
-          {{#unless (eq api "none")}}
+          {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
             <QueryClientProvider client={queryClient}>
               <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
                 <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
@@ -26587,7 +27004,7 @@ export default function RootLayout() {
                 </Stack>
               </GestureHandlerRootView>
             </ThemeProvider>
-          {{/unless}}
+          {{/if}}
         {{/if}}
       {{/if}}
     </>
@@ -27650,19 +28067,19 @@ yarn-error.*
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { ENV } from "../src/env";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
 {{/if}}
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq backend "convex")}}
@@ -27681,9 +28098,9 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { tokenCache } from "@clerk/expo/token-cache";
 {{/if}}
 {{else}}
-  {{#unless (eq api "none")}}
+  {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/react-query";
-  {{/unless}}
+  {{/if}}
 {{/if}}
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -27700,7 +28117,7 @@ const convex = new ConvexReactClient(ENV.EXPO_PUBLIC_CONVEX_URL, {
 });
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -27800,7 +28217,7 @@ export default function RootLayout() {
         tokenCache={tokenCache}
         publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
-        {{#unless (eq api "none")}}
+          {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style=\\{{ flex: 1 }}>
@@ -27845,10 +28262,10 @@ export default function RootLayout() {
             />
           </Stack>
         </GestureHandlerRootView>
-        {{/unless}}
+          {{/if}}
       </ClerkProvider>
       {{else}}
-        {{#unless (eq api "none")}}
+        {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style=\\{{ flex: 1 }}>
           <Stack
@@ -27890,7 +28307,7 @@ export default function RootLayout() {
             />
           </Stack>
         </GestureHandlerRootView>
-        {{/unless}}
+        {{/if}}
       {{/if}}
     {{/if}}
   );
@@ -29123,14 +29540,14 @@ uniwind-types.d.ts
   ["frontend/native/uniwind/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 
 import "@/global.css";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { ENV } from "../src/env";
 {{/if}}
@@ -29152,9 +29569,9 @@ import { ENV } from "../src/env";
     import { tokenCache } from "@clerk/expo/token-cache";
   {{/if}}
 {{else}}
-  {{#unless (eq api "none")}}
+  {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
     import { QueryClientProvider } from "@tanstack/react-query";
-  {{/unless}}
+  {{/if}}
 {{/if}}
 
 import { Stack } from "expo-router";
@@ -29166,7 +29583,7 @@ import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{#if (eq api "trpc")}}
   import { queryClient } from "@/utils/trpc";
 {{/if}}
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   import { queryClient } from "@/utils/orpc";
 {{/if}}
 
@@ -29180,7 +29597,7 @@ export const unstable_settings = {
   });
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -29253,7 +29670,7 @@ export default function Layout() {
     {{else}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-          {{#unless (eq api "none")}}
+          {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
             <ClerkApiAuthBridge />
             <QueryClientProvider client={queryClient}>
               <GestureHandlerRootView style=\\{{ flex: 1 }}>
@@ -29276,10 +29693,10 @@ export default function Layout() {
                 </AppThemeProvider>
               </KeyboardProvider>
             </GestureHandlerRootView>
-          {{/unless}}
+          {{/if}}
         </ClerkProvider>
       {{else}}
-        {{#unless (eq api "none")}}
+        {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style=\\{{ flex: 1 }}>
               <KeyboardProvider>
@@ -29301,7 +29718,7 @@ export default function Layout() {
               </AppThemeProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
-        {{/unless}}
+        {{/if}}
       {{/if}}
     {{/if}}
   );
@@ -30794,11 +31211,11 @@ export function ModeToggle() {
 `],
   ["frontend/react/next/src/components/providers.tsx.hbs", `"use client";
 
-{{#if (and (eq auth "clerk") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
-{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
+{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useAuth } from "@clerk/nextjs";
 {{/if}}
 {{#if (eq backend "convex")}}
@@ -30816,16 +31233,16 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/if}}
 {{else}}
-{{#unless (eq api "none")}}
+{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
 {{/if}}
-{{/unless}}
+{{/if}}
 {{/if}}
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
@@ -30834,7 +31251,7 @@ import { Toaster } from "@{{projectName}}/ui/components/sonner";
 const convex = new ConvexReactClient(ENV.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -30885,12 +31302,12 @@ export default function Providers({
       <ConvexProvider client={convex}>{children}</ConvexProvider>
       {{/if}}
       {{else}}
-      {{#unless (eq api "none")}}
+      {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
       <QueryClientProvider client={queryClient}>
         {{#if (eq auth "clerk")}}
         <ClerkApiAuthBridge />
         {{/if}}
-        {{#if (eq api "orpc")}}
+        {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
         {children}
         {{/if}}
         {{#if (eq api "trpc")}}
@@ -30900,7 +31317,7 @@ export default function Providers({
       </QueryClientProvider>
       {{else}}
       {children}
-      {{/unless}}
+      {{/if}}
       {{/if}}
       <Toaster richColors />
     </ThemeProvider>
@@ -31070,10 +31487,10 @@ import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq auth "clerk")}}
-import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react-router";
+import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
@@ -31090,16 +31507,16 @@ import { authClient } from "@/lib/auth-client";
 import { ConvexProvider } from "convex/react";
   {{/if}}
 {{else}}
-  {{#unless (eq api "none")}}
+  {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-    {{#if (eq api "orpc")}}
+    {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { queryClient } from "./utils/orpc";
     {{/if}}
     {{#if (eq api "trpc")}}
 import { queryClient } from "./utils/trpc";
     {{/if}}
-  {{/unless}}
+  {{/if}}
 {{/if}}
 
 {{#if (eq auth "clerk")}}
@@ -31108,7 +31525,7 @@ export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
 export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -31220,10 +31637,10 @@ export default function App() {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider loaderData={loaderData}>
-      {{#unless (eq api "none")}}
+      {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
       <ClerkApiAuthBridge />
-      {{/unless}}
-      {{#if (eq api "orpc")}}
+      {{/if}}
+      {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
@@ -31272,7 +31689,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
     </ClerkProvider>
   );
 }
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -31628,14 +32045,14 @@ export { useTheme } from "next-themes";
 `],
   ["frontend/react/tanstack-router/src/main.tsx.hbs", `import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
 
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   import { QueryClientProvider } from "@tanstack/react-query";
   import { orpc, queryClient } from "./utils/orpc";
 {{/if}}
@@ -31647,7 +32064,7 @@ import { routeTree } from "./routeTree.gen";
   import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/if}}
 {{#if (eq auth "clerk")}}
-  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
+  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/react";
 {{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
@@ -31662,7 +32079,7 @@ import { routeTree } from "./routeTree.gen";
   const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -31683,7 +32100,7 @@ const router = createRouter({
   defaultPreload: "intent",
   scrollRestoration: true,
   defaultPendingComponent: () => <Loader />,
-  {{#if (eq api "orpc")}}
+  {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   context: { orpc, queryClient },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
@@ -32070,7 +32487,7 @@ import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createQueryClient, orpc } from "./utils/orpc";
 {{/if}}
@@ -32161,7 +32578,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 		}),
 	],
 });
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 {{/if}}
 
 export const getRouter = () => {
@@ -32171,7 +32588,7 @@ export const getRouter = () => {
 		client: trpcClient,
 		queryClient,
 	});
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 	const queryClient = createQueryClient();
 {{/if}}
 
@@ -32181,7 +32598,7 @@ export const getRouter = () => {
 		defaultPreloadStaleTime: 0,
 {{#if (eq api "trpc")}}
 		context: { trpc, queryClient },
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 		context: { orpc, queryClient },
 {{else}}
 		context: {},
@@ -32196,7 +32613,7 @@ export const getRouter = () => {
 		),
 {{/if}}
 	});
-{{#if (or (eq api "trpc") (eq api "orpc"))}}
+{{#if (or (eq api "trpc") (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 
 	setupRouterSsrQueryIntegration({
 		router,
@@ -32886,19 +33303,19 @@ import { Loading } from "solid-js";
 import Header from "~/components/header";
 import Loader from "~/components/loader";
 import { Router } from "~/router";
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { createQueryClient } from "~/utils/orpc";
 {{/if}}
 import "./styles.css";
 
 export default function App() {
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   const queryClient = createQueryClient();
 {{/if}}
 
   return (
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
     <QueryClientProvider client={queryClient}>
 {{/if}}
       <Router>
@@ -32912,7 +33329,7 @@ export default function App() {
           </>
         )}
       </Router>
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
     </QueryClientProvider>
 {{/if}}
   );
@@ -33352,7 +33769,7 @@ export {};
 	</main>
 </div>
 {{else}}
-  {{#if (eq api "orpc")}}
+  {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 <script lang="ts">
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
@@ -35620,4 +36037,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 532;
+export const TEMPLATE_COUNT = 549;
