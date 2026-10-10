@@ -2,7 +2,7 @@ import { expect, it } from "bun:test";
 import { link, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { formatProject } from "../src/utils/file-formatter";
+import { formatCode, formatProject } from "../src/utils/file-formatter";
 import { SMOKE_DIR } from "./setup";
 
 it("formats source without touching installed dependencies, linked caches, or build output", async () => {
@@ -28,4 +28,13 @@ it("formats source without touching installed dependencies, linked caches, or bu
   for (const file of [installed, cacheFile, ...outputs]) {
     expect(await readFile(file, "utf8")).toBe(dependency);
   }
+});
+
+it("sorts generated imports using the current formatter API", async () => {
+  const formatted = await formatCode(
+    "imports.ts",
+    'import { z } from "z-package";\nimport { a } from "a-package";\nexport { a, z };\n',
+  );
+  if (!formatted) throw new Error("Expected formatted source");
+  expect(formatted.indexOf('from "a-package"')).toBeLessThan(formatted.indexOf('from "z-package"'));
 });

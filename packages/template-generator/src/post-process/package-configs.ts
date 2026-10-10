@@ -19,6 +19,8 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
   allowScripts?: Record<string, boolean>;
   overrides?: Record<string, string>;
+  catalog?: Record<string, string>;
+  catalogs?: Record<string, Record<string, string>>;
   workspaces?:
     | string[]
     | {
@@ -737,17 +739,25 @@ function updateVitePlusPackages(vfs: VirtualFileSystem, config: ProjectConfig): 
       }
     }
   }
+  const updateCatalogs = (workspace: Pick<PackageJson, "catalog" | "catalogs">) => {
+    for (const name of catalogNames) {
+      const catalogs =
+        !name || name === "default"
+          ? [workspace.catalog, workspace.catalogs?.default]
+          : [workspace.catalogs?.[name]];
+      for (const catalog of catalogs) {
+        if (catalog?.vite) catalog.vite = coreAlias;
+      }
+    }
+  };
   if (config.packageManager === "pnpm") {
     const workspace = parse(vfs.readFile("pnpm-workspace.yaml") ?? "") ?? {};
-    for (const name of catalogNames) {
-      const catalog = name ? workspace.catalogs?.[name] : workspace.catalog;
-      if (catalog) catalog.vite = coreAlias;
-    }
+    updateCatalogs(workspace);
     vfs.writeFile("pnpm-workspace.yaml", stringify(workspace));
-  } else if (rootPkg?.workspaces && !Array.isArray(rootPkg.workspaces)) {
-    for (const name of catalogNames) {
-      const catalog = name ? rootPkg.workspaces.catalogs?.[name] : rootPkg.workspaces.catalog;
-      if (catalog) catalog.vite = coreAlias;
+  } else if (rootPkg) {
+    updateCatalogs(rootPkg);
+    if (rootPkg.workspaces && !Array.isArray(rootPkg.workspaces)) {
+      updateCatalogs(rootPkg.workspaces);
     }
   }
   if (rootPkg) vfs.writeJson("package.json", rootPkg);
