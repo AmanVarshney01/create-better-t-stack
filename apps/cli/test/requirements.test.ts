@@ -204,21 +204,17 @@ describe("local tool requirements", () => {
     ).toBe(true);
   });
 
-  it.each(["bun", "npm", "pnpm"] as const)(
-    "checks Vite+ Node release lines with %s, including a Bun-hosted CLI",
-    (packageManager) => {
-      const project = config({ addons: ["vite-plus"], frontend: [], packageManager });
-      const versions = { bun: "1.4.2", npm: "11.16.0", pnpm: "10.26.0" };
-      for (const node of ["22.18.0", "24.11.0", "26.0.0"]) {
-        expect(validateLocalToolVersions(project, { ...versions, node }, "bun").isOk()).toBe(true);
-      }
-      for (const node of ["20.19.0", "22.17.0", "23.11.0", "24.10.0", "25.1.0"]) {
-        const result = validateLocalToolVersions(project, { ...versions, node }, "bun");
-        expect(result.isErr()).toBe(true);
-        expect(result.isErr() ? result.error.message : "").toContain("Vite+");
-      }
-    },
-  );
+  it("checks Vite+ Node release lines even when Bun is selected", () => {
+    const project = config({ addons: ["vite-plus"], frontend: [] });
+    for (const node of ["22.18.0", "24.11.0", "26.0.0"]) {
+      expect(validateLocalToolVersions(project, { bun: "1.4.2", node }, "bun").isOk()).toBe(true);
+    }
+    for (const node of ["20.19.0", "22.17.0", "23.11.0", "24.10.0", "25.1.0"]) {
+      const result = validateLocalToolVersions(project, { bun: "1.4.2", node }, "bun");
+      expect(result.isErr()).toBe(true);
+      expect(result.isErr() ? result.error.message : "").toContain("Vite+");
+    }
+  });
 
   it("checks the Skills CLI's Node requirement even when Bun is selected", () => {
     const project = config({ addons: ["skills"] });

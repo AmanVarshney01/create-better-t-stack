@@ -411,6 +411,9 @@ describe("Addon Configurations", () => {
       expect(rootPackageJson.overrides).toMatchObject({
         vite: `npm:@voidzero-dev/vite-plus-core@${rootPackageJson.devDependencies["vite-plus"]}`,
       });
+      expect(rootPackageJson.devDependencies.vite).toBe("catalog:");
+      expect(webPackageJson.devDependencies.vite).toBe(rootPackageJson.devDependencies.vite);
+      expect(rootPackageJson.workspaces.catalog.vite).toBe(rootPackageJson.overrides.vite);
       expect(rootPackageJson.overrides.vitest).toBeUndefined();
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
       expect(rootPackageJson.scripts.build).toBe("vp run -r build");

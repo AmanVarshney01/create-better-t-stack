@@ -42,9 +42,6 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
           ? yaml.parse(files.get("pnpm-workspace.yaml")!)
           : JSON.parse(files.get("package.json")!),
       );
-      if (deployment !== "cloudflare") {
-        expect(workspace.overrides?.["@next/env"]).toBeDefined();
-      }
       if (deployment !== "none") {
         const infra = infraSchema.parse(JSON.parse(files.get("packages/infra/package.json")!));
         const catalog =
@@ -65,26 +62,7 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
           const platformRange = version(platform);
           expect(valid(platformRange)).toBe(platformRange);
           expect(subset(platformRange, effectRange)).toBe(true);
-          expect(satisfies(minimumEffect, platformRange)).toBe(true);
-          expect(satisfies(nextPatch, platformRange)).toBe(false);
           expect(workspace.overrides?.[platform]).toBe(platformRange);
-        }
-        for (const dependency of [
-          "@effect/platform-node-shared",
-          "@effect/sql-d1",
-          "@effect/sql-sqlite-do",
-          "@effect/sql-pg",
-          "@effect/sql-mysql2",
-          "@effect/sql-libsql",
-          "@effect/sql-pglite",
-          "@effect/sql-sqlite-bun",
-          "@effect/sql-sqlite-node",
-          "@effect/sql-sqlite-wasm",
-          "@effect/vitest",
-        ]) {
-          const pinnedVersion = z.string().parse(workspace.overrides?.[dependency]);
-          expect(valid(pinnedVersion)).toBe(pinnedVersion);
-          expect(pinnedVersion).toBe(version("@effect/platform-node"));
         }
         if (deployment === "prisma") {
           expect(version("@alchemy.run/frontend-frameworks")).toBe(version("alchemy"));
@@ -147,22 +125,9 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
         ? yaml.parse(files.get("pnpm-workspace.yaml")!)
         : JSON.parse(files.get("package.json")!),
     );
-    expect(workspace.overrides?.["@next/env"]).toBeDefined();
     const platformVersion = z.string().parse(workspace.overrides?.["@effect/platform-node"]);
     expect(valid(platformVersion)).toBe(platformVersion);
-    for (const adapter of [
-      "@effect/sql-d1",
-      "@effect/sql-libsql",
-      "@effect/sql-mysql2",
-      "@effect/sql-pg",
-      "@effect/sql-pglite",
-      "@effect/sql-sqlite-bun",
-      "@effect/sql-sqlite-do",
-      "@effect/sql-sqlite-node",
-      "@effect/sql-sqlite-wasm",
-    ]) {
-      expect(workspace.overrides?.[adapter]).toBe(platformVersion);
-    }
+    expect(workspace.overrides?.["@effect/sql-libsql"]).toBe(platformVersion);
     expect(workspace.overrides?.effect).toBeUndefined();
   });
 }

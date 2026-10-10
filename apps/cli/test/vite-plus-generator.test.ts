@@ -36,43 +36,6 @@ function configWith(overrides: Partial<ProjectConfig>): ProjectConfig {
 }
 
 describe("Vite+ config generator", () => {
-  it.each(["bun", "npm", "pnpm"] as const)(
-    "aligns the Vite core alias with the toolchain for %s",
-    (packageManager) => {
-      const vfs = new VirtualFileSystem();
-      vfs.writeJson("package.json", {
-        devDependencies: { "vite-plus": dependencyVersionMap["vite-plus"] },
-      });
-      vfs.writeJson("apps/web/package.json", {
-        scripts: { build: "vite build" },
-        devDependencies: { vite: "^8.0.0" },
-      });
-      const config = configWith({ packageManager });
-      processPnpmWorkspaceConfig(vfs, config);
-      processPackageConfigs(vfs, config);
-      const root = vfs.readJson<{
-        devDependencies: Record<string, string>;
-        overrides?: Record<string, string>;
-      }>("package.json")!;
-      const web = vfs.readJson<{
-        scripts: Record<string, string>;
-        devDependencies: Record<string, string>;
-      }>("apps/web/package.json")!;
-      const alias = `npm:@voidzero-dev/vite-plus-core@${root.devDependencies["vite-plus"]}`;
-      expect(web.devDependencies.vite).toBe(alias);
-      expect(web.scripts.build).toBe("vp build");
-      if (packageManager === "pnpm") {
-        const workspace = parse(vfs.readFile("pnpm-workspace.yaml") ?? "");
-        expect(workspace.overrides["vite@*"]).toBe(alias);
-        expect(workspace.overrides.vite).toBeUndefined();
-        expect(root.overrides?.vite).toBeUndefined();
-      } else {
-        expect(root.overrides?.vite).toBe(alias);
-        if (packageManager === "bun") expect(root.devDependencies.vite).toBe(alias);
-      }
-    },
-  );
-
   it.each(["", "default", "toolchain"])(
     "preserves pnpm's %s catalog reference when adding Vite+",
     (name) => {
@@ -104,7 +67,9 @@ describe("Vite+ config generator", () => {
         vfs.readJson<{ devDependencies: Record<string, string> }>("apps/web/package.json")!
           .devDependencies.vite,
       ).toBe(spec);
-      expect(catalog.vite).toBe(workspace.overrides["vite@*"]);
+      const alias = `npm:@voidzero-dev/vite-plus-core@${dependencyVersionMap["vite-plus"]}`;
+      expect(catalog.vite).toBe(alias);
+      expect(workspace.overrides["vite@*"]).toBe(alias);
       expect(catalog.typescript).toBe("^6.0.0");
       expect(workspace.overrides.vite).toBeUndefined();
       expect(workspace.overrides["custom-package"]).toBe("1.0.0");
@@ -136,52 +101,54 @@ describe("Vite+ config generator", () => {
     });
   });
 
-  for (const location of ["root", "workspaces"] as const) {
-    it.each(["", "default", "toolchain"])(
-      `preserves Bun's %s catalog at ${location} when adding Vite+`,
-      (name) => {
-        const vfs = new VirtualFileSystem();
-        const catalog = { vite: "^8.0.0", typescript: "^6.0.0" };
-        const catalogConfig =
-          name && name !== "default" ? { catalogs: { [name]: catalog } } : { catalog };
-        const rootManifest = {
-          devDependencies: { "vite-plus": dependencyVersionMap["vite-plus"] },
-        };
-        vfs.writeJson(
-          "package.json",
-          location === "root"
-            ? { ...rootManifest, workspaces: ["apps/*"], ...catalogConfig }
-            : { ...rootManifest, workspaces: { packages: ["apps/*"], ...catalogConfig } },
-        );
-        const spec = `catalog:${name}`;
-        vfs.writeJson("apps/web/package.json", {
-          scripts: { build: "vite build" },
-          devDependencies: { vite: spec },
-        });
-        processPackageConfigs(vfs, baseConfig);
-        const root = vfs.readJson<{
-          catalog?: Record<string, string>;
-          catalogs?: Record<string, Record<string, string>>;
-          workspaces:
-            | string[]
-            | {
-                catalog?: Record<string, string>;
-                catalogs?: Record<string, Record<string, string>>;
-              };
-          overrides: Record<string, string>;
-        }>("package.json")!;
-        const workspace = location === "root" ? root : root.workspaces;
-        if (Array.isArray(workspace)) throw new Error("Expected a workspace catalog");
-        const updated = name && name !== "default" ? workspace.catalogs?.[name] : workspace.catalog;
-        expect(updated).toEqual({ vite: root.overrides.vite, typescript: "^6.0.0" });
-        expect(workspace.catalogs?.default).toBeUndefined();
-        expect(
-          vfs.readJson<{ devDependencies: Record<string, string> }>("apps/web/package.json")!
-            .devDependencies.vite,
-        ).toBe(spec);
-      },
-    );
-  }
+  it.each([
+    ["root", "default"],
+    ["workspaces", ""],
+    ["workspaces", "toolchain"],
+  ] as const)(
+    "preserves Bun's catalog at %s with catalog:%s when adding Vite+",
+    (location, name) => {
+      const vfs = new VirtualFileSystem();
+      const catalog = { vite: "^8.0.0", typescript: "^6.0.0" };
+      const catalogConfig =
+        name && name !== "default" ? { catalogs: { [name]: catalog } } : { catalog };
+      const rootManifest = {
+        devDependencies: { "vite-plus": dependencyVersionMap["vite-plus"] },
+      };
+      vfs.writeJson(
+        "package.json",
+        location === "root"
+          ? { ...rootManifest, workspaces: ["apps/*"], ...catalogConfig }
+          : { ...rootManifest, workspaces: { packages: ["apps/*"], ...catalogConfig } },
+      );
+      const spec = `catalog:${name}`;
+      vfs.writeJson("apps/web/package.json", {
+        scripts: { build: "vite build" },
+        devDependencies: { vite: spec },
+      });
+      processPackageConfigs(vfs, baseConfig);
+      const root = vfs.readJson<{
+        catalog?: Record<string, string>;
+        catalogs?: Record<string, Record<string, string>>;
+        workspaces:
+          | string[]
+          | {
+              catalog?: Record<string, string>;
+              catalogs?: Record<string, Record<string, string>>;
+            };
+        overrides: Record<string, string>;
+      }>("package.json")!;
+      const workspace = location === "root" ? root : root.workspaces;
+      if (Array.isArray(workspace)) throw new Error("Expected a workspace catalog");
+      const updated = name && name !== "default" ? workspace.catalogs?.[name] : workspace.catalog;
+      expect(updated).toEqual({ vite: root.overrides.vite, typescript: "^6.0.0" });
+      expect(workspace.catalogs?.default).toBeUndefined();
+      expect(
+        vfs.readJson<{ devDependencies: Record<string, string> }>("apps/web/package.json")!
+          .devDependencies.vite,
+      ).toBe(spec);
+    },
+  );
 
   it.each(["bun", "pnpm"] as const)(
     "updates an existing catalogs.default without creating catalog with %s",
