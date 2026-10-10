@@ -23,11 +23,11 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
       const result = await createVirtual({
         projectName: `alchemy-${deployment}-${packageManager}`,
         frontend: ["next"],
-        backend: deployment === "prisma" ? "none" : "hono",
-        runtime: deployment === "prisma" ? "none" : "bun",
-        database: deployment === "prisma" ? "none" : "sqlite",
-        orm: deployment === "prisma" ? "none" : "drizzle",
-        api: deployment === "prisma" ? "none" : "orpc",
+        backend: deployment === "prisma" || deployment === "none" ? "none" : "hono",
+        runtime: deployment === "prisma" || deployment === "none" ? "none" : "bun",
+        database: deployment === "prisma" || deployment === "none" ? "none" : "sqlite",
+        orm: deployment === "prisma" || deployment === "none" ? "none" : "drizzle",
+        api: deployment === "prisma" || deployment === "none" ? "none" : "orpc",
         auth: "none",
         webDeploy: deployment === "cloudflare" || deployment === "prisma" ? deployment : "none",
         addons: deployment === "axiom" ? ["axiom"] : ["none"],
@@ -75,6 +75,11 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
           "@effect/sql-sqlite-do",
           "@effect/sql-pg",
           "@effect/sql-mysql2",
+          "@effect/sql-libsql",
+          "@effect/sql-pglite",
+          "@effect/sql-sqlite-bun",
+          "@effect/sql-sqlite-node",
+          "@effect/sql-sqlite-wasm",
           "@effect/vitest",
         ]) {
           const pinnedVersion = z.string().parse(workspace.overrides?.[dependency]);
@@ -115,5 +120,49 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
     expect(infra.devDependencies.alchemy).toBeDefined();
     expect(infra.devDependencies["@alchemy.run/frontend-frameworks"]).toBeUndefined();
     expect(infra.devDependencies["@vercel/nft"]).toBeUndefined();
+  });
+}
+
+for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+  test(`Drizzle constrains optional Effect SQL peers without Alchemy with ${packageManager}`, async () => {
+    const result = await createVirtual({
+      projectName: `drizzle-effect-${packageManager}`,
+      frontend: ["next"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "trpc",
+      auth: "better-auth",
+      examples: ["todo"],
+      packageManager,
+      install: false,
+      git: false,
+    });
+    if (result.isErr()) throw result.error;
+    const files = collectFiles(result.value.root, result.value.root.path);
+    expect(files.has("packages/infra/package.json")).toBe(false);
+    const workspace = workspaceSchema.parse(
+      packageManager === "pnpm"
+        ? yaml.parse(files.get("pnpm-workspace.yaml")!)
+        : JSON.parse(files.get("package.json")!),
+    );
+    expect(workspace.overrides?.["@next/env"]).toBeDefined();
+    const platformVersion = z.string().parse(workspace.overrides?.["@effect/platform-node"]);
+    expect(valid(platformVersion)).toBe(platformVersion);
+    for (const adapter of [
+      "@effect/sql-d1",
+      "@effect/sql-libsql",
+      "@effect/sql-mysql2",
+      "@effect/sql-pg",
+      "@effect/sql-pglite",
+      "@effect/sql-sqlite-bun",
+      "@effect/sql-sqlite-do",
+      "@effect/sql-sqlite-node",
+      "@effect/sql-sqlite-wasm",
+    ]) {
+      expect(workspace.overrides?.[adapter]).toBe(platformVersion);
+    }
+    expect(workspace.overrides?.effect).toBeUndefined();
   });
 }

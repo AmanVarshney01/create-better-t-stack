@@ -15364,10 +15364,10 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
-    "solid-js": "2.0.0-rc.13",
-    "@solidjs/signals": "2.0.0-rc.13",
-    "@solidjs/compiler": "2.0.0-rc.13",
-    "@solidjs/babel-plugin": "2.0.0-rc.13"
+    "solid-js": "2.0.0-rc.14",
+    "@solidjs/signals": "2.0.0-rc.14",
+    "@solidjs/compiler": "2.0.0-rc.14",
+    "@solidjs/babel-plugin": "2.0.0-rc.14"
   },
 {{/if}}
   "scripts": {}
@@ -32862,12 +32862,12 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.34",
-    "@solidjs/web": "2.0.0-rc.13",
-    "solid-js": "2.0.0-rc.13"
+    "@solidjs/router": "2.0.0-next.38",
+    "@solidjs/web": "2.0.0-rc.14",
+    "solid-js": "2.0.0-rc.14"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.47",
+    "@solidjs/vite-plugin": "3.0.0-next.49",
     "@tailwindcss/vite": "^4.3.3",
     "filesystem-routing": "0.4.0",
     "tailwindcss": "^4.3.3",
@@ -32983,10 +32983,13 @@ export default function Document(props: ParentProps) {
   );
 }
 `],
-  ["frontend/solid/src/middleware.ts", `import { createAPIHandler } from "filesystem-routing/api";
+  ["frontend/solid/src/middleware.ts", `import type { StartMiddleware } from "@solidjs/vite-plugin";
+import { createAPIHandler } from "filesystem-routing/api";
 import routes from "virtual:file-routes";
 
-export default [createAPIHandler(routes)];
+const handleAPI = createAPIHandler(routes);
+
+export default ((event, next) => handleAPI(event.request, next)) satisfies StartMiddleware;
 `],
   ["frontend/solid/src/router.ts", `import { createRouter } from "@solidjs/router";
 import { fileRoutes } from "@solidjs/router/fs";

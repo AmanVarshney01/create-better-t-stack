@@ -1,9 +1,8 @@
 import type { ProjectConfig } from "@better-t-stack/types";
-import { parseDocument } from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getPrismaWebsiteFramework } from "../generators/alchemy/plan";
-import { addPackageDependency, alchemyEffectDependencyVersions } from "../utils/add-deps";
+import { addPackageDependency } from "../utils/add-deps";
 
 export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const infraPath = "packages/infra/package.json";
@@ -33,19 +32,5 @@ export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         "varlock",
       ],
     });
-
-    // Pin transitive and adapter peers too; workspace dependency pins alone do not constrain them.
-    if (config.packageManager === "pnpm") {
-      const workspacePath = "pnpm-workspace.yaml";
-      const workspace = parseDocument(vfs.readFile(workspacePath) ?? "");
-      for (const [name, version] of Object.entries(alchemyEffectDependencyVersions)) {
-        workspace.setIn(["overrides", name], version);
-      }
-      vfs.writeFile(workspacePath, workspace.toString());
-    } else {
-      const workspace = vfs.readJson<{ overrides?: Record<string, string> }>("package.json")!;
-      workspace.overrides = { ...workspace.overrides, ...alchemyEffectDependencyVersions };
-      vfs.writeJson("package.json", workspace);
-    }
   }
 }

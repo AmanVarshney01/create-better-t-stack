@@ -57,24 +57,24 @@ export function processPnpmWorkspaceConfig(vfs: VirtualFileSystem, config: Proje
   }
   if (config.frontend.includes("solid")) {
     workspace.overrides = {
-      "solid-js": "2.0.0-rc.13",
-      "@solidjs/signals": "2.0.0-rc.13",
-      "@solidjs/compiler": "2.0.0-rc.13",
-      "@solidjs/babel-plugin": "2.0.0-rc.13",
+      "solid-js": "2.0.0-rc.14",
+      "@solidjs/signals": "2.0.0-rc.14",
+      "@solidjs/compiler": "2.0.0-rc.14",
+      "@solidjs/babel-plugin": "2.0.0-rc.14",
       ...workspace.overrides,
     };
     workspace.minimumReleaseAgeExclude = [
       ...new Set([
         ...(workspace.minimumReleaseAgeExclude ?? []),
-        "@solidjs/babel-plugin@2.0.0-rc.13",
-        "@solidjs/compiler@2.0.0-rc.13",
+        "@solidjs/babel-plugin@2.0.0-rc.14",
+        "@solidjs/compiler@2.0.0-rc.14",
         "@solidjs/meta@1.0.0-next.2",
-        "@solidjs/router@2.0.0-next.34",
-        "@solidjs/signals@2.0.0-rc.13",
-        "@solidjs/vite-plugin@3.0.0-next.47",
-        "@solidjs/web@2.0.0-rc.13",
+        "@solidjs/router@2.0.0-next.38",
+        "@solidjs/signals@2.0.0-rc.14",
+        "@solidjs/vite-plugin@3.0.0-next.49",
+        "@solidjs/web@2.0.0-rc.14",
         "@tanstack/solid-query@6.0.0-rc.5",
-        "solid-js@2.0.0-rc.13",
+        "solid-js@2.0.0-rc.14",
       ]),
     ];
   }
