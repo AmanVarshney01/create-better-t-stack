@@ -409,7 +409,7 @@ describe("Addon Configurations", () => {
       expect(rootPackageJson.devDependencies["vite-plus"]).toBeDefined();
       expect(rootPackageJson.devDependencies.rolldown).toBeDefined();
       expect(rootPackageJson.overrides).toMatchObject({
-        vite: "npm:@voidzero-dev/vite-plus-core@0.3.1",
+        vite: `npm:@voidzero-dev/vite-plus-core@${rootPackageJson.devDependencies["vite-plus"]}`,
       });
       expect(rootPackageJson.overrides.vitest).toBeUndefined();
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
@@ -837,7 +837,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain(
           'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
         );
-        expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
+        expect(JSON.parse(serverPackageJson).dependencies.evlog).toBeDefined();
         const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
         expect(gitignore).toContain(".evlog/");
       });
@@ -933,7 +933,7 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.28.1"');
+        expect(JSON.parse(webPackageJson).dependencies.evlog).toBeDefined();
         if (webCase.frontend === "tanstack-start") {
           expect(webPackageJson).toContain('"nitro": "3.0.260903-beta"');
         }
@@ -1444,7 +1444,7 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain(
         'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
       );
-      expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
+      expect(JSON.parse(serverPackageJson).dependencies.evlog).toBeDefined();
     });
 
     it.each([

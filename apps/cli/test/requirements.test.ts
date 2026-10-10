@@ -204,6 +204,34 @@ describe("local tool requirements", () => {
     ).toBe(true);
   });
 
+  it.each(["bun", "npm", "pnpm"] as const)(
+    "checks Vite+ Node release lines with %s, including a Bun-hosted CLI",
+    (packageManager) => {
+      const project = config({ addons: ["vite-plus"], frontend: [], packageManager });
+      const versions = { bun: "1.4.2", npm: "11.16.0", pnpm: "10.26.0" };
+      for (const node of ["22.18.0", "24.11.0", "26.0.0"]) {
+        expect(validateLocalToolVersions(project, { ...versions, node }, "bun").isOk()).toBe(true);
+      }
+      for (const node of ["20.19.0", "22.17.0", "23.11.0", "24.10.0", "25.1.0"]) {
+        const result = validateLocalToolVersions(project, { ...versions, node }, "bun");
+        expect(result.isErr()).toBe(true);
+        expect(result.isErr() ? result.error.message : "").toContain("Vite+");
+      }
+    },
+  );
+
+  it("checks the Skills CLI's Node requirement even when Bun is selected", () => {
+    const project = config({ addons: ["skills"] });
+    for (const node of [undefined, "22.19.0"]) {
+      const result = validateLocalToolVersions(project, { bun: "1.4.2", node }, "bun");
+      expect(result.isErr()).toBe(true);
+      expect(result.isErr() ? result.error.message : "").toContain("the Skills CLI");
+    }
+    expect(
+      validateLocalToolVersions(project, { bun: "1.4.2", node: "22.20.0" }, "bun").isOk(),
+    ).toBe(true);
+  });
+
   it.each([
     [{ examples: ["ai"] }, "21.7.0", "22.3.0", "AI SDK 7"],
     [{ orm: "mongoose" }, "20.18.0", "22.3.0", "Mongoose 9 and MongoDB 7"],
@@ -211,7 +239,7 @@ describe("local tool requirements", () => {
     [
       { addons: ["ultracite"], addonOptions: { ultracite: { linter: "oxlint" } } },
       "20.18.0",
-      "22.12.0",
+      "22.13.0",
       "Oxlint and Oxfmt",
     ],
   ] satisfies Array<[Partial<RequirementConfig>, string, string, string]>)(

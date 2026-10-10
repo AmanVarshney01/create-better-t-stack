@@ -4,6 +4,7 @@
  */
 
 import { getLocalD1Owner, webFrontends, type ProjectConfig } from "@better-t-stack/types";
+import { parse, stringify } from "yaml";
 
 import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -18,7 +19,13 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
   allowScripts?: Record<string, boolean>;
   overrides?: Record<string, string>;
-  workspaces?: string[] | { packages?: string[]; catalog?: Record<string, string> };
+  workspaces?:
+    | string[]
+    | {
+        packages?: string[];
+        catalog?: Record<string, string>;
+        catalogs?: Record<string, Record<string, string>>;
+      };
   packageManager?: string;
   [key: string]: JsonValue | undefined;
 };
@@ -45,7 +52,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
-  updateVitePlusPackageScripts(vfs, config);
+  updateVitePlusPackages(vfs, config);
 
   if (config.backend === "convex") {
     updateConvexPackageJson(vfs, config);
@@ -252,12 +259,26 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     };
   }
 
-  if (hasVitePlus) {
+  if (hasVitePlus && packageManager !== "pnpm") {
     pkgJson.overrides = {
       ...pkgJson.overrides,
-      // vite-plus 0.2+ bundles vitest directly; @voidzero-dev/vite-plus-test is discontinued
       vite: `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`,
     };
+    if (packageManager === "bun") {
+      pkgJson.devDependencies = {
+        ...pkgJson.devDependencies,
+        vite: pkgJson.devDependencies?.vite?.startsWith("catalog:")
+          ? pkgJson.devDependencies.vite
+          : `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`,
+      };
+    }
+  }
+  if (
+    hasVitePlus &&
+    packageManager === "pnpm" &&
+    pkgJson.overrides?.vite?.startsWith("npm:@voidzero-dev/vite-plus-core@")
+  ) {
+    delete pkgJson.overrides.vite;
   }
 
   if (backend === "convex") {
@@ -297,7 +318,11 @@ function getUpdatedWorkspaces(
   existingWorkspaces: PackageJson["workspaces"],
   packages: string[],
 ): WorkspacesConfig {
-  if (existingWorkspaces && !Array.isArray(existingWorkspaces) && existingWorkspaces.catalog) {
+  if (
+    existingWorkspaces &&
+    !Array.isArray(existingWorkspaces) &&
+    (existingWorkspaces.catalog || existingWorkspaces.catalogs)
+  ) {
     return {
       ...existingWorkspaces,
       packages,
@@ -691,16 +716,43 @@ export function finalizeAlchemyDevScripts(vfs: VirtualFileSystem, config: Projec
   }
 }
 
-function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectConfig): void {
+function updateVitePlusPackages(vfs: VirtualFileSystem, config: ProjectConfig): void {
   if (!config.addons.includes("vite-plus")) {
     return;
   }
 
   const webPkgPath = "apps/web/package.json";
   const webPkg = vfs.readJson<PackageJson>(webPkgPath);
-  if (!webPkg?.scripts) {
-    return;
+
+  const coreAlias = `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`;
+  const rootPkg = vfs.readJson<PackageJson>("package.json");
+  const catalogNames = new Set<string>();
+  for (const pkg of [rootPkg, webPkg]) {
+    for (const dependencies of [pkg?.dependencies, pkg?.devDependencies]) {
+      if (!dependencies?.vite) continue;
+      if (dependencies.vite.startsWith("catalog:")) {
+        catalogNames.add(dependencies.vite.slice("catalog:".length));
+      } else {
+        dependencies.vite = coreAlias;
+      }
+    }
   }
+  if (config.packageManager === "pnpm") {
+    const workspace = parse(vfs.readFile("pnpm-workspace.yaml") ?? "") ?? {};
+    for (const name of catalogNames) {
+      const catalog = name ? workspace.catalogs?.[name] : workspace.catalog;
+      if (catalog) catalog.vite = coreAlias;
+    }
+    vfs.writeFile("pnpm-workspace.yaml", stringify(workspace));
+  } else if (rootPkg?.workspaces && !Array.isArray(rootPkg.workspaces)) {
+    for (const name of catalogNames) {
+      const catalog = name ? rootPkg.workspaces.catalogs?.[name] : rootPkg.workspaces.catalog;
+      if (catalog) catalog.vite = coreAlias;
+    }
+  }
+  if (rootPkg) vfs.writeJson("package.json", rootPkg);
+
+  if (!webPkg?.scripts) return;
 
   const viteScriptReplacements = {
     vite: "vp dev",

@@ -149,8 +149,8 @@ export default {
   "scripts": {},
   "devDependencies": {
     "@types/bun": "^1.4.2",
-    "concurrently": "^10.0.5",
-    "electrobun": "^2.0.1",
+    "concurrently": "^10.0.6",
+    "electrobun": "^2.0.2",
     "typescript": "^6.0.3"
   }
 }

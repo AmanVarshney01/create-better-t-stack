@@ -2,6 +2,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import { parse, stringify } from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { dependencyVersionMap } from "../utils/add-deps";
 import { getAllowedDependencyScripts } from "../utils/dependency-scripts";
 import { type TemplateData, processSingleTemplate } from "./utils";
 
@@ -44,6 +45,15 @@ export function processPnpmWorkspaceConfig(vfs: VirtualFileSystem, config: Proje
   const allowBuilds = getAllowedDependencyScripts(config);
   if (Object.keys(allowBuilds).length) {
     workspace.allowBuilds = { ...allowBuilds, ...workspace.allowBuilds };
+  }
+  if (config.addons.includes("vite-plus")) {
+    if (workspace.overrides?.vite?.startsWith("npm:@voidzero-dev/vite-plus-core@")) {
+      delete workspace.overrides.vite;
+    }
+    workspace.overrides = {
+      ...workspace.overrides,
+      "vite@*": `npm:@voidzero-dev/vite-plus-core@${dependencyVersionMap["vite-plus"]}`,
+    };
   }
   if (config.frontend.includes("solid")) {
     workspace.overrides = {

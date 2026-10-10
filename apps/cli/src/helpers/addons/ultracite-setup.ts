@@ -144,9 +144,9 @@ const HOOKS = {
   copilot: { label: "GitHub Copilot" },
 } as const;
 
-// Pinned so upstream preset releases can't silently break scaffold lint compliance;
-// bump alongside a template compliance run (BTS_ULTRACITE_COMPLIANCE=1 bun test)
-const ULTRACITE_VERSION = "7.11.0";
+// Pin the preset version so generated lint behavior is reproducible.
+// Validate both linter presets against generated projects when bumping.
+const ULTRACITE_VERSION = "7.12.4";
 
 const DEFAULT_LINTER: UltraciteLinter = "biome";
 const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode"];
