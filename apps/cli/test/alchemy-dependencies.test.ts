@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { inc, minVersion, satisfies, subset } from "semver";
+import { inc, minVersion, satisfies, subset, valid } from "semver";
 import yaml from "yaml";
 import { z } from "zod";
 
@@ -42,8 +42,9 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
           ? yaml.parse(files.get("pnpm-workspace.yaml")!)
           : JSON.parse(files.get("package.json")!),
       );
-      // Stable Effect peers resolve normally; generation must not inject an override.
-      expect(workspace.overrides?.["@effect/platform-node-shared"]).toBeUndefined();
+      if (deployment !== "cloudflare") {
+        expect(workspace.overrides?.["@next/env"]).toBeDefined();
+      }
       if (deployment !== "none") {
         const infra = infraSchema.parse(JSON.parse(files.get("packages/infra/package.json")!));
         const catalog =
@@ -62,12 +63,31 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
         expect(satisfies(nextPatch, effectRange)).toBe(true);
         for (const platform of ["@effect/platform-node", "@effect/platform-bun"]) {
           const platformRange = version(platform);
+          expect(valid(platformRange)).toBe(platformRange);
           expect(subset(platformRange, effectRange)).toBe(true);
-          expect(satisfies(nextPatch, platformRange)).toBe(true);
+          expect(satisfies(minimumEffect, platformRange)).toBe(true);
+          expect(satisfies(nextPatch, platformRange)).toBe(false);
+          expect(workspace.overrides?.[platform]).toBe(platformRange);
+        }
+        for (const dependency of [
+          "@effect/platform-node-shared",
+          "@effect/sql-d1",
+          "@effect/sql-sqlite-do",
+          "@effect/sql-pg",
+          "@effect/sql-mysql2",
+          "@effect/vitest",
+        ]) {
+          const pinnedVersion = z.string().parse(workspace.overrides?.[dependency]);
+          expect(valid(pinnedVersion)).toBe(pinnedVersion);
+          expect(pinnedVersion).toBe(version("@effect/platform-node"));
         }
         if (deployment === "prisma") {
           expect(version("@alchemy.run/frontend-frameworks")).toBe(version("alchemy"));
         }
+      } else {
+        expect(workspace.overrides?.["@effect/platform-node"]).toBeUndefined();
+        expect(workspace.overrides?.["@effect/platform-bun"]).toBeUndefined();
+        expect(workspace.overrides?.["@effect/platform-node-shared"]).toBeUndefined();
       }
     });
   }

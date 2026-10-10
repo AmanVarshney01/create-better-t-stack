@@ -12,6 +12,19 @@ type PackageJson = {
   [key: string]: JsonValue | undefined;
 };
 
+// The 4.0.3 platform/SQL releases require an unpublished Effect 4.0.3 peer.
+const alchemyEffectVersion = "4.0.2";
+export const alchemyEffectDependencyVersions = {
+  "@effect/platform-node": alchemyEffectVersion,
+  "@effect/platform-bun": alchemyEffectVersion,
+  "@effect/platform-node-shared": alchemyEffectVersion,
+  "@effect/sql-d1": alchemyEffectVersion,
+  "@effect/sql-sqlite-do": alchemyEffectVersion,
+  "@effect/sql-pg": alchemyEffectVersion,
+  "@effect/sql-mysql2": alchemyEffectVersion,
+  "@effect/vitest": alchemyEffectVersion,
+} as const;
+
 export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
@@ -168,8 +181,7 @@ export const dependencyVersionMap = {
   "@vercel/nft": "^1.11.0",
   alchemy: "2.0.0-beta.81",
   effect: "^4.0.2",
-  "@effect/platform-node": "^4.0.2",
-  "@effect/platform-bun": "^4.0.2",
+  ...alchemyEffectDependencyVersions,
 
   "babel-preset-expo": "~57.0.10",
   varlock: "1.18.0",
