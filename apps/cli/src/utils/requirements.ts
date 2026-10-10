@@ -128,6 +128,22 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
     addNodeRequirement(requirements, ">=22.0.0", "AI SDK 7");
   }
 
+  requirements.push(...getAddonNodeRequirements(config));
+
+  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
+    addNodeRequirement(requirements, ">=22.0.0", "Wrangler 4");
+  }
+
+  return requirements;
+}
+
+function getAddonNodeRequirements(config: RequirementConfig): VersionRequirement[] {
+  const requirements: VersionRequirement[] = [];
+
+  if (config.addons.includes("ultracite")) {
+    addNodeRequirement(requirements, "^20.19.0 || >=22.13.0", "the Ultracite CLI");
+  }
+
   if (
     config.addons.includes("oxlint") ||
     (config.addons.includes("ultracite") && config.addonOptions?.ultracite?.linter === "oxlint")
@@ -140,7 +156,7 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
   }
 
   if (config.addons.includes("vite-plus")) {
-    addNodeRequirement(requirements, "^20.19.0 || ^22.18.0 || >=24.11.0", "Vite+");
+    addNodeRequirement(requirements, "^22.18.0 || ^24.11.0 || >=26.0.0", "Vite+");
   }
 
   if (config.addons.includes("starlight")) {
@@ -151,8 +167,8 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
     addNodeRequirement(requirements, ">=22.0.0", "WXT");
   }
 
-  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
-    addNodeRequirement(requirements, ">=22.0.0", "Wrangler 4");
+  if (config.addons.includes("skills")) {
+    addNodeRequirement(requirements, ">=22.20.0", "the Skills CLI");
   }
 
   return requirements;
@@ -191,8 +207,11 @@ export function getLocalVersionRequirements(
 
   if (config.packageManager !== "bun") {
     requirements.push(...getNodeToolingRequirements(config));
-  } else if (config.runtime === "node") {
-    addNodeRequirement(requirements, ">=22.0.0", "the selected Node.js server runtime");
+  } else {
+    requirements.push(...getAddonNodeRequirements(config));
+    if (config.runtime === "node") {
+      addNodeRequirement(requirements, ">=22.0.0", "the selected Node.js server runtime");
+    }
   }
 
   return requirements;

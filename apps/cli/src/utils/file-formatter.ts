@@ -2,13 +2,13 @@ import path from "node:path";
 
 import { Result } from "better-result";
 import fs from "fs-extra";
-import { format, type FormatOptions } from "oxfmt";
+import { format, type FormatConfig } from "oxfmt";
 
 import { ProjectCreationError } from "./errors";
 
-const formatOptions: FormatOptions = {
-  experimentalSortPackageJson: true,
-  experimentalSortImports: {
+const formatOptions: FormatConfig = {
+  sortPackageJson: true,
+  sortImports: {
     order: "asc",
   },
 };

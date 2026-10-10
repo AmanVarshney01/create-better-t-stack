@@ -12,6 +12,24 @@ type PackageJson = {
   [key: string]: JsonValue | undefined;
 };
 
+// The 4.0.3 platform/SQL releases require an unpublished Effect 4.0.3 peer.
+const effectVersion = "4.0.2";
+export const effectDependencyVersions = {
+  "@effect/platform-node": effectVersion,
+  "@effect/platform-bun": effectVersion,
+  "@effect/platform-node-shared": effectVersion,
+  "@effect/sql-d1": effectVersion,
+  "@effect/sql-sqlite-do": effectVersion,
+  "@effect/sql-pg": effectVersion,
+  "@effect/sql-mysql2": effectVersion,
+  "@effect/sql-libsql": effectVersion,
+  "@effect/sql-pglite": effectVersion,
+  "@effect/sql-sqlite-bun": effectVersion,
+  "@effect/sql-sqlite-node": effectVersion,
+  "@effect/sql-sqlite-wasm": effectVersion,
+  "@effect/vitest": effectVersion,
+} as const;
+
 export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
@@ -61,19 +79,19 @@ export const dependencyVersionMap = {
   mongoose: "^9.9.5",
   mongodb: "^7.6.0",
 
-  "vite-plugin-pwa": "^1.3.0",
-  "@vite-pwa/assets-generator": "^1.0.2",
+  "vite-plugin-pwa": "^2.0.0",
+  "@vite-pwa/assets-generator": "^2.0.0",
 
-  "@tauri-apps/cli": "^2.11.4",
+  "@tauri-apps/cli": "^2.12.1",
 
-  "@biomejs/biome": "^2.5.12",
+  "@biomejs/biome": "^2.5.15",
 
-  oxlint: "^1.81.0",
-  oxfmt: "^0.66.0",
+  oxlint: "^1.87.0",
+  oxfmt: "^0.72.0",
 
   husky: "^9.1.7",
-  lefthook: "^2.1.12",
-  "lint-staged": "^17.5.0",
+  lefthook: "^2.2.1",
+  "lint-staged": "^17.6.0",
 
   tsx: "^4.23.13",
   "@types/node": "^26.4.1",
@@ -100,10 +118,10 @@ export const dependencyVersionMap = {
   fastify: "^5.12.3",
   "@fastify/cors": "^11.3.0",
 
-  turbo: "^2.10.12",
-  nx: "^23.2.0",
-  "vite-plus": "0.3.1",
-  rolldown: "1.2.7",
+  turbo: "^2.11.7",
+  nx: "^23.3.0",
+  "vite-plus": "1.1.0",
+  rolldown: "1.2.13",
   unwasm: "^0.6.0",
 
   ai: "^7.0.93",
@@ -168,8 +186,7 @@ export const dependencyVersionMap = {
   "@vercel/nft": "^1.11.0",
   alchemy: "2.0.0-beta.81",
   effect: "^4.0.2",
-  "@effect/platform-node": "^4.0.2",
-  "@effect/platform-bun": "^4.0.2",
+  ...effectDependencyVersions,
 
   "babel-preset-expo": "~57.0.10",
   varlock: "1.18.0",
@@ -189,7 +206,7 @@ export const dependencyVersionMap = {
   "@stripe/react-stripe-js": "^6.9.0",
   "@stripe/stripe-js": "^9.15.0",
 
-  evlog: "^2.28.1",
+  evlog: "^2.30.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

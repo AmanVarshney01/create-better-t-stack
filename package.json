@@ -15,7 +15,7 @@
       "convex": "^1.45.0",
       "convex-helpers": "^0.1.124",
       "handlebars": "^4.7.9",
-      "oxfmt": "^0.67.0",
+      "oxfmt": "^0.72.0",
       "ts-morph": "^28.0.0",
       "tsdown": "^0.23.0",
       "typescript": "^6.0.3",
@@ -52,14 +52,14 @@
     "@clack/prompts": "^1.8.0"
   },
   "devDependencies": {
-    "@oxlint/plugins": "1.81.0",
+    "@oxlint/plugins": "1.87.0",
     "@types/bun": "^1.4.2",
     "changelogithub": "^15.0.5",
-    "lefthook": "^2.1.12",
-    "lint-staged": "^17.5.0",
+    "lefthook": "^2.2.1",
+    "lint-staged": "^17.6.0",
     "oxfmt": "catalog:",
-    "oxlint": "1.81.0",
-    "turbo": "^2.10.12",
+    "oxlint": "1.87.0",
+    "turbo": "^2.11.7",
     "typescript": "catalog:"
   },
   "lint-staged": {
