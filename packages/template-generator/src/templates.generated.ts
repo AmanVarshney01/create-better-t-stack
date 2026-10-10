@@ -14277,9 +14277,10 @@ See https://docs.convex.dev/functions for more.
 A query function that takes two arguments looks like:
 
 \`\`\`ts
+import { v } from "convex/values";
+
 // convex/myFunctions.ts
 import { query } from "./_generated/server";
-import { v } from "convex/values";
 
 export const myQueryFunction = query({
   // Validators for arguments.
@@ -14316,9 +14317,10 @@ const data = useQuery(api.myFunctions.myQueryFunction, {
 A mutation function looks like:
 
 \`\`\`ts
+import { v } from "convex/values";
+
 // convex/myFunctions.ts
 import { mutation } from "./_generated/server";
-import { v } from "convex/values";
 
 export const myMutationFunction = mutation({
   // Validators for arguments.
