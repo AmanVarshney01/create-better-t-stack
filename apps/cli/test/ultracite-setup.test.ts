@@ -19,6 +19,7 @@ describe("Ultracite setup", () => {
     expect(args).not.toContain("--agents");
     expect(args).not.toContain("--hooks");
     expect(args).toContain("--skip-install");
+    expect(args).toContain("--yes");
     expect(args).toContain("--quiet");
   });
 

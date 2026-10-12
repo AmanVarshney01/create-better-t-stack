@@ -141,7 +141,7 @@ function getAddonNodeRequirements(config: RequirementConfig): VersionRequirement
   const requirements: VersionRequirement[] = [];
 
   if (config.addons.includes("ultracite")) {
-    addNodeRequirement(requirements, "^20.19.0 || >=22.13.0", "the Ultracite CLI");
+    addNodeRequirement(requirements, ">=22.18.0", "the Ultracite CLI");
   }
 
   if (

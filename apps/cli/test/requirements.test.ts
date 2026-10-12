@@ -234,9 +234,9 @@ describe("local tool requirements", () => {
     [{ addons: ["oxlint"] }, "20.18.0", "22.12.0", "Oxlint and Oxfmt"],
     [
       { addons: ["ultracite"], addonOptions: { ultracite: { linter: "oxlint" } } },
-      "20.18.0",
-      "22.13.0",
-      "Oxlint and Oxfmt",
+      "22.17.0",
+      "22.18.0",
+      "the Ultracite CLI",
     ],
   ] satisfies Array<[Partial<RequirementConfig>, string, string, string]>)(
     "checks dependency runtime requirements for %#",
