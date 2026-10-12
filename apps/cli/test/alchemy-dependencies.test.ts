@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { inc, minVersion, satisfies, subset, valid } from "semver";
+import { satisfies, valid } from "semver";
 import yaml from "yaml";
 import { z } from "zod";
 
@@ -42,6 +42,11 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
           ? yaml.parse(files.get("pnpm-workspace.yaml")!)
           : JSON.parse(files.get("package.json")!),
       );
+      expect(
+        Object.keys(workspace.overrides ?? {}).filter(
+          (name) => name === "effect" || name.startsWith("@effect/"),
+        ),
+      ).toEqual([]);
       if (deployment !== "none") {
         const infra = infraSchema.parse(JSON.parse(files.get("packages/infra/package.json")!));
         const catalog =
@@ -53,24 +58,15 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
           return z.string().parse(resolved);
         };
         const effectRange = version("effect");
-        const minimumEffect = minVersion(effectRange);
-        if (!minimumEffect) throw new Error("Expected a valid Effect dependency range");
-        const nextPatch = inc(minimumEffect, "patch");
-        if (!nextPatch) throw new Error("Expected a compatible Effect patch version");
-        expect(satisfies(nextPatch, effectRange)).toBe(true);
+        expect(valid(effectRange)).toBe(effectRange);
         for (const platform of ["@effect/platform-node", "@effect/platform-bun"]) {
           const platformRange = version(platform);
           expect(valid(platformRange)).toBe(platformRange);
-          expect(subset(platformRange, effectRange)).toBe(true);
-          expect(workspace.overrides?.[platform]).toBe(platformRange);
+          expect(satisfies(platformRange, effectRange)).toBe(true);
         }
         if (deployment === "prisma") {
           expect(version("@alchemy.run/frontend-frameworks")).toBe(version("alchemy"));
         }
-      } else {
-        expect(workspace.overrides?.["@effect/platform-node"]).toBeUndefined();
-        expect(workspace.overrides?.["@effect/platform-bun"]).toBeUndefined();
-        expect(workspace.overrides?.["@effect/platform-node-shared"]).toBeUndefined();
       }
     });
   }
@@ -98,36 +94,5 @@ for (const packageManager of ["bun", "npm", "pnpm"] as const) {
     expect(infra.devDependencies.alchemy).toBeDefined();
     expect(infra.devDependencies["@alchemy.run/frontend-frameworks"]).toBeUndefined();
     expect(infra.devDependencies["@vercel/nft"]).toBeUndefined();
-  });
-}
-
-for (const packageManager of ["bun", "npm", "pnpm"] as const) {
-  test(`Drizzle constrains optional Effect SQL peers without Alchemy with ${packageManager}`, async () => {
-    const result = await createVirtual({
-      projectName: `drizzle-effect-${packageManager}`,
-      frontend: ["next"],
-      backend: "hono",
-      runtime: "bun",
-      database: "sqlite",
-      orm: "drizzle",
-      api: "trpc",
-      auth: "better-auth",
-      examples: ["todo"],
-      packageManager,
-      install: false,
-      git: false,
-    });
-    if (result.isErr()) throw result.error;
-    const files = collectFiles(result.value.root, result.value.root.path);
-    expect(files.has("packages/infra/package.json")).toBe(false);
-    const workspace = workspaceSchema.parse(
-      packageManager === "pnpm"
-        ? yaml.parse(files.get("pnpm-workspace.yaml")!)
-        : JSON.parse(files.get("package.json")!),
-    );
-    const platformVersion = z.string().parse(workspace.overrides?.["@effect/platform-node"]);
-    expect(valid(platformVersion)).toBe(platformVersion);
-    expect(workspace.overrides?.["@effect/sql-libsql"]).toBe(platformVersion);
-    expect(workspace.overrides?.effect).toBeUndefined();
   });
 }

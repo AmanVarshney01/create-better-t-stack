@@ -9,7 +9,6 @@ import { processAuthPlugins } from "./auth-plugins";
 import { processBackendDeps } from "./backend-deps";
 import { processDatabaseDeps } from "./db-deps";
 import { processDeployDeps } from "./deploy-deps";
-import { processEffectDeps } from "./effect-deps";
 import { processEnvDeps } from "./env-deps";
 import { processEnvVariables } from "./env-vars";
 import { processExamplesDeps } from "./examples-deps";
@@ -30,7 +29,6 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processEnvDeps(vfs, config);
   processInfraDeps(vfs, config);
   processDatabaseDeps(vfs, config);
-  processEffectDeps(vfs, config);
   processBackendDeps(vfs, config);
   processRuntimeDeps(vfs, config);
   processApiDeps(vfs, config);
