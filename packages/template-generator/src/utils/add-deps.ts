@@ -24,7 +24,7 @@ export const dependencyVersionMap = {
   "@clerk/backend": "^3.23.2",
   "@clerk/express": "^2.1.78",
   "@clerk/fastify": "^3.1.88",
-  "@clerk/nextjs": "^7.9.14",
+  "@clerk/nextjs": "^7.9.15",
   "@clerk/react": "^6.17.8",
   "@clerk/react-router": "^3.6.33",
   "@react-router/express": "^8.3.1",

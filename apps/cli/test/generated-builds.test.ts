@@ -1092,7 +1092,7 @@ async function writeStartCsrfProbe(sample: SelectedBuildSample, projectDir: stri
     `import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
-const probe = createServerFn({ method: "POST" }).handler(() => "bts-csrf-probe-ok");
+const probe = createServerFn({ method: "POST" }).handler(() => new Response("bts-csrf-probe-ok"));
 export const Route = createFileRoute("/csrf-probe")({
   component: () => <p data-csrf-url={probe.url}>CSRF probe</p>,
 });
@@ -1126,18 +1126,23 @@ async function bootAndValidateStartCsrf(sample: SelectedBuildSample, projectDir:
   );
   try {
     const page = await fetchWhenReady(`${origin}/csrf-probe`);
-    if (page && page.status !== 200) {
+    if (!page) {
+      throw new Error(`CSRF probe page did not become ready at ${origin}/csrf-probe`);
+    }
+    if (page.status !== 200) {
       throw new Error(
         `CSRF probe page returned ${page.status} at ${page.url}: ${await page.text()}`,
       );
     }
-    expect(page?.status).toBe(200);
-    const endpoint = /data-csrf-url="([^"]+)"/.exec(await page!.text())?.[1];
-    expect(endpoint).toBeDefined();
+    expect(page.status).toBe(200);
+    const endpoint = /data-csrf-url="([^"]+)"/.exec(await page.text())?.[1];
+    if (!endpoint) {
+      throw new Error("CSRF probe page did not include a server function URL");
+    }
     const invoke = (requestOrigin: string) =>
-      fetch(new URL(endpoint!, origin), {
+      fetch(new URL(endpoint, origin), {
         method: "POST",
-        headers: { origin: requestOrigin, "x-tsr-serverFn": "true" },
+        headers: { origin: requestOrigin },
         signal: AbortSignal.timeout(5000),
       });
     const allowed = await invoke(origin);
