@@ -28,7 +28,7 @@ export const dependencyVersionMap = {
   "@clerk/react": "^6.15.1",
   "@clerk/react-router": "^3.6.21",
   "@react-router/express": "^8.3.1",
-  "@clerk/tanstack-react-start": "^1.5.12",
+  "@clerk/tanstack-react-start": "^1.7.1",
   "@clerk/expo": "^4.6.5",
 
   "drizzle-orm": "1.0.0-rc.4",
@@ -115,15 +115,15 @@ export const dependencyVersionMap = {
   streamdown: "^2.6.0",
   shiki: "^4.4.3",
 
-  "@orpc/server": "^1.15.0",
-  "@orpc/client": "^1.15.0",
-  "@orpc/openapi": "^1.15.0",
-  "@orpc/zod": "^1.15.0",
-  "@orpc/tanstack-query": "^1.15.0",
+  "@orpc/server": "^1.15.6",
+  "@orpc/client": "^1.15.6",
+  "@orpc/openapi": "^1.15.6",
+  "@orpc/zod": "^1.15.6",
+  "@orpc/tanstack-query": "^1.15.6",
 
-  "@trpc/tanstack-react-query": "^11.18.0",
-  "@trpc/server": "^11.18.0",
-  "@trpc/client": "^11.18.0",
+  "@trpc/tanstack-react-query": "^11.19.0",
+  "@trpc/server": "^11.19.0",
+  "@trpc/client": "^11.19.0",
 
   next: "^16.3.4",
   nitro: "3.0.260903-beta",
@@ -143,10 +143,10 @@ export const dependencyVersionMap = {
   "@tanstack/vue-query-devtools": "^6.1.48",
   "@tanstack/vue-query": "^5.102.8",
 
-  "@tanstack/react-query-devtools": "^5.102.8",
-  "@tanstack/react-query": "^5.102.8",
+  "@tanstack/react-query-devtools": "^5.104.2",
+  "@tanstack/react-query": "^5.104.2",
   "@tanstack/react-form": "^1.33.5",
-  "@tanstack/react-router-ssr-query": "^1.167.2",
+  "@tanstack/react-router-ssr-query": "^1.167.3",
   "@tanstack/svelte-form": "^1.33.5",
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).

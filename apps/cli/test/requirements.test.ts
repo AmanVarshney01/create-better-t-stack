@@ -149,6 +149,8 @@ describe("local tool requirements", () => {
     ["astro", "22.11.0", "22.12.0", "Astro 7"],
     ["react-router", "22.21.0", "22.22.0", "React Router 8"],
     ["solid", "23.11.0", "24.0.0", "Solid"],
+    ["tanstack-start", "22.11.0", "22.22.2", "TanStack Start 1.169"],
+    ["tanstack-start", "22.22.1", "22.22.2", "TanStack Start test tooling"],
     ["native-bare", "22.12.0", "22.13.0", "React Native 0.86"],
   ] as const)(
     "checks the %s Node requirement",

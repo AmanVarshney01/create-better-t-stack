@@ -94,8 +94,15 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
         break;
       case "svelte":
       case "tanstack-router":
-      case "tanstack-start":
         addNodeRequirement(requirements, "^20.19.0 || >=22.12.0", "Vite 8");
+        break;
+      case "tanstack-start":
+        addNodeRequirement(requirements, ">=22.12.0", "TanStack Start 1.169");
+        addNodeRequirement(
+          requirements,
+          "^22.22.2 || ^24.15.0 || >=26.0.0",
+          "TanStack Start test tooling (jsdom 30.1)",
+        );
         break;
       case "next":
         addNodeRequirement(requirements, ">=20.9.0", "Next.js 16");
