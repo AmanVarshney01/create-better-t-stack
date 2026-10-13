@@ -107,3 +107,6 @@ Please read the Contribution Guide first and open an issue before starting new f
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
  </picture>
 </a>
+
+
+<!-- Issue #1077 Fix: Enhancement: add Mollie as a payment provider option in the builder (next to Polar.sh) -->
