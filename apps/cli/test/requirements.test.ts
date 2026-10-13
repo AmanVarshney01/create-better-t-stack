@@ -204,6 +204,47 @@ describe("local tool requirements", () => {
     ).toBe(true);
   });
 
+  it.each([
+    { webDeploy: "cloudflare" },
+    { serverDeploy: "cloudflare" },
+    { webDeploy: "prisma" },
+    { serverDeploy: "prisma" },
+    { addons: ["axiom"] },
+  ] satisfies Partial<RequirementConfig>[])("checks Alchemy's runtime for %#", (overrides) => {
+    for (const packageManager of ["npm", "pnpm"] as const) {
+      const project = config({ ...overrides, packageManager });
+      const versions = { npm: "11.16.0", pnpm: "10.26.0" };
+
+      for (const node of ["22.22.2", "23.11.0", "24.11.0", "25.0.0"]) {
+        const result = validateLocalToolVersions(project, { ...versions, node }, "bun");
+        expect(result.isErr()).toBe(true);
+        expect(result.isErr() ? result.error.message : "").toContain("the Alchemy CLI");
+      }
+
+      for (const node of ["24.11.1", "24.12.0", "25.1.0", "26.0.0"]) {
+        expect(validateLocalToolVersions(project, { ...versions, node }, "node").isOk()).toBe(true);
+      }
+    }
+
+    expect(validateLocalToolVersions(config(overrides), { bun: "1.4.2" }, "bun").isOk()).toBe(true);
+  });
+
+  it("does not apply Alchemy's Node requirement to other deployments or Prisma ORM alone", () => {
+    for (const overrides of [
+      { webDeploy: "vercel" },
+      { serverDeploy: "docker" },
+      { orm: "prisma" },
+    ] satisfies Partial<RequirementConfig>[]) {
+      expect(
+        validateLocalToolVersions(
+          config({ ...overrides, packageManager: "pnpm" }),
+          { pnpm: "10.26.0", node: "22.22.2" },
+          "node",
+        ).isOk(),
+      ).toBe(true);
+    }
+  });
+
   it("checks Vite+ Node release lines even when Bun is selected", () => {
     const project = config({ addons: ["vite-plus"], frontend: [] });
     for (const node of ["22.18.0", "24.11.0", "26.0.0"]) {
