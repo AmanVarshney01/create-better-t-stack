@@ -1,4 +1,4 @@
-import { usesAlchemyManagedDatabase, type ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@better-t-stack/types";
 import { dirname, relative } from "pathe";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -230,15 +230,9 @@ export function processVarlock(
   }
   if (vfs.exists("packages/db/package.json")) {
     const keys = config.dbSetup === "d1" ? ["NODE_ENV"] : ["NODE_ENV", "DATABASE_*"];
-    // Prisma Client generation runs before Alchemy provisions the database.
-    // The application schema still requires DATABASE_URL at runtime.
-    const databaseUrlSchema =
-      config.orm === "prisma" && usesAlchemyManagedDatabase(config)
-        ? "\n# @required=false\nDATABASE_URL=\n"
-        : "";
     vfs.writeFile(
       "packages/db/.env.schema",
-      `# @import(../../${server}/, pick=[${keys.join(", ")}])\n# @generateTsTypes(path=./src/env.ts, exposeEnv=local)\n# ---\n${databaseUrlSchema}`,
+      `# @import(../../${server}/, pick=[${keys.join(", ")}])\n# @generateTsTypes(path=./src/env.ts, exposeEnv=local)\n# ---\n`,
     );
     addPackageDependency({
       vfs,
