@@ -4,7 +4,7 @@ import { Result } from "better-result";
 import { execa } from "execa";
 import { clean, coerce, satisfies } from "semver";
 
-import type { PackageManager, ProjectConfig } from "../types";
+import { isAlchemyDeployTarget, type PackageManager, type ProjectConfig } from "../types";
 import { CLIError } from "./errors";
 import { shouldSkipExternalCommands } from "./external-commands";
 
@@ -132,6 +132,14 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
 
   if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
     addNodeRequirement(requirements, ">=22.0.0", "Wrangler 4");
+  }
+
+  if (
+    isAlchemyDeployTarget(config.webDeploy) ||
+    isAlchemyDeployTarget(config.serverDeploy) ||
+    config.addons.includes("axiom")
+  ) {
+    addNodeRequirement(requirements, "^24.11.1 || >=25.1.0", "the Alchemy CLI");
   }
 
   return requirements;
