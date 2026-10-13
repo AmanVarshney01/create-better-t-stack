@@ -41,6 +41,29 @@ async function generate(overrides: Partial<CreateOptions>) {
 }
 
 describe("Alchemy providers", () => {
+  it("keeps standalone Start bundling out of the dependency-traced Website path", async () => {
+    for (const backend of ["none", "self", "hono"] as const) {
+      const files = await generate({
+        frontend: ["tanstack-start"],
+        backend,
+        runtime: backend === "hono" ? "bun" : "none",
+        webDeploy: "prisma",
+        serverDeploy: backend === "hono" ? "prisma" : "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: backend === "none" ? "none" : "orpc",
+        dbSetup: "none",
+        examples: ["none"],
+      });
+      const infra = files.get("packages/infra/alchemy.run.ts")!;
+      const vite = files.get("apps/web/vite.config.ts")!;
+      expect(infra.includes('Prisma.Website.TanStackStart("web"')).toBe(backend === "none");
+      expect(vite.includes("noExternal: true")).toBe(backend !== "none");
+      expect(vite.includes("nitro(")).toBe(backend !== "none");
+    }
+  });
+
   it("lets the official Astro website own Prisma builds for every backend topology", async () => {
     for (const backend of ["none", "self", "hono"] as const) {
       const files = await generate({
