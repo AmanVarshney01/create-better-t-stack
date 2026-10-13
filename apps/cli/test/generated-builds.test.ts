@@ -185,6 +185,7 @@ const buildSamples: BuildSample[] = [
       payments: "none",
       addons: ["none"],
       examples: ["todo"],
+      webDeploy: "docker",
     },
   },
   {
@@ -671,6 +672,38 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "next-clerk-self",
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "clerk",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
+    name: "next-clerk-convex",
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "clerk",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
     name: "tanstack-start-clerk-hono",
     config: {
       ...baseConfig,
@@ -683,6 +716,22 @@ const buildSamples: BuildSample[] = [
       auth: "clerk",
       payments: "none",
       addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
+    name: "tanstack-start-convex-clerk",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "clerk",
+      payments: "none",
+      addons: [],
       examples: [],
     },
   },
@@ -1032,6 +1081,84 @@ async function getAvailablePort(): Promise<number> {
   });
 }
 
+function isStartClerkSample(sample: SelectedBuildSample) {
+  return sample.config.frontend?.includes("tanstack-start") && sample.config.auth === "clerk";
+}
+
+async function writeStartCsrfProbe(sample: SelectedBuildSample, projectDir: string) {
+  if (!isStartClerkSample(sample)) return;
+  await fs.outputFile(
+    path.join(projectDir, "apps/web/src/routes/csrf-probe.tsx"),
+    `import { createServerFn } from "@tanstack/react-start";
+import { createFileRoute } from "@tanstack/react-router";
+
+const probe = createServerFn({ method: "POST" }).handler(() => new Response("bts-csrf-probe-ok"));
+export const Route = createFileRoute("/csrf-probe")({
+  component: () => <p data-csrf-url={probe.url}>CSRF probe</p>,
+});
+`,
+  );
+}
+
+async function bootAndValidateStartCsrf(sample: SelectedBuildSample, projectDir: string) {
+  if (!isStartClerkSample(sample)) return;
+  // Build the injected route directly so a task-runner cache cannot restore an older scaffold.
+  await runCommand(sample.name, path.join(projectDir, "apps/web"), sample.packageManager, [
+    "run",
+    "build",
+  ]);
+  const port = await getAvailablePort();
+  const origin = `http://127.0.0.1:${port}`;
+  const runtime = execa(
+    "bun",
+    [
+      "-e",
+      'import server from "./dist/server/server.js"; Bun.serve({ fetch: (request) => server.fetch(request), hostname: "127.0.0.1", port: Number(process.env.PORT) });',
+    ],
+    {
+      cwd: path.join(projectDir, "apps/web"),
+      all: true,
+      reject: false,
+      timeout: commandTimeoutMs,
+      killDescendants: true,
+      env: { ...process.env, PORT: String(port), HOST: "127.0.0.1" },
+    },
+  );
+  try {
+    const page = await fetchWhenReady(`${origin}/csrf-probe`);
+    if (!page) {
+      throw new Error(`CSRF probe page did not become ready at ${origin}/csrf-probe`);
+    }
+    if (page.status !== 200) {
+      throw new Error(
+        `CSRF probe page returned ${page.status} at ${page.url}: ${await page.text()}`,
+      );
+    }
+    expect(page.status).toBe(200);
+    const endpoint = /data-csrf-url="([^"]+)"/.exec(await page.text())?.[1];
+    if (!endpoint) {
+      throw new Error("CSRF probe page did not include a server function URL");
+    }
+    const invoke = (requestOrigin: string) =>
+      fetch(new URL(endpoint, origin), {
+        method: "POST",
+        headers: { origin: requestOrigin },
+        signal: AbortSignal.timeout(5000),
+      });
+    const allowed = await invoke(origin);
+    expect(allowed.status).toBe(200);
+    expect(await allowed.text()).toContain("bts-csrf-probe-ok");
+    expect((await invoke("https://cross-origin.example.test")).status).toBe(403);
+  } catch (error) {
+    runtime.kill("SIGTERM");
+    const result = await runtime;
+    throw new Error(`TanStack Start CSRF runtime failed:\n${result.all}`, { cause: error });
+  } finally {
+    runtime.kill("SIGTERM");
+    await runtime;
+  }
+}
+
 async function fetchWhenReady(url: string, init?: RequestInit) {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
@@ -1057,20 +1184,20 @@ async function bootAndValidateStartAuthRuntime(sample: SelectedBuildSample, proj
   if (sample.name !== "tanstack-start-self-auth-todo") return;
 
   await runCommand(sample.name, projectDir, sample.packageManager, ["run", "db:push"]);
+  await runCommand(sample.name, path.join(projectDir, "apps/web"), sample.packageManager, [
+    "run",
+    "build",
+  ]);
   const port = await getAvailablePort();
   const origin = `http://127.0.0.1:${port}`;
-  const runtime = execa(
-    sample.packageManager,
-    ["run", "serve", "--host", "127.0.0.1", "--port", String(port)],
-    {
-      cwd: path.join(projectDir, "apps/web"),
-      all: true,
-      reject: false,
-      timeout: commandTimeoutMs,
-      killDescendants: true,
-      env: { ...process.env, BETTER_AUTH_URL: origin },
-    },
-  );
+  const runtime = execa("node", [".output/server/index.mjs"], {
+    cwd: path.join(projectDir, "apps/web"),
+    all: true,
+    reject: false,
+    timeout: commandTimeoutMs,
+    killDescendants: true,
+    env: { ...process.env, BETTER_AUTH_URL: origin, HOST: "127.0.0.1", PORT: String(port) },
+  });
   const rpc = (
     procedure: string,
     input: null | { text: string } | { id: number; completed?: boolean } = null,
@@ -1599,6 +1726,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           const createResult = await create(projectDir, sample.config);
           expect(createResult.isOk()).toBe(true);
           await writeSyntheticBuildConfig(projectDir);
+          await writeStartCsrfProbe(sample, projectDir);
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
@@ -1652,6 +1780,7 @@ try {
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
+          await bootAndValidateStartCsrf(sample, projectDir);
           await bootAndValidateNuxtAuthRuntime(sample, projectDir);
           await bootAndValidateSolidDevRuntime(sample, projectDir);
           await bootAndValidateSolidRuntime(sample, projectDir);

@@ -2,7 +2,12 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { type ProjectConfig } from "@better-t-stack/types";
-import { chromium, expect as baseExpect, type Browser } from "@playwright/test";
+import {
+  chromium,
+  expect as baseExpect,
+  type APIRequestContext,
+  type Browser,
+} from "@playwright/test";
 import { z } from "zod";
 
 import { Blocked } from "./command";
@@ -44,6 +49,19 @@ export function verificationBlockers(config: ProjectConfig): string[] {
 
 export async function openBrowser(): Promise<Browser> {
   return chromium.launch();
+}
+
+export async function waitForDeployment(request: APIRequestContext, url: string) {
+  await expect(async () => {
+    const response = await request.get(url, { timeout: 5_000 });
+    try {
+      expect(response.status(), "Cloudflare home page becomes available after deployment").toBe(
+        200,
+      );
+    } finally {
+      await response.dispose();
+    }
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 }
 
 export async function verifyBrowser(
@@ -115,6 +133,9 @@ export async function verifyBrowser(
   });
   try {
     await authorizeDeployment(context.request, deployment);
+    if ([config.webDeploy, config.serverDeploy].includes("cloudflare")) {
+      await waitForDeployment(context.request, deployment.web);
+    }
     const home = await page.goto(deployment.web);
     expect(home?.status(), "Deployed home page").toBe(200);
     if (config.api !== "none")

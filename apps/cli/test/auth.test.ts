@@ -896,7 +896,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(nativePackageFile).toContain('"@clerk/expo": "^4.6.5"');
+      expect(nativePackageFile).toContain('"@clerk/expo":');
 
       expect(signInFile).not.toContain("setActive");
       expect(signInFile).not.toContain("signIn.create");

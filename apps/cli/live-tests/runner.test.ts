@@ -1,9 +1,14 @@
 import { Database } from "bun:sqlite";
 import { afterEach, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
+import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
+import { request } from "@playwright/test";
+import { z } from "zod";
+
+import { waitForDeployment } from "./browser";
 import { cleanResources } from "./cleanup";
 import { Commands } from "./command";
 import { DatabaseAssertions } from "./database";
@@ -34,6 +39,27 @@ const selection: Selection = {
   addons: [],
   examples: ["todo"],
 };
+
+test("deployment readiness retries a connection reset and a temporary 404", async () => {
+  let attempts = 0;
+  const server = createServer((incoming, response) => {
+    attempts++;
+    if (attempts === 1) incoming.socket.destroy();
+    else response.writeHead(attempts === 2 ? 404 : 200).end("ready");
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = z.object({ port: z.number().int().positive() }).parse(server.address());
+  const context = await request.newContext();
+  try {
+    await waitForDeployment(context, `http://127.0.0.1:${port}`);
+    expect(attempts).toBe(3);
+  } finally {
+    await context.dispose();
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+  }
+});
 
 test("preview protection accepts denials and Vercel login redirects, not application redirects", () => {
   for (const status of [401, 403])

@@ -13328,13 +13328,18 @@ function AuthLayout() {
 }
 `],
   ["auth/clerk/convex/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
-import { createStart } from '@tanstack/react-start'
+import { createCsrfMiddleware, createStart } from '@tanstack/react-start'
+
+const csrfMiddleware = createCsrfMiddleware({
+	filter: (ctx) => ctx.handlerType === 'serverFn',
+})
 
 export const startInstance = createStart(() => {
 	return {
-		requestMiddleware: [clerkMiddleware()],
+		requestMiddleware: [csrfMiddleware, clerkMiddleware()],
 	}
-})`],
+})
+`],
   ["auth/clerk/native/base/app/(auth)/_layout.tsx.hbs", `import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
@@ -14150,11 +14155,15 @@ function AuthLayout() {
 }
 `],
   ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
-import { createStart } from '@tanstack/react-start'
+import { createCsrfMiddleware, createStart } from '@tanstack/react-start'
+
+const csrfMiddleware = createCsrfMiddleware({
+	filter: (ctx) => ctx.handlerType === 'serverFn',
+})
 
 export const startInstance = createStart(() => {
 	return {
-		requestMiddleware: [clerkMiddleware()],
+		requestMiddleware: [csrfMiddleware, clerkMiddleware()],
 	}
 })
 `],
@@ -16230,7 +16239,7 @@ export function createPrismaClient(env: DatabaseConfig) {
 export type Database = ReturnType<typeof createPrismaClient>;
 `],
   ["db/prisma/sqlite/prisma.config.ts.hbs", `import path from "node:path";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig{{#unless (or (eq dbSetup "turso") (eq dbSetup "d1"))}}, env{{/unless}} } from "prisma/config";
 import "varlock/auto-load";
 
 
@@ -16240,13 +16249,14 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
   },
   datasource: {
-    {{#if (eq dbSetup "turso")}}
+    {{#if (or (eq dbSetup "turso") (eq dbSetup "d1"))}}
     url: "file:./dev.db",
     {{else}}
     url: env("DATABASE_URL"),
     {{/if}}
   },
-});`],
+});
+`],
   ["db/prisma/sqlite/prisma/migrations/.gitkeep", ``],
   ["db/prisma/sqlite/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
@@ -16871,7 +16881,7 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (not (includes addons "vite-plus")))}}
+  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (eq runtime "bun") (not (includes addons "vite-plus")))}}
 FROM oven/bun:1 AS builder
 {{else}}
 FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
@@ -31566,23 +31576,23 @@ export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy
 	"dependencies": {
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
 		"@tailwindcss/vite": "^4.3.3",
-		"@tanstack/react-router": "^1.170.32",
-		"lucide-react": "^1.41.0",
+		"@tanstack/react-router": "^1.170.44",
+		"lucide-react": "^1.56.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.8",
-		"react-dom": "^19.2.8",
+		"react": "^19.3.0",
+		"react-dom": "^19.3.0",
         "sonner": "^2.0.8"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.167.1",
-		"@tanstack/router-plugin": "^1.168.35",
-		"@types/node": "^26.4.1",
-		"@types/react": "^19.2.18",
-		"@types/react-dom": "^19.2.7",
-		"@vitejs/plugin-react": "^6.1.1",
-		"postcss": "^8.5.28",
+		"@tanstack/react-router-devtools": "^1.167.2",
+		"@tanstack/router-plugin": "^1.168.45",
+		"@types/node": "^26.6.5",
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"@vitejs/plugin-react": "^6.1.2",
+		"postcss": "^8.5.30",
 		"tailwindcss": "^4.3.3",
-		"vite": "^8.2.2"
+		"vite": "^8.3.4"
 	}
 }
 `],
@@ -32019,26 +32029,26 @@ export default defineConfig({
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/react-query": "^5.102.8",
-    "@tanstack/react-router": "^1.170.32",
-    "@tanstack/react-start": "^1.168.49",
-    "lucide-react": "^1.41.0",
+    "@tanstack/react-query": "^5.104.2",
+    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-start": "^1.169.1",
+    "lucide-react": "^1.56.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "sonner": "^2.0.8",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.167.1",
-    "@testing-library/dom": "^10.4.1",
+    "@tanstack/react-router-devtools": "^1.167.2",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
-    "jsdom": "^30.0.1",
-    "vite": "^8.2.2",
-    "web-vitals": "^6.2.1"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "jsdom": "^30.1.2",
+    "vite": "^8.3.4",
+    "web-vitals": "^6.2.3"
   }
 }
 `],
