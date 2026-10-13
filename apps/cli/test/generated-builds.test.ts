@@ -1832,7 +1832,10 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
               "auth:generate",
             ]);
           }
-          const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
+          // Artifact probes typecheck and boot the generated scaffold without custom router fixtures.
+          const restoreTypeFixtures = sample.name.endsWith("-prisma-compute-artifact")
+            ? undefined
+            : await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(
               path.join(projectDir, "apps/web/app/pages/ssr-auth-probe.vue"),

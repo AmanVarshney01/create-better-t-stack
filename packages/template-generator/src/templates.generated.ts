@@ -26324,9 +26324,6 @@ const TITLE_TEXT = \`
   ["frontend/astro/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   "references": [{ "path": "../../packages/api" }],
-  "compilerOptions": {
-    "disableSourceOfProjectReferenceRedirect": true
-  },
   {{/if}}
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
