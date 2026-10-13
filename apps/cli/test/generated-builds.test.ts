@@ -1088,6 +1088,7 @@ async function bootAndValidateStartCsrf(sample: SelectedBuildSample, projectDir:
       all: true,
       reject: false,
       timeout: commandTimeoutMs,
+      killDescendants: true,
       env: { ...process.env, PORT: String(port), HOST: "127.0.0.1" },
     },
   );
