@@ -52,8 +52,8 @@ export default defineConfig({
 {{/if}}
     viteReact(),
   ],
-{{#if (eq webDeploy "vercel")}}
-  // Bundle all SSR deps: Vercel functions have no node_modules at runtime
+{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+  // These deployments run the standalone build artifact.
   ssr: {
     noExternal: true,
   },

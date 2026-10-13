@@ -333,6 +333,24 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  {
+    name: "tanstack-start-prisma-compute-artifact",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      webDeploy: "prisma",
+      auth: "none",
+      api: "orpc",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
   ...(["trpc", "orpc"] as const).map(
     (api) =>
       ({
@@ -1446,7 +1464,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
     ? "build/server/index.js"
     : frontend.includes("svelte")
       ? "build/index.js"
-      : frontend.includes("solid")
+      : frontend.includes("solid") || frontend.includes("tanstack-start")
         ? ".output/server/index.mjs"
         : undefined;
   if (!entrypoint) return;

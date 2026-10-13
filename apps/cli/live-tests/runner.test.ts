@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
+import { usesAlchemyManagedDatabase } from "@better-t-stack/types";
 import { request } from "@playwright/test";
 import { z } from "zod";
 
@@ -39,6 +40,21 @@ const selection: Selection = {
   addons: [],
   examples: ["todo"],
 };
+
+test("manual and managed databases remain distinct deploy cases", () => {
+  const managed = [...configurations({ ...selection, serverDeploy: "prisma" })][0]!;
+  const manual = [
+    ...configurations({
+      ...selection,
+      serverDeploy: "prisma",
+      dbSetupOptions: { mode: "manual" },
+    }),
+  ][0]!;
+  expect(usesAlchemyManagedDatabase(managed)).toBe(true);
+  expect(usesAlchemyManagedDatabase(manual)).toBe(false);
+  expect(manual.dbSetupOptions).toEqual({ mode: "manual" });
+  expect(caseId(managed)).not.toBe(caseId(manual));
+});
 
 test("deployment readiness retries a connection reset and a temporary 404", async () => {
   let attempts = 0;

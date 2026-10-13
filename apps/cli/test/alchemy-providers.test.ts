@@ -34,6 +34,34 @@ async function generate(overrides: Partial<CreateOptions>) {
 }
 
 describe("Alchemy providers", () => {
+  it("allows managed Prisma code generation before provisioning while preserving app validation", async () => {
+    for (const webDeploy of ["cloudflare", "prisma"] as const) {
+      for (const orm of ["prisma", "drizzle"] as const) {
+        for (const mode of ["alchemy", "manual"] as const) {
+          const files = await generate({
+            frontend: ["tanstack-start"],
+            backend: "self",
+            runtime: "none",
+            serverDeploy: "none",
+            webDeploy,
+            orm,
+            dbSetup: "prisma-postgres",
+            dbSetupOptions: { mode },
+          });
+          const dbSchema = files.get("packages/db/.env.schema")!;
+          expect(dbSchema).toContain("@import(../../apps/web/");
+          expect(dbSchema.includes("@required=false\nDATABASE_URL=")).toBe(
+            orm === "prisma" && mode === "alchemy",
+          );
+          const appSchema = files.get("apps/web/.env.schema")!;
+          expect(appSchema).toContain("@defaultRequired=true");
+          expect(appSchema).toContain("DATABASE_URL=");
+          expect(appSchema).not.toContain("@required=false\nDATABASE_URL=");
+        }
+      }
+    }
+  });
+
   it("keeps Cloudflare development on each framework's documented frontend port", async () => {
     const scenarios = [
       { frontend: "tanstack-router", port: 3001 },
