@@ -672,6 +672,38 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "next-clerk-self",
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "clerk",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
+    name: "next-clerk-convex",
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "clerk",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
     name: "tanstack-start-clerk-hono",
     config: {
       ...baseConfig,
