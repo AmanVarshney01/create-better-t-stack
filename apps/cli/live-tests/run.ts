@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { mkdir, open, readFile, readdir, unlink, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
@@ -28,6 +27,7 @@ import {
   writeEnvironment,
 } from "./providers";
 import { RunState, type Status } from "./state";
+import { checkDeployedProjectTypes } from "./typecheck";
 import { verifyRuntime } from "./verification";
 
 const { values, positionals } = parseArgs({
@@ -244,31 +244,8 @@ async function executeCase(selection: ProjectConfig, id: string) {
       }
     } else {
       const deployment = await deployAlchemy(config, state, id, commands);
-      if (checkTypesAfterDeploy) {
-        // Alchemy builds the app with the provisioned database environment and
-        // generates Start's routes. Check those types without rebuilding outside
-        // that environment; check the remaining workspaces through their scripts.
-        for (const entry of await readdir(path.join(project, "packages"), {
-          withFileTypes: true,
-        })) {
-          if (!entry.isDirectory()) continue;
-          const workspace = path.join(project, "packages", entry.name);
-          const pkg = z
-            .object({ scripts: z.record(z.string(), z.string()).optional() })
-            .parse(JSON.parse(await readFile(path.join(workspace, "package.json"), "utf8")));
-          if (pkg.scripts?.["check-types"])
-            await commands.run(`check-types-${entry.name}`, workspace, config.packageManager, [
-              "run",
-              "check-types",
-            ]);
-        }
-        const webDirectory = path.join(project, "apps/web");
-        const require = createRequire(path.join(webDirectory, "package.json"));
-        await commands.run("check-types-web", webDirectory, "node", [
-          require.resolve("typescript/bin/tsc"),
-          "--noEmit",
-        ]);
-      }
+      if (checkTypesAfterDeploy)
+        await checkDeployedProjectTypes(project, config.packageManager, commands);
       await writeFile(
         path.join(caseDirectory, "deployment.json"),
         JSON.stringify(deployment, null, 2),
