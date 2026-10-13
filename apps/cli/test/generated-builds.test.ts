@@ -351,6 +351,24 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  {
+    name: "astro-prisma-compute-artifact",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["astro"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      webDeploy: "prisma",
+      auth: "none",
+      api: "orpc",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
   ...(["trpc", "orpc"] as const).map(
     (api) =>
       ({
@@ -1466,7 +1484,9 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
       ? "build/index.js"
       : frontend.includes("solid") || frontend.includes("tanstack-start")
         ? ".output/server/index.mjs"
-        : undefined;
+        : frontend.includes("astro")
+          ? "dist/server/entry.mjs"
+          : undefined;
   if (!entrypoint) return;
 
   const webDir = path.join(projectDir, "apps/web");
@@ -1492,6 +1512,16 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
       const response = await fetchWhenReady(`http://127.0.0.1:${port}${pathname}`);
       expect(response?.status).toBe(200);
     }
+    if (sample.config.backend === "self" && sample.config.api === "orpc") {
+      const prefix = frontend.includes("tanstack-start") ? "/api/rpc" : "/rpc";
+      const response = await fetchWhenReady(`http://127.0.0.1:${port}${prefix}/healthCheck`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ json: null }),
+      });
+      expect(response?.status).toBe(200);
+      expect(await response?.json()).toEqual({ json: "OK" });
+    }
   } catch (error) {
     failure = error;
   } finally {
@@ -1506,6 +1536,35 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
         .filter(Boolean)
         .join("\n\n"),
     );
+  }
+}
+
+async function bootAndValidateAstroDevRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.name !== "astro-prisma-compute-artifact") return;
+
+  const webDir = path.join(projectDir, "apps/web");
+  const port = await getAvailablePort();
+  try {
+    await runCommand(sample.name, webDir, sample.packageManager, [
+      "run",
+      "dev:bare",
+      "--background",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      String(port),
+    ]);
+    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+    expect(root?.status).toBe(200);
+    const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ json: null }),
+    });
+    expect(health?.status).toBe(200);
+    expect(await health?.json()).toEqual({ json: "OK" });
+  } finally {
+    await runCommand(sample.name, webDir, sample.packageManager, ["run", "astro", "dev", "stop"]);
   }
 }
 
@@ -1796,6 +1855,7 @@ try {
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidateAstroDevRuntime(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
           await bootAndValidateStartCsrf(sample, projectDir);

@@ -26094,7 +26094,17 @@ export default defineConfig({
   adapter: node({ mode: "standalone" }),
 {{/if}}
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+{{#if (and (eq webDeploy "prisma") (ne backend "none") (not (or (includes addons "electrobun") (includes addons "tauri"))))}}
+      {
+        name: "prisma-compute-ssr",
+        apply: "build",
+        // Compute runs the uploaded dist directory without workspace dependencies.
+        config: () => ({ ssr: { noExternal: true } }),
+      },
+{{/if}}
+    ],
   },
 });
 `],
@@ -26314,6 +26324,9 @@ const TITLE_TEXT = \`
   ["frontend/astro/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   "references": [{ "path": "../../packages/api" }],
+  "compilerOptions": {
+    "disableSourceOfProjectReferenceRedirect": true
+  },
   {{/if}}
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
