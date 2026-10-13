@@ -26072,7 +26072,7 @@ import { defineConfig } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
-{{else if (or (eq webDeploy "cloudflare") (and (eq webDeploy "prisma") (eq backend "none")))}}
+{{else if (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -26087,24 +26087,14 @@ export default defineConfig({
 {{else if (eq webDeploy "vercel")}}
   output: "server",
   adapter: vercel(),
-{{else if (or (eq webDeploy "cloudflare") (and (eq webDeploy "prisma") (eq backend "none")))}}
+{{else if (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
   output: "server",
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
 {{/if}}
   vite: {
-    plugins: [
-      tailwindcss(),
-{{#if (and (eq webDeploy "prisma") (ne backend "none") (not (or (includes addons "electrobun") (includes addons "tauri"))))}}
-      {
-        name: "prisma-compute-ssr",
-        apply: "build",
-        // Compute runs the uploaded dist directory without workspace dependencies.
-        config: () => ({ ssr: { noExternal: true } }),
-      },
-{{/if}}
-    ],
+    plugins: [tailwindcss()],
   },
 });
 `],
@@ -26115,12 +26105,12 @@ export default defineConfig({
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro build",
 
 {{/unless}}
 		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro check",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "preview": "astro preview",
 {{/unless}}
     "astro": "astro"

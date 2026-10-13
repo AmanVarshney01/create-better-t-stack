@@ -1484,9 +1484,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
       ? "build/index.js"
       : frontend.includes("solid") || frontend.includes("tanstack-start")
         ? ".output/server/index.mjs"
-        : frontend.includes("astro")
-          ? "dist/server/entry.mjs"
-          : undefined;
+        : undefined;
   if (!entrypoint) return;
 
   const webDir = path.join(projectDir, "apps/web");
@@ -1539,32 +1537,75 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   }
 }
 
-async function bootAndValidateAstroDevRuntime(sample: SelectedBuildSample, projectDir: string) {
+async function bootAndValidateAstroWebsite(sample: SelectedBuildSample, projectDir: string) {
   if (sample.name !== "astro-prisma-compute-artifact") return;
 
-  const webDir = path.join(projectDir, "apps/web");
+  const infraDir = path.join(projectDir, "packages/infra");
   const port = await getAvailablePort();
+  // Use the same builder and dependency packager as Prisma.Website.Astro, without cloud resources.
+  const probe = "astro-website-probe.ts";
+  await fs.writeFile(
+    path.join(infraDir, probe),
+    `import assert from "node:assert/strict";
+import path from "node:path";
+import * as Effect from "effect/Effect";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { make } from "@alchemy.run/frontend-frameworks/astro";
+import { stageWebsiteArtifact } from "alchemy/Prisma/Website/Artifact";
+
+async function check(origin: string) {
+  let root: Response | undefined;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    root = await fetch(origin, { signal: AbortSignal.timeout(10000) }).catch(() => undefined);
+    if (root) break;
+    await Bun.sleep(100);
+  }
+  assert.equal(root?.status, 200);
+  const rpc = await fetch(new URL("/rpc/healthCheck", origin), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ json: null }),
+    signal: AbortSignal.timeout(10000),
+  });
+  assert.equal(rpc.status, 200);
+  assert.deepEqual(await rpc.json(), { json: "OK" });
+}
+
+await Effect.runPromise(Effect.gen(function* () {
+  const root = path.resolve("../../apps/web");
+  const framework = yield* make({ root, target: "@alchemy.run/frontend-frameworks/astro/node" });
+  const built = yield* framework.build({ root });
+  const entry = built.serverModules?.[0];
+  assert.ok(built.distDirectory && entry);
+  const artifact = yield* stageWebsiteArtifact({
+    root,
+    distDir: built.distDirectory,
+    serverEntry: path.join(built.distDirectory, entry.name),
+  });
+  yield* Effect.acquireRelease(
+    Effect.sync(() => Bun.spawn(["bun", artifact.entrypoint], {
+      cwd: artifact.directory,
+      env: { ...process.env, HOST: "127.0.0.1", NODE_ENV: "production", PORT: "${port}" },
+      stdout: "inherit",
+      stderr: "inherit",
+    })),
+    (child) => Effect.promise(async () => {
+      child.kill("SIGTERM");
+      await child.exited;
+    }),
+  );
+  yield* Effect.tryPromise(() => check("http://127.0.0.1:${port}/"));
+  const dev = yield* framework.dev({ root, host: "127.0.0.1", port: 0 });
+  yield* Effect.tryPromise(() => check(dev.url));
+  console.log("Astro Website isolated production and native dev RPC passed");
+}).pipe(Effect.provide(BunServices.layer), Effect.scoped));
+`,
+  );
   try {
-    await runCommand(sample.name, webDir, sample.packageManager, [
-      "run",
-      "dev:bare",
-      "--background",
-      "--host",
-      "127.0.0.1",
-      "--port",
-      String(port),
-    ]);
-    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
-    expect(root?.status).toBe(200);
-    const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ json: null }),
-    });
-    expect(health?.status).toBe(200);
-    expect(await health?.json()).toEqual({ json: "OK" });
+    await runCommand(sample.name, infraDir, sample.packageManager, ["run", "check-types"]);
+    await runCommand(sample.name, infraDir, "bun", [probe]);
   } finally {
-    await runCommand(sample.name, webDir, sample.packageManager, ["run", "astro", "dev", "stop"]);
+    await fs.remove(path.join(infraDir, probe));
   }
 }
 
@@ -1858,7 +1899,7 @@ try {
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
-          await bootAndValidateAstroDevRuntime(sample, projectDir);
+          await bootAndValidateAstroWebsite(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
           await bootAndValidateStartCsrf(sample, projectDir);
