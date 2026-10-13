@@ -185,6 +185,7 @@ const buildSamples: BuildSample[] = [
       payments: "none",
       addons: ["none"],
       examples: ["todo"],
+      webDeploy: "docker",
     },
   },
   {
@@ -1145,20 +1146,20 @@ async function bootAndValidateStartAuthRuntime(sample: SelectedBuildSample, proj
   if (sample.name !== "tanstack-start-self-auth-todo") return;
 
   await runCommand(sample.name, projectDir, sample.packageManager, ["run", "db:push"]);
+  await runCommand(sample.name, path.join(projectDir, "apps/web"), sample.packageManager, [
+    "run",
+    "build",
+  ]);
   const port = await getAvailablePort();
   const origin = `http://127.0.0.1:${port}`;
-  const runtime = execa(
-    sample.packageManager,
-    ["run", "serve", "--host", "127.0.0.1", "--port", String(port)],
-    {
-      cwd: path.join(projectDir, "apps/web"),
-      all: true,
-      reject: false,
-      timeout: commandTimeoutMs,
-      killDescendants: true,
-      env: { ...process.env, BETTER_AUTH_URL: origin },
-    },
-  );
+  const runtime = execa("node", [".output/server/index.mjs"], {
+    cwd: path.join(projectDir, "apps/web"),
+    all: true,
+    reject: false,
+    timeout: commandTimeoutMs,
+    killDescendants: true,
+    env: { ...process.env, BETTER_AUTH_URL: origin, HOST: "127.0.0.1", PORT: String(port) },
+  });
   const rpc = (
     procedure: string,
     input: null | { text: string } | { id: number; completed?: boolean } = null,

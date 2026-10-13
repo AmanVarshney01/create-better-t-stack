@@ -11,7 +11,7 @@ import { readBtsConfig } from "../src/utils/bts-config";
 import { openBrowser, verificationBlockers } from "./browser";
 import { cleanResources } from "./cleanup";
 import { Blocked, Commands } from "./command";
-import { DatabaseAssertions, migrateDatabase } from "./database";
+import { DatabaseAssertions, generateDatabaseMigrations, migrateDatabase } from "./database";
 import { startLocal } from "./local";
 import { caseId, configurations, selectionSchema } from "./matrix";
 import {
@@ -109,7 +109,8 @@ async function executeCase(selection: ProjectConfig, id: string) {
     );
   const caseDirectory = path.join(directory, id, `attempt-${Date.now()}`);
   await mkdir(caseDirectory, { recursive: true, mode: 0o700 });
-  const name = `bts-live-${path.basename(directory).slice(0, 6)}-${id.slice(0, 12)}`;
+  const prefix = path.basename(directory).slice(0, 6).replace(/-+$/, "");
+  const name = `bts-live-${prefix}-${id.slice(0, 12)}`;
   const project = path.join(caseDirectory, name);
   const config = { ...selection, projectName: name, relativePath: name, projectDir: project };
   const commands = new Commands(caseDirectory, abort.signal);
@@ -165,6 +166,11 @@ async function executeCase(selection: ProjectConfig, id: string) {
     if (databaseUrl) {
       await migrateDatabase(config, commands);
       database = new DatabaseAssertions(databaseUrl);
+    } else if (
+      config.dbSetup === "d1" ||
+      (usesAlchemyManagedDatabase(config) && config.orm === "drizzle")
+    ) {
+      await generateDatabaseMigrations(config, commands);
     }
     if (config.addons.some((addon) => ["biome", "oxlint", "vite-plus"].includes(addon)))
       await commands.run("check", project, config.packageManager, ["run", "check"]);

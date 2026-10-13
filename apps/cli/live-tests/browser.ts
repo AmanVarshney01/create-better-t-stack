@@ -115,8 +115,18 @@ export async function verifyBrowser(
   });
   try {
     await authorizeDeployment(context.request, deployment);
-    const home = await page.goto(deployment.web);
-    expect(home?.status(), "Deployed home page").toBe(200);
+    if ([config.webDeploy, config.serverDeploy].includes("cloudflare")) {
+      await expect
+        .poll(async () => (await page.goto(deployment.web!))?.status(), {
+          message: "Cloudflare home page becomes available after deployment",
+          timeout: 60_000,
+          intervals: [1_000, 2_000, 5_000],
+        })
+        .toBe(200);
+    } else {
+      const home = await page.goto(deployment.web);
+      expect(home?.status(), "Deployed home page").toBe(200);
+    }
     if (config.api !== "none")
       await expect(
         page.getByText(config.frontend.includes("nuxt") ? "Connected (OK)" : "Connected", {

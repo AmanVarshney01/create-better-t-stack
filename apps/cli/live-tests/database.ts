@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import type { Commands } from "./command";
 
-export async function migrateDatabase(config: ProjectConfig, commands: Commands) {
+export async function generateDatabaseMigrations(config: ProjectConfig, commands: Commands) {
   const directory = path.join(config.projectDir, "packages/db");
   if (config.orm === "prisma") {
     await commands.run("prisma-generate", directory, config.packageManager, ["run", "db:generate"]);
@@ -35,6 +35,11 @@ export async function migrateDatabase(config: ProjectConfig, commands: Commands)
       "db:generate",
     ]);
   }
+}
+
+export async function migrateDatabase(config: ProjectConfig, commands: Commands) {
+  await generateDatabaseMigrations(config, commands);
+  const directory = path.join(config.projectDir, "packages/db");
   for (const step of ["apply", "repeat"])
     await commands.run(`migration-${step}`, directory, config.packageManager, [
       "run",

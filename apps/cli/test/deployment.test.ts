@@ -1712,7 +1712,10 @@ describe("Deployment Configurations", () => {
       expect(viteConfig).toContain('nitro({ preset: "node-server" }),');
       expect(webPkg.dependencies.nitro).toBeDefined();
       // SSR chunks require() externals at runtime, so the app runs from the workspace
-      expect(webDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(webDockerfile).toContain("FROM node:24-slim AS builder");
+      expect(webDockerfile).toContain(
+        "COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun",
+      );
       expect(webDockerfile).toContain("FROM node:24-slim AS runner");
       expect(webDockerfile).toContain("WORKDIR /app/apps/web");
       expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
@@ -1797,7 +1800,7 @@ describe("Deployment Configurations", () => {
               runtime === "bun" ? 'nitro({ preset: "bun" }),' : 'nitro({ preset: "node-server" }),',
             );
             expect(webDockerfile).toContain(
-              packageManager === "bun" && !useVitePlus
+              packageManager === "bun" && runtime === "bun" && !useVitePlus
                 ? "FROM oven/bun:1 AS builder"
                 : `FROM node:24${useVitePlus ? "" : "-slim"} AS builder`,
             );

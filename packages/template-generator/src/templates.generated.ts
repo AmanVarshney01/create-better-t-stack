@@ -16239,7 +16239,7 @@ export function createPrismaClient(env: DatabaseConfig) {
 export type Database = ReturnType<typeof createPrismaClient>;
 `],
   ["db/prisma/sqlite/prisma.config.ts.hbs", `import path from "node:path";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig{{#unless (or (eq dbSetup "turso") (eq dbSetup "d1"))}}, env{{/unless}} } from "prisma/config";
 import "varlock/auto-load";
 
 
@@ -16249,13 +16249,14 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
   },
   datasource: {
-    {{#if (eq dbSetup "turso")}}
+    {{#if (or (eq dbSetup "turso") (eq dbSetup "d1"))}}
     url: "file:./dev.db",
     {{else}}
     url: env("DATABASE_URL"),
     {{/if}}
   },
-});`],
+});
+`],
   ["db/prisma/sqlite/prisma/migrations/.gitkeep", ``],
   ["db/prisma/sqlite/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
@@ -16880,7 +16881,7 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (not (includes addons "vite-plus")))}}
+  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (eq runtime "bun") (not (includes addons "vite-plus")))}}
 FROM oven/bun:1 AS builder
 {{else}}
 FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
