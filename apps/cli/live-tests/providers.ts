@@ -5,6 +5,7 @@ import { parseEnv } from "node:util";
 import { usesAlchemyManagedDatabase, type ProjectConfig } from "@better-t-stack/types";
 import { z } from "zod";
 
+import { readBtsConfig } from "../src/utils/bts-config";
 import { Blocked, Commands } from "./command";
 import { RunState, type Resource } from "./state";
 
@@ -272,28 +273,53 @@ export async function deployAlchemy(
   id: string,
   commands: Commands,
 ) {
-  if (!process.env.CLOUDFLARE_ACCOUNT_ID)
+  const usesCloudflare = [config.webDeploy, config.serverDeploy].includes("cloudflare");
+  if (usesCloudflare && !process.env.CLOUDFLARE_ACCOUNT_ID)
     throw new Blocked(
       "Set CLOUDFLARE_ACCOUNT_ID and connect Cloudflare in the Alchemy profile before deploying.",
     );
   const directory = path.join(config.projectDir, "packages/infra");
   const stage = `test-${id.slice(0, 12)}`;
   state.resource(id, "alchemy", stage, directory);
-  const stdout = await commands.run(
+  let stdout = await commands.run(
     "alchemy-deploy",
     directory,
     config.packageManager,
     ["run", "deploy", "--stage", stage, "--yes"],
-    { CI: "" },
+    { CI: usesCloudflare ? "" : "1" },
   );
   // Alchemy prints the stack's declared web/server outputs after deployment.
-  const web = stdout.match(/\bweb:\s*["'](https?:\/\/[^"']+)["']/)?.[1];
-  const server = stdout.match(/\bserver:\s*["'](https?:\/\/[^"']+)["']/)?.[1];
-  const output = deploymentOutput.parse({ web, server });
+  const readOutput = (value: string) =>
+    deploymentOutput.parse({
+      web: value.match(/\bweb:\s*["'](https?:\/\/[^"']+)["']/)?.[1],
+      server: value.match(/\bserver:\s*["'](https?:\/\/[^"']+)["']/)?.[1],
+    });
+  let output = readOutput(stdout);
   if (!output.web && !output.server)
     throw new Error(
       "Alchemy deployment returned no usable web/server URL; inspect deployment log.",
     );
+  if (config.auth === "better-auth" && [config.webDeploy, config.serverDeploy].includes("prisma")) {
+    const authUrl = config.backend === "self" ? output.web : output.server;
+    if (!authUrl) throw new Error("Prisma deployment returned no authentication server URL");
+    const values = new Map([["BETTER_AUTH_URL", new URL(authUrl).origin]]);
+    if (config.backend !== "self" && output.web)
+      values.set("CORS_ORIGIN", new URL(output.web).origin);
+    // Prisma's stable app URL becomes available after the first deployment.
+    // Configure its exact auth origin, then redeploy before testing sign-up.
+    await updateEnvironment(config, values);
+    stdout = await commands.run(
+      "alchemy-deploy-auth-origin",
+      directory,
+      config.packageManager,
+      ["run", "deploy", "--stage", stage, "--yes"],
+      { CI: usesCloudflare ? "" : "1" },
+    );
+    const updated = readOutput(stdout);
+    if (updated.web !== output.web || updated.server !== output.server)
+      throw new Error("Prisma deployment changed its stable URL while configuring authentication");
+    output = updated;
+  }
   return output;
 }
 
@@ -357,12 +383,15 @@ export async function cleanup(resource: Resource, commands: Commands) {
       ]),
     );
   } else if (resource.provider === "alchemy") {
+    const config = await readBtsConfig(path.resolve(resource.directory, "../.."));
+    const usesCloudflare =
+      !config || [config.webDeploy, config.serverDeploy].includes("cloudflare");
     await commands.run(
       "alchemy-destroy",
       resource.directory,
       "bun",
       ["run", "destroy", "--stage", resource.id, "--yes"],
-      { CI: "" },
+      { CI: usesCloudflare ? "" : "1" },
     );
   } else {
     await commands.run("docker-down", resource.directory, "docker", [
@@ -385,6 +414,10 @@ export async function writeEnvironment(
     ["ALCHEMY_PASSWORD", commands.secret(crypto.randomUUID() + crypto.randomUUID())],
   ]);
   if (databaseUrl) values.set("DATABASE_URL", databaseUrl);
+  await updateEnvironment(config, values);
+}
+
+async function updateEnvironment(config: ProjectConfig, values: ReadonlyMap<string, string>) {
   const files = ["apps/web/.env", "apps/server/.env", "packages/infra/.env"];
   for (const file of files) {
     const pathname = path.join(config.projectDir, file);

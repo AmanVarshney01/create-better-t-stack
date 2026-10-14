@@ -333,6 +333,42 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  {
+    name: "tanstack-start-prisma-compute-artifact",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      webDeploy: "prisma",
+      auth: "none",
+      api: "orpc",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
+    name: "astro-prisma-compute-artifact",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["astro"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      webDeploy: "prisma",
+      auth: "none",
+      api: "orpc",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
   ...(["trpc", "orpc"] as const).map(
     (api) =>
       ({
@@ -1446,7 +1482,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
     ? "build/server/index.js"
     : frontend.includes("svelte")
       ? "build/index.js"
-      : frontend.includes("solid")
+      : frontend.includes("solid") || frontend.includes("tanstack-start")
         ? ".output/server/index.mjs"
         : undefined;
   if (!entrypoint) return;
@@ -1474,6 +1510,16 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
       const response = await fetchWhenReady(`http://127.0.0.1:${port}${pathname}`);
       expect(response?.status).toBe(200);
     }
+    if (sample.config.backend === "self" && sample.config.api === "orpc") {
+      const prefix = frontend.includes("tanstack-start") ? "/api/rpc" : "/rpc";
+      const response = await fetchWhenReady(`http://127.0.0.1:${port}${prefix}/healthCheck`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ json: null }),
+      });
+      expect(response?.status).toBe(200);
+      expect(await response?.json()).toEqual({ json: "OK" });
+    }
   } catch (error) {
     failure = error;
   } finally {
@@ -1488,6 +1534,78 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
         .filter(Boolean)
         .join("\n\n"),
     );
+  }
+}
+
+async function bootAndValidateAstroWebsite(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.name !== "astro-prisma-compute-artifact") return;
+
+  const infraDir = path.join(projectDir, "packages/infra");
+  const port = await getAvailablePort();
+  // Use the same builder and dependency packager as Prisma.Website.Astro, without cloud resources.
+  const probe = "astro-website-probe.ts";
+  await fs.writeFile(
+    path.join(infraDir, probe),
+    `import assert from "node:assert/strict";
+import path from "node:path";
+import * as Effect from "effect/Effect";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { make } from "@alchemy.run/frontend-frameworks/astro";
+import { stageWebsiteArtifact } from "alchemy/Prisma/Website/Artifact";
+
+async function check(origin: string) {
+  let root: Response | undefined;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    root = await fetch(origin, { signal: AbortSignal.timeout(10000) }).catch(() => undefined);
+    if (root) break;
+    await Bun.sleep(100);
+  }
+  assert.equal(root?.status, 200);
+  const rpc = await fetch(new URL("/rpc/healthCheck", origin), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ json: null }),
+    signal: AbortSignal.timeout(10000),
+  });
+  assert.equal(rpc.status, 200);
+  assert.deepEqual(await rpc.json(), { json: "OK" });
+}
+
+await Effect.runPromise(Effect.gen(function* () {
+  const root = path.resolve("../../apps/web");
+  const framework = yield* make({ root, target: "@alchemy.run/frontend-frameworks/astro/node" });
+  const built = yield* framework.build({ root });
+  const entry = built.serverModules?.[0];
+  assert.ok(built.distDirectory && entry);
+  const artifact = yield* stageWebsiteArtifact({
+    root,
+    distDir: built.distDirectory,
+    serverEntry: path.join(built.distDirectory, entry.name),
+  });
+  yield* Effect.acquireRelease(
+    Effect.sync(() => Bun.spawn(["bun", artifact.entrypoint], {
+      cwd: artifact.directory,
+      env: { ...process.env, HOST: "127.0.0.1", NODE_ENV: "production", PORT: "${port}" },
+      stdout: "inherit",
+      stderr: "inherit",
+    })),
+    (child) => Effect.promise(async () => {
+      child.kill("SIGTERM");
+      await child.exited;
+    }),
+  );
+  yield* Effect.tryPromise(() => check("http://127.0.0.1:${port}/"));
+  const dev = yield* framework.dev({ root, host: "127.0.0.1", port: 0 });
+  yield* Effect.tryPromise(() => check(dev.url));
+  console.log("Astro Website isolated production and native dev RPC passed");
+}).pipe(Effect.provide(BunServices.layer), Effect.scoped));
+`,
+  );
+  try {
+    await runCommand(sample.name, infraDir, sample.packageManager, ["run", "check-types"]);
+    await runCommand(sample.name, infraDir, "bun", [probe]);
+  } finally {
+    await fs.remove(path.join(infraDir, probe));
   }
 }
 
@@ -1755,7 +1873,10 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
               "auth:generate",
             ]);
           }
-          const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
+          // Artifact probes typecheck and boot the generated scaffold without custom router fixtures.
+          const restoreTypeFixtures = sample.name.endsWith("-prisma-compute-artifact")
+            ? undefined
+            : await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(
               path.join(projectDir, "apps/web/app/pages/ssr-auth-probe.vue"),
@@ -1778,6 +1899,7 @@ try {
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidateAstroWebsite(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
           await bootAndValidateStartCsrf(sample, projectDir);

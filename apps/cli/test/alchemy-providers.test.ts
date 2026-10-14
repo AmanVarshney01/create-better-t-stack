@@ -1,11 +1,18 @@
 import { describe, expect, it } from "bun:test";
 
 import { usesAlchemyManagedDatabase } from "@better-t-stack/types";
+import { z } from "zod";
 
 import { createVirtual } from "../src/index";
 import { collectFiles } from "./setup";
 
 type CreateOptions = Parameters<typeof createVirtual>[0];
+
+const packageSchema = z.object({
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+  scripts: z.record(z.string(), z.string()).optional(),
+});
 
 const baseConfig = {
   projectName: "alchemy-provider-test",
@@ -34,6 +41,62 @@ async function generate(overrides: Partial<CreateOptions>) {
 }
 
 describe("Alchemy providers", () => {
+  it("keeps standalone Start bundling out of the dependency-traced Website path", async () => {
+    for (const backend of ["none", "self", "hono"] as const) {
+      const files = await generate({
+        frontend: ["tanstack-start"],
+        backend,
+        runtime: backend === "hono" ? "bun" : "none",
+        webDeploy: "prisma",
+        serverDeploy: backend === "hono" ? "prisma" : "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: backend === "none" ? "none" : "orpc",
+        dbSetup: "none",
+        examples: ["none"],
+      });
+      const infra = files.get("packages/infra/alchemy.run.ts")!;
+      const vite = files.get("apps/web/vite.config.ts")!;
+      expect(infra.includes('Prisma.Website.TanStackStart("web"')).toBe(backend === "none");
+      expect(vite.includes("noExternal: true")).toBe(backend !== "none");
+      expect(vite.includes("nitro(")).toBe(backend !== "none");
+    }
+  });
+
+  it("lets the official Astro website own Prisma builds for every backend topology", async () => {
+    for (const backend of ["none", "self", "hono"] as const) {
+      const files = await generate({
+        frontend: ["astro"],
+        backend,
+        runtime: backend === "hono" ? "bun" : "none",
+        webDeploy: "prisma",
+        serverDeploy: backend === "hono" ? "prisma" : "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: backend === "none" ? "none" : "orpc",
+        dbSetup: "none",
+        examples: ["none"],
+      });
+      const infra = files.get("packages/infra/alchemy.run.ts")!;
+      const astro = files.get("apps/web/astro.config.mjs")!;
+      const web = packageSchema.parse(JSON.parse(files.get("apps/web/package.json")!));
+      const infraPackage = packageSchema.parse(
+        JSON.parse(files.get("packages/infra/package.json")!),
+      );
+      expect(infra).toContain('Prisma.Website.Astro("web", {');
+      expect(infra).not.toContain('Prisma.Compute("web"');
+      expect(astro).not.toContain("adapter:");
+      expect(astro).not.toContain("prisma-compute-ssr");
+      expect(web.dependencies?.["@astrojs/node"]).toBeUndefined();
+      expect(web.scripts?.build).toBeUndefined();
+      expect(web.scripts?.preview).toBeUndefined();
+      expect(infraPackage.devDependencies).toHaveProperty("@vercel/nft");
+      expect(infraPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBeDefined();
+    }
+  });
+
   it("keeps Cloudflare development on each framework's documented frontend port", async () => {
     const scenarios = [
       { frontend: "tanstack-router", port: 3001 },

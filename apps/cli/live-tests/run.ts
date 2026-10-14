@@ -11,7 +11,12 @@ import { readBtsConfig } from "../src/utils/bts-config";
 import { openBrowser, verificationBlockers } from "./browser";
 import { cleanResources } from "./cleanup";
 import { Blocked, Commands } from "./command";
-import { DatabaseAssertions, generateDatabaseMigrations, migrateDatabase } from "./database";
+import {
+  DatabaseAssertions,
+  generateDatabaseMigrations,
+  generatePrismaClient,
+  migrateDatabase,
+} from "./database";
 import { startLocal } from "./local";
 import { caseId, configurations, selectionSchema } from "./matrix";
 import {
@@ -22,6 +27,7 @@ import {
   writeEnvironment,
 } from "./providers";
 import { RunState, type Status } from "./state";
+import { checkDeployedProjectTypes } from "./typecheck";
 import { verifyRuntime } from "./verification";
 
 const { values, positionals } = parseArgs({
@@ -112,7 +118,15 @@ async function executeCase(selection: ProjectConfig, id: string) {
   const prefix = path.basename(directory).slice(0, 6).replace(/-+$/, "");
   const name = `bts-live-${prefix}-${id.slice(0, 12)}`;
   const project = path.join(caseDirectory, name);
-  const config = { ...selection, projectName: name, relativePath: name, projectDir: project };
+  const config = {
+    ...selection,
+    dbSetupOptions: selection.dbSetupOptions ?? {
+      mode: usesAlchemyManagedDatabase(selection) ? "alchemy" : "manual",
+    },
+    projectName: name,
+    relativePath: name,
+    projectDir: project,
+  } satisfies ProjectConfig;
   const commands = new Commands(caseDirectory, abort.signal);
   let status: Status = "running";
   let detail = "";
@@ -148,7 +162,6 @@ async function executeCase(selection: ProjectConfig, id: string) {
         examples: input.examples.length ? input.examples : ["none"],
         directoryConflict: "error",
         disableAnalytics: true,
-        dbSetupOptions: { mode: usesAlchemyManagedDatabase(config) ? "alchemy" : "manual" },
       }),
     ]);
     const saved = await readBtsConfig(project);
@@ -171,10 +184,15 @@ async function executeCase(selection: ProjectConfig, id: string) {
       (usesAlchemyManagedDatabase(config) && config.orm === "drizzle")
     ) {
       await generateDatabaseMigrations(config, commands);
+    } else if (usesAlchemyManagedDatabase(config) && config.orm === "prisma") {
+      await generatePrismaClient(config, commands);
     }
     if (config.addons.some((addon) => ["biome", "oxlint", "vite-plus"].includes(addon)))
       await commands.run("check", project, config.packageManager, ["run", "check"]);
-    await commands.run("check-types", project, config.packageManager, ["run", "check-types"]);
+    const checkTypesAfterDeploy =
+      usesAlchemyManagedDatabase(config) && config.frontend.includes("tanstack-start");
+    if (!checkTypesAfterDeploy)
+      await commands.run("check-types", project, config.packageManager, ["run", "check-types"]);
     if (targets.has("vercel")) {
       for (const stage of ["production", "preview"] as const) {
         const deployment = await deployVercel(config, state, id, commands, stage);
@@ -226,12 +244,14 @@ async function executeCase(selection: ProjectConfig, id: string) {
       }
     } else {
       const deployment = await deployAlchemy(config, state, id, commands);
+      if (checkTypesAfterDeploy)
+        await checkDeployedProjectTypes(project, config.packageManager, commands);
       await writeFile(
         path.join(caseDirectory, "deployment.json"),
         JSON.stringify(deployment, null, 2),
         { mode: 0o600 },
       );
-      await verifyRuntime(config, deployment, caseDirectory, "alchemy", getBrowser);
+      await verifyRuntime(config, deployment, caseDirectory, "alchemy", getBrowser, database);
     }
     status = "passed";
   } catch (error) {

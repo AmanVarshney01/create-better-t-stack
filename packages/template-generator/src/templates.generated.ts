@@ -26072,7 +26072,7 @@ import { defineConfig } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
-{{else if (or (eq webDeploy "cloudflare") (and (eq webDeploy "prisma") (eq backend "none")))}}
+{{else if (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -26087,7 +26087,7 @@ export default defineConfig({
 {{else if (eq webDeploy "vercel")}}
   output: "server",
   adapter: vercel(),
-{{else if (or (eq webDeploy "cloudflare") (and (eq webDeploy "prisma") (eq backend "none")))}}
+{{else if (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
   output: "server",
 {{else}}
   output: "server",
@@ -26105,12 +26105,12 @@ export default defineConfig({
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro build",
 
 {{/unless}}
 		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro check",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "preview": "astro preview",
 {{/unless}}
     "astro": "astro"
@@ -32653,8 +32653,8 @@ export default defineConfig({
 {{/if}}
     viteReact(),
   ],
-{{#if (eq webDeploy "vercel")}}
-  // Bundle all SSR deps: Vercel functions have no node_modules at runtime
+{{#if (or (eq webDeploy "vercel") (and (eq webDeploy "prisma") (ne backend "none")))}}
+  // These deployments run the standalone build artifact.
   ssr: {
     noExternal: true,
   },

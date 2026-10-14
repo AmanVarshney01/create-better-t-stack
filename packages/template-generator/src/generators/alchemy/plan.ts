@@ -160,15 +160,15 @@ export function assertNever(value: never): never {
 }
 
 export function getPrismaWebsiteFramework(config: ProjectConfig): string | undefined {
-  if (config.webDeploy !== "prisma" || config.backend !== "none") return;
+  if (config.webDeploy !== "prisma") return;
+  if (config.frontend.includes("astro")) return "Astro";
+  if (config.backend !== "none") return;
   for (const frontend of config.frontend) {
     switch (frontend) {
       case "next":
         return "Nextjs";
       case "nuxt":
         return "Nuxt";
-      case "astro":
-        return "Astro";
       case "svelte":
         // Alchemy's framework adapter requires Kit 3. Kit 2 uses its Node server artifact.
         return;

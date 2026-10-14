@@ -9,10 +9,19 @@ import { z } from "zod";
 
 import type { Commands } from "./command";
 
+export async function generatePrismaClient(config: ProjectConfig, commands: Commands) {
+  await commands.run(
+    "prisma-generate",
+    path.join(config.projectDir, "packages/db"),
+    config.packageManager,
+    ["run", "db:generate"],
+  );
+}
+
 export async function generateDatabaseMigrations(config: ProjectConfig, commands: Commands) {
   const directory = path.join(config.projectDir, "packages/db");
   if (config.orm === "prisma") {
-    await commands.run("prisma-generate", directory, config.packageManager, ["run", "db:generate"]);
+    await generatePrismaClient(config, commands);
     const sql = await commands.run("migration-generate", directory, "node", [
       "node_modules/prisma/build/index.js",
       "migrate",

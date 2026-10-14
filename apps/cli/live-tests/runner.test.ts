@@ -1,10 +1,11 @@
 import { Database } from "bun:sqlite";
 import { afterEach, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
+import { usesAlchemyManagedDatabase } from "@better-t-stack/types";
 import { request } from "@playwright/test";
 import { z } from "zod";
 
@@ -15,6 +16,7 @@ import { DatabaseAssertions } from "./database";
 import { caseId, configurations, type Selection } from "./matrix";
 import { assertPreviewProtected } from "./providers";
 import { RunState } from "./state";
+import { checkDeployedProjectTypes } from "./typecheck";
 import { verifyRuntime } from "./verification";
 
 const directories: string[] = [];
@@ -39,6 +41,66 @@ const selection: Selection = {
   addons: [],
   examples: ["todo"],
 };
+
+test("manual and managed databases remain distinct deploy cases", () => {
+  const managed = [...configurations({ ...selection, serverDeploy: "prisma" })][0]!;
+  const manual = [
+    ...configurations({
+      ...selection,
+      serverDeploy: "prisma",
+      dbSetupOptions: { mode: "manual" },
+    }),
+  ][0]!;
+  expect(usesAlchemyManagedDatabase(managed)).toBe(true);
+  expect(usesAlchemyManagedDatabase(manual)).toBe(false);
+  expect(manual.dbSetupOptions).toEqual({ mode: "manual" });
+  expect(caseId(managed)).not.toBe(caseId(manual));
+});
+
+test("deferred typechecks cover server and native errors without rebuilding Start", async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), "bts-live-typechecks-"));
+  directories.push(directory);
+  symlinkSync(
+    path.resolve(import.meta.dir, "../../../node_modules"),
+    path.join(directory, "node_modules"),
+  );
+  const valid = 'export const value: string = "ok";';
+  for (const workspace of ["packages/api", "apps/server", "apps/native", "apps/web"]) {
+    const workspaceDirectory = path.join(directory, workspace);
+    mkdirSync(workspaceDirectory, { recursive: true });
+    writeFileSync(
+      path.join(workspaceDirectory, "package.json"),
+      JSON.stringify({
+        scripts: {
+          "check-types":
+            workspace === "apps/web"
+              ? "exit 99"
+              : "node ../../node_modules/typescript/bin/tsc --noEmit",
+        },
+      }),
+    );
+    writeFileSync(
+      path.join(workspaceDirectory, "tsconfig.json"),
+      JSON.stringify({ compilerOptions: { types: [], skipLibCheck: true }, include: ["index.ts"] }),
+    );
+    writeFileSync(path.join(workspaceDirectory, "index.ts"), valid);
+  }
+  const commands = new Commands(directory, new AbortController().signal);
+  await checkDeployedProjectTypes(directory, "bun", commands);
+  for (const workspace of ["packages-api", "apps-server", "apps-native", "web"])
+    expect(
+      readdirSync(directory).some((name) => name.endsWith(`check-types-${workspace}.log`)),
+    ).toBe(true);
+
+  for (const app of ["native", "server"]) {
+    const source = path.join(directory, "apps", app, "index.ts");
+    writeFileSync(source, "export const value: string = 123;");
+    await expect(checkDeployedProjectTypes(directory, "bun", commands)).rejects.toThrow(
+      `check-types-apps-${app} failed`,
+    );
+    writeFileSync(source, valid);
+  }
+}, 30000);
 
 test("deployment readiness retries a connection reset and a temporary 404", async () => {
   let attempts = 0;
