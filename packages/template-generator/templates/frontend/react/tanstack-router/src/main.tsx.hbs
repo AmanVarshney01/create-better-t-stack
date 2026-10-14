@@ -31,7 +31,9 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
+  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL{{#if (eq auth "better-auth")}}, {
+    expectAuth: true,
+  }{{/if}});
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
