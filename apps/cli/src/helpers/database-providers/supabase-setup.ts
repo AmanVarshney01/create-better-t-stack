@@ -12,6 +12,7 @@ import type { PackageManager, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { getInterruptSignal } from "../../utils/interrupt";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 import { cliLog } from "../../utils/terminal-output";
 import {
@@ -24,10 +25,12 @@ type SupabaseSetupResult = Result<void, DatabaseSetupError | UserCancelledError>
 
 // Keep automatic setup and the printed manual commands on the same stable release.
 export const SUPABASE_CLI_PACKAGE = "supabase@2.121.0";
+const supabaseEnv = { SUPABASE_EXPERIMENTAL_STACK: "0" };
 const statusSchema = z.object({
   DB_URL: z.url().refine((value) => ["postgres:", "postgresql:"].includes(new URL(value).protocol)),
 });
 
+/** Save a verified database URL in the app that consumes the database. */
 async function writeSupabaseEnvFile(
   projectDir: string,
   backend: ProjectConfig["backend"],
@@ -60,6 +63,7 @@ async function writeSupabaseEnvFile(
   });
 }
 
+/** Read Docker status with cancellation and a bounded wait. */
 async function readSupabaseStatus(serverDir: string, packageManager: PackageManager) {
   const statusArgs = getPackageExecutionArgs(
     packageManager,
@@ -69,6 +73,9 @@ async function readSupabaseStatus(serverDir: string, packageManager: PackageMana
     try: async () => {
       const { stdout } = await execa(statusArgs[0], statusArgs.slice(1), {
         cwd: serverDir,
+        env: supabaseEnv,
+        cancelSignal: getInterruptSignal(),
+        timeout: 120_000,
       });
       return statusSchema.parse(JSON.parse(stdout)).DB_URL;
     },
@@ -82,6 +89,7 @@ async function readSupabaseStatus(serverDir: string, packageManager: PackageMana
   });
 }
 
+/** Initialize missing configuration without overwriting an existing project. */
 async function initializeSupabase(
   serverDir: string,
   packageManager: PackageManager,
@@ -97,6 +105,8 @@ async function initializeSupabase(
       await execa(supabaseInitArgs[0], supabaseInitArgs.slice(1), {
         cwd: serverDir,
         stdio: "inherit",
+        env: supabaseEnv,
+        cancelSignal: getInterruptSignal(),
       });
       cliLog.success("Supabase project initialized");
     },
@@ -116,6 +126,7 @@ async function initializeSupabase(
   });
 }
 
+/** Start the standard Docker runtime and stream its progress to the CLI. */
 async function startSupabase(
   serverDir: string,
   packageManager: PackageManager,
@@ -130,6 +141,8 @@ async function startSupabase(
     try: async () => {
       const subprocess = execa(supabaseStartArgs[0], supabaseStartArgs.slice(1), {
         cwd: serverDir,
+        env: supabaseEnv,
+        cancelSignal: getInterruptSignal(),
       });
 
       let stdoutData = "";
@@ -168,6 +181,7 @@ async function startSupabase(
   });
 }
 
+/** Print pinned setup commands without changing configuration or credentials. */
 function displayManualSupabaseInstructions(
   targetApp: "apps/web" | "apps/server",
   packageManager: PackageManager,
@@ -192,6 +206,7 @@ ${pc.dim(output)}`
   );
 }
 
+/** Configure local Supabase, preserving credentials until automatic setup succeeds. */
 export async function setupSupabase(
   config: ProjectConfig,
   cliInput?: DatabaseSetupCliOptions,

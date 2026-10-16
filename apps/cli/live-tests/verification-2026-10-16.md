@@ -7,12 +7,13 @@ The earlier six application runs used an experimental native runtime. Those runs
 ## Verification scope
 
 - `bun run check`, `bun run build:cli` (including publint), and CLI source/test typechecks passed.
-- Full CLI suite: **871 passed, 65 skipped, 0 failed**.
+- Full CLI suite: **873 passed, 65 skipped, 0 failed**.
 
 - The actual pinned CLI successfully initialized a disposable project without enabling experimental stacks.
+- With an existing `stack = true` configuration, `SUPABASE_EXPERIMENTAL_STACK=0` selected the Docker status path (the daemon remains unavailable).
 - Its `start --help` and `status --help` confirm the standard Docker commands and `status --output json` format.
 - Starting the disposable project used the Docker path and reported that the local Docker daemon is unavailable.
-- Regression tests cover Bun/npm/pnpm, split/fullstack environment files, existing Supabase configuration, manual setup, provider failures, malformed JSON and invalid database URLs. They assert that setup does not opt into experimental features.
+- Regression tests cover Bun/npm/pnpm, split/fullstack environment files, existing Supabase configuration, manual setup, provider failures, malformed JSON and invalid database URLs. They assert that setup forces the Docker workflow even when the parent environment and an existing configuration enable experimental stacks. A hanging status subprocess is interrupted without replacing credentials.
 
 Live Docker migrations, browser authentication and todo flows have not been rerun: the Docker daemon is unavailable on this machine. No experimental runtime is substituted for that missing prerequisite.
 

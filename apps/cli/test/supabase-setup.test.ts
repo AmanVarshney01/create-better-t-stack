@@ -11,6 +11,11 @@ import {
 } from "../src/helpers/database-providers/supabase-setup";
 import type { PackageManager, ProjectConfig } from "../src/types";
 import { runWithContextAsync } from "../src/utils/context";
+import {
+  beginInterruptibleScope,
+  endInterruptibleScope,
+  startInterruptibleStep,
+} from "../src/utils/interrupt";
 import { SMOKE_DIR } from "./setup";
 
 const assignedUrl = "postgresql://postgres:postgres@127.0.0.1:28123/postgres";
@@ -27,8 +32,11 @@ type FixtureOptions = {
   fail?: "init" | "start" | "status";
   status?: string;
   existingConfig?: boolean;
+  experimentalStack?: boolean;
+  hangStatus?: boolean;
 };
 
+/** Exercise setup against controllable provider processes and existing credentials. */
 async function runFixture(name: string, options: FixtureOptions = {}) {
   const projectDir = path.join(SMOKE_DIR, `supabase-${name}`);
   const dbDirectory = path.join(projectDir, "packages/db");
@@ -45,7 +53,11 @@ async function runFixture(name: string, options: FixtureOptions = {}) {
   const configPath = path.join(dbDirectory, "supabase/config.toml");
   if (options.existingConfig) {
     await mkdir(path.dirname(configPath), { recursive: true });
-    await writeFile(configPath, 'project_id = "keep-my-config"\n');
+    await writeFile(
+      configPath,
+      'project_id = "keep-my-config"\n' +
+        (options.experimentalStack ? "[experimental]\nstack = true\n" : ""),
+    );
   }
   for (const runner of ["bunx", "npx", "pnpm"]) {
     const file = path.join(bin, runner);
@@ -61,7 +73,10 @@ if (command === "init") {
   fs.mkdirSync("supabase", {recursive: true});
   fs.writeFileSync("supabase/config.toml", 'project_id = "fixture"\\n');
 }
-if (command === "status") console.log(${JSON.stringify(options.status ?? JSON.stringify({ DB_URL: assignedUrl }))});
+if (command === "status") {
+  if (${JSON.stringify(options.hangStatus ?? false)}) setInterval(() => {}, 1000);
+  else console.log(${JSON.stringify(options.status ?? JSON.stringify({ DB_URL: assignedUrl }))});
+}
 `,
     );
     await chmod(file, 0o755);
@@ -129,7 +144,7 @@ describe("Supabase stable local setup", () => {
         expect(fixture.calls).toHaveLength(3);
         for (const call of fixture.calls) {
           expect(call.cwd).toBe(fixture.dbDirectory);
-          expect(call.stack).toBeNull();
+          expect(call.stack).toBe("0");
           expect(call.args).not.toContain("--experimental");
           expect(call.args).not.toContain("--preparation");
           expect(call.args).toContain(SUPABASE_CLI_PACKAGE);
@@ -137,7 +152,7 @@ describe("Supabase stable local setup", () => {
         expect(fixture.calls[0]!.args).toContain("init");
         expect(fixture.calls[1]!.args).toContain("start");
         expect(fixture.calls[2]!.args.slice(-2)).toEqual(["--output", "json"]);
-        expect(await readFile(fixture.configPath, "utf8")).not.toContain("[experimental]");
+        expect(await readFile(fixture.configPath, "utf8")).not.toMatch(/^\s*stack\s*=\s*true/m);
       });
     }
   }
@@ -154,6 +169,53 @@ describe("Supabase stable local setup", () => {
     expect(fixture.result.isOk()).toBe(true);
     expect(fixture.calls).toEqual([]);
     expect(fixture.env).toBe(fixture.originalEnv);
+  });
+
+  it("forces Docker even when existing configuration and the parent environment enable stacks", async () => {
+    const previousStack = process.env.SUPABASE_EXPERIMENTAL_STACK;
+    process.env.SUPABASE_EXPERIMENTAL_STACK = "1";
+    try {
+      const fixture = await runFixture("force-docker", {
+        existingConfig: true,
+        experimentalStack: true,
+      });
+      expect(fixture.result.isOk()).toBe(true);
+      expect(fixture.calls).toHaveLength(2);
+      expect(fixture.calls.every((call) => call.stack === "0")).toBe(true);
+      expect(await readFile(fixture.configPath, "utf8")).toContain("stack = true");
+      expect(process.env.SUPABASE_EXPERIMENTAL_STACK).toBe("1");
+    } finally {
+      if (previousStack === undefined) delete process.env.SUPABASE_EXPERIMENTAL_STACK;
+      else process.env.SUPABASE_EXPERIMENTAL_STACK = previousStack;
+    }
+  });
+
+  it("interrupts a hanging status process without replacing existing credentials", async () => {
+    beginInterruptibleScope();
+    startInterruptibleStep();
+    const pending = runFixture("cancel-status", { hangStatus: true });
+    try {
+      const log = path.join(SMOKE_DIR, "supabase-cancel-status/calls.jsonl");
+      let statusStarted = false;
+      for (let attempt = 0; attempt < 200; attempt++) {
+        const calls = await readFile(log, "utf8").catch(() => "");
+        if (calls.includes('"status"')) {
+          statusStarted = true;
+          break;
+        }
+        await Bun.sleep(20);
+      }
+      expect(statusStarted).toBe(true);
+      process.emit("SIGINT");
+      const fixture = await pending;
+      expect(fixture.result.isErr()).toBe(true);
+      expect(fixture.calls).toHaveLength(3);
+      expect(fixture.env).toBe(fixture.originalEnv);
+    } finally {
+      process.emit("SIGINT");
+      await pending;
+      endInterruptibleScope();
+    }
   });
 
   for (const fail of ["init", "start", "status"] as const) {
