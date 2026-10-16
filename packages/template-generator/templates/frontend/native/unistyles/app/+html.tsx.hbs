@@ -11,7 +11,7 @@ export default function Root({ children }: PropsWithChildren) {
   const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } = useServerDocumentContext();
 
   return (
-    <html {...htmlAttributes} lang="en">
+    <html lang="en" {...htmlAttributes}>
       <head>
         {headNodes}
         <meta charSet="utf-8" />

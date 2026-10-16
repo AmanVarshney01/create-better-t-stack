@@ -90,6 +90,9 @@ jobs:
           version: 11
       - run: bun install --frozen-lockfile
       - run: bun run build:cli
+      - name: Install browser for native web navigation checks
+        working-directory: apps/cli
+        run: bunx --no-install playwright install --with-deps chromium
       - name: Install, Build and Type-check Generated Projects
         working-directory: apps/cli
         run: bun test test/generated-builds.test.ts

@@ -336,6 +336,7 @@ function generateStackDescription(
   return parts.length > 0 ? `${parts.join(", ")}, and more` : "";
 }
 
+/** Describe the selected app servers and native development-build workflow. */
 function generateRunningInstructions(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],

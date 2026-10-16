@@ -65,6 +65,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   }
 }
 
+/** Wire root scripts and package-manager settings for the selected stack. */
 function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const pkgJson = vfs.readJson<PackageJson>("package.json");
   if (!pkgJson) return;

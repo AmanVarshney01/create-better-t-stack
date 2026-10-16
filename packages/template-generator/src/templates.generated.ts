@@ -26469,7 +26469,7 @@ const DARK_THEME = {
 };
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  anchor: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
@@ -27706,7 +27706,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  anchor: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
@@ -28605,7 +28605,7 @@ export default function Root({ children }: PropsWithChildren) {
   const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } = useServerDocumentContext();
 
   return (
-    <html {...htmlAttributes} lang="en">
+    <html lang="en" {...htmlAttributes}>
       <head>
         {headNodes}
         <meta charSet="utf-8" />
@@ -29190,7 +29190,7 @@ import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{/if}}
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  anchor: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
