@@ -5,26 +5,31 @@ import { Result } from "better-result";
 import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
+import { z } from "zod";
 
 import { DbSetupModeSchema } from "../../types";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
-import {
-  DatabaseSetupError,
-  databaseSetupError,
-  UserCancelledError,
-  userCancelled,
-} from "../../utils/errors";
-import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { getInterruptSignal } from "../../utils/interrupt";
+import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 import { cliLog } from "../../utils/terminal-output";
 import {
   type DatabaseSetupCliOptions,
   type DbSetupMode,
   resolveDbSetupMode,
 } from "../core/db-setup-options";
+import { prepareGitRepository } from "../core/git";
 
 type SupabaseSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
+
+// Stack flags and output are experimental, so use the tested release for every command.
+export const SUPABASE_CLI_PACKAGE = "supabase@2.121.0";
+const stackEnv = { SUPABASE_EXPERIMENTAL_STACK: "1" };
+const statusSchema = z.object({
+  DB_URL: z.url().refine((value) => ["postgres:", "postgresql:"].includes(new URL(value).protocol)),
+});
 
 async function writeSupabaseEnvFile(
   projectDir: string,
@@ -35,16 +40,15 @@ async function writeSupabaseEnvFile(
     try: async () => {
       const targetApp = backend === "self" ? "apps/web" : "apps/server";
       const envPath = path.join(projectDir, targetApp, ".env");
-      const dbUrlToUse = databaseUrl || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
       const variables: EnvVariable[] = [
         {
           key: "DATABASE_URL",
-          value: dbUrlToUse,
+          value: databaseUrl,
           condition: true,
         },
         {
           key: "DIRECT_URL",
-          value: dbUrlToUse,
+          value: databaseUrl,
           condition: true,
         },
       ];
@@ -59,20 +63,27 @@ async function writeSupabaseEnvFile(
   });
 }
 
-function extractDbUrl(statusEnv: string): string | null {
-  return statusEnv.match(/^DB_URL="(postgresql:\/\/[^"]+)"$/m)?.[1] ?? null;
-}
-
 async function readSupabaseStatus(serverDir: string, packageManager: PackageManager) {
-  const statusArgs = getPackageExecutionArgs(packageManager, "supabase status --agent no -o env");
-  const result = await Result.tryPromise({
+  const statusArgs = getPackageExecutionArgs(
+    packageManager,
+    `${SUPABASE_CLI_PACKAGE} status --agent no --env --output-format json`,
+  );
+  return Result.tryPromise({
     try: async () => {
-      const { stdout } = await execa(statusArgs[0], statusArgs.slice(1), { cwd: serverDir });
-      return stdout;
+      const { stdout } = await execa(statusArgs[0], statusArgs.slice(1), {
+        cwd: serverDir,
+        env: stackEnv,
+      });
+      return statusSchema.parse(JSON.parse(stdout)).DB_URL;
     },
-    catch: () => "",
+    catch: (e) =>
+      new DatabaseSetupError({
+        provider: "supabase",
+        message:
+          "Could not read the Supabase database URL. Run Supabase status and configure DATABASE_URL and DIRECT_URL manually.",
+        cause: e,
+      }),
   });
-  return result.isOk() ? result.value : "";
 }
 
 async function initializeSupabase(
@@ -82,10 +93,15 @@ async function initializeSupabase(
   cliLog.info("Initializing Supabase project...");
   return Result.tryPromise({
     try: async () => {
-      const supabaseInitArgs = getPackageExecutionArgs(packageManager, "supabase init");
+      if (await fs.pathExists(path.join(serverDir, "supabase/config.toml"))) return;
+      const supabaseInitArgs = getPackageExecutionArgs(
+        packageManager,
+        `${SUPABASE_CLI_PACKAGE} init --agent no`,
+      );
       await execa(supabaseInitArgs[0], supabaseInitArgs.slice(1), {
         cwd: serverDir,
         stdio: "inherit",
+        env: stackEnv,
       });
       cliLog.success("Supabase project initialized");
     },
@@ -93,7 +109,7 @@ async function initializeSupabase(
       const error = e as Error;
       const isNotFound = error.message?.includes("ENOENT");
       const message = isNotFound
-        ? "Supabase CLI not found. Please install it globally (npm install -g supabase) or ensure it's in your PATH."
+        ? "Could not run the Supabase CLI. Ensure your selected package manager is installed and available in PATH."
         : `Failed to initialize Supabase project: ${error.message ?? String(e)}`;
 
       return new DatabaseSetupError({
@@ -110,12 +126,16 @@ async function startSupabase(
   packageManager: PackageManager,
 ): Promise<Result<string, DatabaseSetupError>> {
   cliLog.info("Starting Supabase services (this may take a moment)...");
-  const supabaseStartArgs = getPackageExecutionArgs(packageManager, "supabase start --agent no");
+  const supabaseStartArgs = getPackageExecutionArgs(
+    packageManager,
+    `${SUPABASE_CLI_PACKAGE} start --agent no --preparation on-demand`,
+  );
 
   return Result.tryPromise({
     try: async () => {
       const subprocess = execa(supabaseStartArgs[0], supabaseStartArgs.slice(1), {
         cwd: serverDir,
+        env: stackEnv,
       });
 
       let stdoutData = "";
@@ -135,7 +155,6 @@ async function startSupabase(
       }
 
       await subprocess;
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return stdoutData;
     },
@@ -157,23 +176,25 @@ async function startSupabase(
 
 function displayManualSupabaseInstructions(
   targetApp: "apps/web" | "apps/server",
+  packageManager: PackageManager,
   output?: string | null,
 ) {
+  const command = getPackageExecutionCommand(packageManager, SUPABASE_CLI_PACKAGE);
   cliLog.info(
     `"Manual Supabase Setup Instructions:"
-1. Ensure Docker is installed and running.
-2. Install the Supabase CLI (e.g., \`npm install -g supabase\`).
-3. Run \`supabase init\` in your project's \`packages/db\` directory.
-4. Run \`supabase start\` in your project's \`packages/db\` directory.
-5. Copy the database URL from the output.${
+1. Open your project's \`packages/db\` directory.
+2. Run \`${command} init\` if \`supabase/config.toml\` does not exist.
+3. Set \`stack = true\` under \`[experimental]\` in \`supabase/config.toml\` and remove fixed port settings to allow separate stacks per branch/worktree.
+4. Run \`${command} start --preparation on-demand\`. Docker/Podman is used when available; otherwise the native runtime supports macOS 14+ on Apple silicon and Linux with glibc 2.35+ on amd64/arm64. Windows and Intel Macs require Docker.
+5. Run \`${command} status --env --output-format json\` and copy \`DB_URL\`. Stack commands are experimental; use the pinned CLI version.${
       output
         ? `
 ${pc.bold("Relevant output from `supabase start`:")}
 ${pc.dim(output)}`
         : ""
     }
-6. Add the database URL to the .env file in \`${targetApp}/.env\` as \`DATABASE_URL\`:
-			${pc.gray('DATABASE_URL="your_supabase_db_url"')}`,
+6. Add the database URL to the .env file in \`${targetApp}/.env\` as \`DATABASE_URL\` and \`DIRECT_URL\`:
+			${pc.gray('DATABASE_URL="your_supabase_db_url"\nDIRECT_URL="your_supabase_db_url"')}`,
   );
 }
 
@@ -205,8 +226,8 @@ export async function setupSupabase(
   }
 
   if (setupMode === "manual") {
-    displayManualSupabaseInstructions(targetApp);
-    return writeSupabaseEnvFile(projectDir, backend, "");
+    displayManualSupabaseInstructions(targetApp, packageManager);
+    return Result.ok();
   }
 
   let mode: DbSetupMode | undefined = setupMode;
@@ -241,42 +262,53 @@ export async function setupSupabase(
   }
 
   if (mode === "manual") {
-    displayManualSupabaseInstructions(targetApp);
-    return writeSupabaseEnvFile(projectDir, backend, "");
+    displayManualSupabaseInstructions(targetApp, packageManager);
+    return Result.ok();
+  }
+
+  // The stack identity includes the Git branch. Establish it before starting the
+  // database; the post-scaffold Git step will commit the completed project later.
+  const gitResult = await prepareGitRepository(projectDir, config.git, getInterruptSignal());
+  if (gitResult.isErr()) {
+    return Result.err(
+      new DatabaseSetupError({
+        provider: "supabase",
+        message: `Failed to prepare Git before Supabase setup: ${gitResult.error.message}`,
+        cause: gitResult.error,
+      }),
+    );
   }
 
   const initResult = await initializeSupabase(serverDir, packageManager);
   if (initResult.isErr()) {
     cliLog.error(pc.red(initResult.error.message));
-    displayManualSupabaseInstructions(targetApp);
-    return writeSupabaseEnvFile(projectDir, backend, "");
+    displayManualSupabaseInstructions(targetApp, packageManager);
+    return initResult;
   }
 
+  cliLog.info(`Using experimental Supabase stacks with ${SUPABASE_CLI_PACKAGE}.`);
   const startResult = await startSupabase(serverDir, packageManager);
   if (startResult.isErr()) {
     cliLog.error(pc.red(startResult.error.message));
-    displayManualSupabaseInstructions(targetApp);
-    return writeSupabaseEnvFile(projectDir, backend, "");
+    displayManualSupabaseInstructions(targetApp, packageManager);
+    return startResult;
   }
 
   const supabaseOutput = startResult.value;
-  const dbUrl = extractDbUrl(await readSupabaseStatus(serverDir, packageManager));
+  const statusResult = await readSupabaseStatus(serverDir, packageManager);
 
-  if (dbUrl) {
-    const envResult = await writeSupabaseEnvFile(projectDir, backend, dbUrl);
+  if (statusResult.isOk()) {
+    const envResult = await writeSupabaseEnvFile(projectDir, backend, statusResult.value);
     if (envResult.isOk()) {
       cliLog.success(pc.green("Supabase local development setup ready!"));
     } else {
       cliLog.error(pc.red("Supabase setup completed, but failed to update .env automatically."));
-      displayManualSupabaseInstructions(targetApp, supabaseOutput);
+      displayManualSupabaseInstructions(targetApp, packageManager, supabaseOutput);
     }
     return envResult;
   }
 
   cliLog.error(pc.yellow("Supabase started, but could not extract DB URL automatically."));
-  displayManualSupabaseInstructions(targetApp, supabaseOutput);
-  return databaseSetupError(
-    "supabase",
-    "Could not extract database URL from Supabase output. Please configure manually.",
-  );
+  displayManualSupabaseInstructions(targetApp, packageManager, supabaseOutput);
+  return statusResult;
 }

@@ -1,10 +1,11 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseEnv } from "node:util";
 
 import { usesAlchemyManagedDatabase, type ProjectConfig } from "@better-t-stack/types";
 import { z } from "zod";
 
+import { SUPABASE_CLI_PACKAGE } from "../src/helpers/database-providers/supabase-setup";
 import { readBtsConfig } from "../src/utils/bts-config";
 import { Blocked, Commands } from "./command";
 import { RunState, type Resource } from "./state";
@@ -20,6 +21,12 @@ const deploymentOutput = z.object({
   deploymentUrl: z.string().url().optional(),
 });
 export type Deployment = z.infer<typeof deploymentOutput>;
+
+// Keep disposable stacks and their shared download cache separate from the user's Supabase home.
+export const supabaseTestEnv = {
+  SUPABASE_HOME: path.resolve(import.meta.dir, "../.smoke/supabase"),
+  SUPABASE_EXPERIMENTAL_STACK: "1",
+};
 
 export function assertPreviewProtected(response: Response) {
   const location = response.headers.get("location");
@@ -115,6 +122,23 @@ export async function provisionDatabase(
   )
     return `file:${path.join(config.projectDir, "live-test.db")}`;
   if (config.dbSetup === "prisma-postgres") return provisionPrismaPostgres(commands);
+  if (config.dbSetup === "supabase") {
+    const output = await commands.run(
+      "supabase-status",
+      path.join(config.projectDir, "packages/db"),
+      "bunx",
+      [SUPABASE_CLI_PACKAGE, "status", "--agent", "no", "--env", "--output-format", "json"],
+      supabaseTestEnv,
+    );
+    const { DB_URL } = z.object({ DB_URL: z.url() }).parse(JSON.parse(output));
+    const app = config.backend === "self" ? "web" : "server";
+    const env = parseEnv(await readFile(path.join(config.projectDir, "apps", app, ".env"), "utf8"));
+    if (env.DATABASE_URL !== DB_URL || env.DIRECT_URL !== DB_URL)
+      throw new Error(
+        "Supabase automatic setup did not save its assigned database URL in the app environment.",
+      );
+    return commands.secret(DB_URL);
+  }
   if (config.dbSetup !== "neon")
     throw new Blocked(
       `Database provisioner not yet available: ${config.dbSetup}/${config.database}`,
@@ -348,7 +372,40 @@ export async function captureVercelLogs(
 }
 
 export async function cleanup(resource: Resource, commands: Commands) {
-  if (resource.provider === "vercel-intent") {
+  if (resource.provider === "supabase") {
+    const output = await commands.run(
+      "supabase-list",
+      commands.directory,
+      "bunx",
+      [SUPABASE_CLI_PACKAGE, "stack", "list", "--agent", "no", "--output-format", "json"],
+      supabaseTestEnv,
+    );
+    const { stacks } = z
+      .object({
+        stacks: z.array(z.object({ id: z.string().min(1), project_root: z.string() })),
+      })
+      .parse(JSON.parse(output));
+    const projectRoot = await realpath(resource.directory).catch(() =>
+      path.resolve(resource.directory),
+    );
+    const owned = stacks.filter((stack) => stack.project_root === projectRoot);
+    if (!owned.length) return;
+    await commands.run(
+      "supabase-destroy",
+      commands.directory,
+      "bunx",
+      [
+        SUPABASE_CLI_PACKAGE,
+        "stack",
+        "destroy",
+        ...owned.flatMap((stack) => ["--stack-id", stack.id]),
+        "--yes",
+        "--agent",
+        "no",
+      ],
+      supabaseTestEnv,
+    );
+  } else if (resource.provider === "vercel-intent") {
     throw new Error(
       `Vercel creation was not confirmed for ${resource.id}; inspect the create log and account before reconciling this intent. No project was deleted by name.`,
     );

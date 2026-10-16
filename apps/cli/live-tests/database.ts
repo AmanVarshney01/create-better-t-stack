@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { mkdir, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { ProjectConfig } from "@better-t-stack/types";
@@ -22,8 +23,11 @@ export async function generateDatabaseMigrations(config: ProjectConfig, commands
   const directory = path.join(config.projectDir, "packages/db");
   if (config.orm === "prisma") {
     await generatePrismaClient(config, commands);
+    const prismaCli = createRequire(path.join(directory, "package.json")).resolve(
+      "prisma/build/index.js",
+    );
     const sql = await commands.run("migration-generate", directory, "node", [
-      "node_modules/prisma/build/index.js",
+      prismaCli,
       "migrate",
       "diff",
       "--from-empty",

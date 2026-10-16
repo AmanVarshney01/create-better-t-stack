@@ -24,6 +24,7 @@ import {
   deployAlchemy,
   deployVercel,
   provisionDatabase,
+  supabaseTestEnv,
   writeEnvironment,
 } from "./providers";
 import { RunState, type Status } from "./state";
@@ -121,9 +122,14 @@ async function executeCase(selection: ProjectConfig, id: string) {
   const config = {
     ...selection,
     dbSetupOptions: selection.dbSetupOptions ?? {
-      mode: usesAlchemyManagedDatabase(selection) ? "alchemy" : "manual",
+      mode: usesAlchemyManagedDatabase(selection)
+        ? "alchemy"
+        : selection.dbSetup === "supabase"
+          ? "auto"
+          : "manual",
     },
     projectName: name,
+    git: selection.dbSetup === "supabase" || selection.git,
     relativePath: name,
     projectDir: project,
   } satisfies ProjectConfig;
@@ -139,9 +145,14 @@ async function executeCase(selection: ProjectConfig, id: string) {
     if (targets.has("vercel") && targets.size > 1)
       blockers.push("Mixed-provider URL wiring verification required");
     if (targets.has("docker")) blockers.push("Docker execution adapter required");
+    if (config.dbSetup === "supabase" && (targets.size || config.dbSetupOptions.mode !== "auto"))
+      blockers.push(
+        "Supabase verification requires automatic setup and local application servers.",
+      );
     if (
       config.dbSetup !== "neon" &&
       config.dbSetup !== "prisma-postgres" &&
+      config.dbSetup !== "supabase" &&
       config.database !== "none" &&
       !(config.database === "sqlite" && config.dbSetup === "none" && targets.size === 0) &&
       !usesAlchemyManagedDatabase(config) &&
@@ -150,20 +161,30 @@ async function executeCase(selection: ProjectConfig, id: string) {
       blockers.push(`Provisioner required: ${config.dbSetup}/${config.database}`);
     if (blockers.length) throw new Blocked(blockers.join("; "));
     await writeFile(path.join(caseDirectory, "config.json"), JSON.stringify(config, null, 2));
+    if (config.dbSetup === "supabase") {
+      const dbDirectory = path.join(project, "packages/db");
+      state.resource(id, "supabase", project, dbDirectory);
+    }
     const { projectDir: _dir, relativePath: _rel, ...input } = config;
-    await commands.run("generate", caseDirectory, "node", [
-      cli,
-      "create-json",
-      "--json",
-      JSON.stringify({
-        ...input,
-        frontend: input.frontend.length ? input.frontend : ["none"],
-        addons: input.addons.length ? input.addons : ["none"],
-        examples: input.examples.length ? input.examples : ["none"],
-        directoryConflict: "error",
-        disableAnalytics: true,
-      }),
-    ]);
+    await commands.run(
+      "generate",
+      caseDirectory,
+      "node",
+      [
+        cli,
+        "create-json",
+        "--json",
+        JSON.stringify({
+          ...input,
+          frontend: input.frontend.length ? input.frontend : ["none"],
+          addons: input.addons.length ? input.addons : ["none"],
+          examples: input.examples.length ? input.examples : ["none"],
+          directoryConflict: "error",
+          disableAnalytics: true,
+        }),
+      ],
+      config.dbSetup === "supabase" ? supabaseTestEnv : undefined,
+    );
     const saved = await readBtsConfig(project);
     if (!saved) throw new Error("Generated project did not save a valid bts.jsonc");
     const normalize = (value: ProjectConfig[keyof typeof filter] | undefined) =>
