@@ -773,6 +773,7 @@ const buildSamples: BuildSample[] = [
   },
   {
     name: "expo-clerk-express",
+    packageManagers: ["bun", "npm"],
     config: {
       ...baseConfig,
       frontend: ["native-uniwind"],
@@ -1848,6 +1849,15 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
+          if (sample.config.frontend?.some((frontend) => frontend.startsWith("native-"))) {
+            await runCommand(sample.name, path.join(projectDir, "apps/native"), "bun", [
+              "x",
+              "--no-install",
+              "expo",
+              "install",
+              "--check",
+            ]);
+          }
           if (await fs.pathExists(path.join(projectDir, "packages/infra/alchemy.run.ts"))) {
             await runCommand(
               sample.name,
@@ -1911,7 +1921,7 @@ try {
           if (sample.config.frontend?.some((frontend) => frontend.startsWith("native-"))) {
             // Exercise Metro/Babel and platform imports as well as TypeScript.
             // This exports JS bundles; it does not compile or sign native binaries.
-            for (const platform of ["ios", "android"]) {
+            for (const platform of ["ios", "android", "web"]) {
               await runCommand(sample.name, path.join(projectDir, "apps/native"), "bun", [
                 "x",
                 "--no-install",
@@ -1920,7 +1930,25 @@ try {
                 "--platform",
                 platform,
               ]);
+              if (platform === "web") {
+                const html = await fs.readFile(
+                  path.join(projectDir, "apps/native/dist/index.html"),
+                  "utf8",
+                );
+                expect(html, "Static Expo HTML includes the scripts needed for hydration").toMatch(
+                  /<script[^>]+src=["'][^"']*\/_expo\/static\/js\/web\//,
+                );
+              }
             }
+            await runCommand(sample.name, path.join(projectDir, "apps/native"), "bun", [
+              "x",
+              "--no-install",
+              "expo",
+              "prebuild",
+              "--no-install",
+              "--platform",
+              "all",
+            ]);
           }
         } finally {
           await fs.remove(projectDir);

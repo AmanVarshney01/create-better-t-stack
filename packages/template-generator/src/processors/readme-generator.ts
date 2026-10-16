@@ -355,7 +355,14 @@ function generateRunningInstructions(
   }
 
   if (hasNative) {
-    instructions.push("Use the Expo Go app to run the mobile application.");
+    instructions.push(
+      "Create a development build from `apps/native` using the `ios` or `android` script, then run the native development server. Use a development build matching Expo SDK 58 and the native modules in this app. See [Expo development builds](https://docs.expo.dev/develop/development-builds/introduction/).",
+    );
+    if (frontend.includes("native-uniwind")) {
+      instructions.push(
+        "The native TypeScript config temporarily uses React Native's `react-native-legacy-deep-imports` condition because HeroUI Native's published input declarations still use the legacy ref types. The app runs on SDK 58 and React Native 0.88. Remove this condition when HeroUI's published declarations support the strict types.",
+      );
+    }
   }
 
   if (isConvex) {
