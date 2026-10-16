@@ -3814,9 +3814,9 @@ const styles = StyleSheet.create((theme) => ({
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { useRef, type ComponentRef } from "react";
+import { useRef } from "react";
 import { Text, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signInSchema = z.object({
@@ -3859,7 +3859,7 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 export function SignIn() {
-  const passwordInputRef = useRef<ComponentRef<typeof Input>>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -3972,9 +3972,9 @@ export function SignIn() {
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { useRef, type ComponentRef } from "react";
+import { useRef } from "react";
 import { Text, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signUpSchema = z.object({
@@ -4022,8 +4022,8 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 export function SignUp() {
-  const emailInputRef = useRef<ComponentRef<typeof Input>>(null);
-  const passwordInputRef = useRef<ComponentRef<typeof Input>>(null);
+  const emailInputRef = useRef<InputRef>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -7878,9 +7878,9 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { useRef, type ComponentRef } from "react";
+import { useRef } from "react";
 import { Text, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signInSchema = z.object({
@@ -7923,7 +7923,7 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 function SignIn() {
-  const passwordInputRef = useRef<ComponentRef<typeof Input>>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -8050,9 +8050,9 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { useRef, type ComponentRef } from "react";
+import { useRef } from "react";
 import { Text, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signUpSchema = z.object({
@@ -8100,8 +8100,8 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 export function SignUp() {
-  const emailInputRef = useRef<ComponentRef<typeof Input>>(null);
-  const passwordInputRef = useRef<ComponentRef<typeof Input>>(null);
+  const emailInputRef = useRef<InputRef>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({

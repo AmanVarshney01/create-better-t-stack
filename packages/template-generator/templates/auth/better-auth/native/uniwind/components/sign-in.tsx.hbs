@@ -6,9 +6,9 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { useRef, type ComponentRef } from "react";
+import { useRef } from "react";
 import { Text, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signInSchema = z.object({
@@ -51,7 +51,7 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 function SignIn() {
-  const passwordInputRef = useRef<ComponentRef<typeof Input>>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
