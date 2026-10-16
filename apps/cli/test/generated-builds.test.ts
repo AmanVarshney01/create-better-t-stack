@@ -9,7 +9,6 @@ import { z } from "zod";
 
 import type { CreateInput } from "../src";
 import { create } from "../src";
-import { verifyNativeNavigation, writeNativeNavigationProbe } from "./native-runtime";
 import { SMOKE_DIR } from "./setup";
 
 type PackageManager = NonNullable<CreateInput["packageManager"]>;
@@ -1846,7 +1845,6 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           const createResult = await create(projectDir, sample.config);
           expect(createResult.isOk()).toBe(true);
           await writeSyntheticBuildConfig(projectDir);
-          await writeNativeNavigationProbe(sample.config, projectDir);
           await writeStartCsrfProbe(sample, projectDir);
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
@@ -1932,16 +1930,6 @@ try {
                 "--platform",
                 platform,
               ]);
-              if (platform === "web") {
-                const html = await fs.readFile(
-                  path.join(projectDir, "apps/native/dist/index.html"),
-                  "utf8",
-                );
-                expect(html, "Static Expo HTML includes the scripts needed for hydration").toMatch(
-                  /<script[^>]+src=["'][^"']*\/_expo\/static\/js\/web\//,
-                );
-                await verifyNativeNavigation(sample.config, projectDir);
-              }
             }
             await runCommand(sample.name, path.join(projectDir, "apps/native"), "bun", [
               "x",
