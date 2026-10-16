@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -1420,59 +1420,6 @@ async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, projectD
     collector.stop(true);
   }
 }
-
-describe("Generated runtime readiness", () => {
-  it("preserves cancellation during the final retry delay", async () => {
-    const controller = new AbortController();
-    const reason = new Error("Runtime probe cancelled during retry delay");
-    const fetchMock = spyOn(globalThis, "fetch").mockRejectedValue(new Error("Server not ready"));
-    let delays = 0;
-    const sleepMock = spyOn(Bun, "sleep").mockImplementation(async () => {
-      await Promise.resolve();
-      if (++delays === 100) controller.abort(reason);
-    });
-
-    try {
-      await expect(
-        fetchWhenReady("http://127.0.0.1:1/", { signal: controller.signal }),
-      ).rejects.toBe(reason);
-      expect(delays).toBe(100);
-    } finally {
-      sleepMock.mockRestore();
-      fetchMock.mockRestore();
-    }
-  });
-
-  it("stops when the caller cancels a streaming response", async () => {
-    const controller = new AbortController();
-    const reason = new Error("Runtime probe cancelled");
-    let requests = 0;
-    const server = Bun.serve({
-      hostname: "127.0.0.1",
-      port: 0,
-      fetch() {
-        requests++;
-        return new Response(
-          new ReadableStream({
-            start(stream) {
-              stream.enqueue(new TextEncoder().encode("pending"));
-              controller.abort(reason);
-            },
-          }),
-        );
-      },
-    });
-
-    try {
-      await expect(fetchWhenReady(server.url.href, { signal: controller.signal })).rejects.toBe(
-        reason,
-      );
-      expect(requests).toBe(1);
-    } finally {
-      await server.stop(true);
-    }
-  });
-});
 
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;

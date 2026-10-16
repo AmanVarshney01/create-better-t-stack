@@ -64,9 +64,9 @@
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "check-test-types": "tsc --noEmit -p tsconfig.tests.json",
-    "test": "bun test",
-    "test:ci": "bun run build && BTS_SKIP_EXTERNAL_COMMANDS=1 BTS_TEST_MODE=1 bun test --bail=5",
-    "test:complete": "cd ../.. && bun run build && cd apps/cli && BTS_MATRIX_MODE=smoke BTS_BUILD_SAMPLES=1 bun test --bail=5",
+    "test": "bun test ./test",
+    "test:ci": "bun run build && BTS_SKIP_EXTERNAL_COMMANDS=1 BTS_TEST_MODE=1 bun run test --bail=5",
+    "test:complete": "cd ../.. && bun run build && cd apps/cli && BTS_BUILD_SAMPLES=1 bun run test --bail=5",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

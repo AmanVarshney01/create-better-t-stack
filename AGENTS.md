@@ -19,7 +19,7 @@ This repo is a Bun + Turborepo monorepo.
 - `bun build`: build all packages/apps through Turbo.
 - `bun build:cli`: build only the CLI target.
 - `bun run check`: format + lint (`oxfmt . && oxlint .`).
-- `cd apps/cli && bun run test`: run CLI tests.
+- `cd apps/cli && bun run test`: run CLI integration tests.
 
 ## Coding Style & Naming Conventions
 
@@ -49,11 +49,11 @@ This repo is a Bun + Turborepo monorepo.
 
 ## Testing Guidelines
 
-- Framework: `bun:test`.
-- Test files use `*.test.ts` naming (see `apps/cli/test` and `packages/template-generator/test`).
-- Add or update tests with behavior changes, especially prompt flows, template output, and config validation.
-- Keep tests deterministic; reuse shared setup utilities in `apps/cli/test/setup.ts`.
-- Test generated projects through installation, typechecking, builds, and runtime behavior. Keep focused assertions for conditional generation, dependency relationships, and preservation of user edits; avoid copying static template source or dependency versions into expectations.
+- Use `bun:test` for integration tests in `apps/cli/test` and `apps/web/test`.
+- Verify behavior through CLI, MCP, and oRPC interfaces and generated-project installation, typechecking, and builds.
+- Reuse shared setup utilities in `apps/cli/test/setup.ts` for disposable project directories.
+- Run live browser, database, and deployment checks locally through `apps/cli/live-tests`; keep them out of CI.
+- Do not add isolated unit tests, mocked helper tests, or assertions that copy static template source.
 
 ## Commit & Pull Request Guidelines
 
