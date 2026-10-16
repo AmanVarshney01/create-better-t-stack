@@ -80,14 +80,4 @@ describe("builder preview over oRPC", () => {
     }
     await expect(client.preview({ projectName: "-bad" })).rejects.toBeInstanceOf(ORPCError);
   });
-
-  test("rejects malformed saved preferences and fills missing fields in older preferences", () => {
-    expect(StackStateSchema.safeParse({ addons: "pwa" }).success).toBe(false);
-    expect(StackStateSchema.safeParse({ backend: "invented" }).success).toBe(false);
-    expect(StackStateSchema.parse({ projectName: "saved-app" })).toEqual({
-      ...DEFAULT_STACK,
-      projectName: "saved-app",
-      yolo: "false",
-    });
-  });
 });

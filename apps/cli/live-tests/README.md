@@ -57,12 +57,6 @@ Cleanup normally runs after each case. `--retain-failed` preserves failed deploy
 
 Only one process can mutate a given run directory. `runner.lock` contains its PID. After an ungraceful kill, confirm that process is gone before removing the stale lock. Local cases also refuse to use occupied framework ports.
 
-The small runner regression suite does not deploy anything:
-
-```sh
-bun test apps/cli/live-tests/runner.test.ts
-```
-
 With Chromium installed, the optional credential-scoping regression checks browser, JavaScript-disabled SSR and HTTP contexts against local protected and external origins:
 
 ```sh
