@@ -29,7 +29,7 @@ export const dependencyVersionMap = {
   "@clerk/react-router": "^3.6.33",
   "@react-router/express": "^8.3.1",
   "@clerk/tanstack-react-start": "^1.7.1",
-  "@clerk/expo": "^4.10.1",
+  "@clerk/expo": "^4.12.0",
 
   "drizzle-orm": "1.0.0-rc.4",
   "drizzle-kit": "1.0.0-rc.4",
@@ -171,7 +171,7 @@ export const dependencyVersionMap = {
   "@effect/platform-node": "4.0.5",
   "@effect/platform-bun": "4.0.5",
 
-  "babel-preset-expo": "~57.0.10",
+  "babel-preset-expo": "~58.0.16",
   varlock: "1.18.0",
   "@varlock/vite-integration": "1.5.1",
   "@varlock/nextjs-integration": "1.2.2",

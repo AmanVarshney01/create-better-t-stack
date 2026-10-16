@@ -7,7 +7,7 @@ import {
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Button, Separator, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -56,7 +56,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const mutedColor = useThemeColor("muted");
   const foregroundColor = useThemeColor("foreground");
 
@@ -276,7 +276,7 @@ export default function AIScreen() {
   );
 }
 {{else}}
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -326,7 +326,7 @@ export default function AIScreen() {
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
   const isBusy = status === "submitted" || status === "streaming";

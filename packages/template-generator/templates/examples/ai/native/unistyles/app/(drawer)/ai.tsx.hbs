@@ -8,7 +8,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -63,7 +63,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -521,7 +521,7 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 {{else}}
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -575,7 +575,7 @@ export default function AIScreen() {
     onError: (error) => console.error(error, "AI Chat Error"),
   });
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const isBusy = status === "submitted" || status === "streaming";
   const hasMessages = messages.length > 0;
   const canSend = Boolean(input.trim()) && !isBusy;
