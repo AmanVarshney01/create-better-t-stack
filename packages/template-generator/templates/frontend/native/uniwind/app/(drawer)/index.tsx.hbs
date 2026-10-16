@@ -37,6 +37,10 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
 import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -292,6 +296,13 @@ return (
     <SignUp />
   </View>
   )}
+  {{/if}}
+
+  {{#if (eq payments "revenuecat")}}
+  <View className="mt-5">
+    <SubscriptionStatusCard />
+    <PaywallExample />
+  </View>
   {{/if}}
 </Container>
 );

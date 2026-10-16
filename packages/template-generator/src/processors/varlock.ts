@@ -114,7 +114,14 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
     }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
-    lines.push(`# ${isPublic ? "@public " : ""}@type=${type}`, `${key}=${value}`, "");
+    const isRevenueCatPlatformKey =
+      app === "apps/native" &&
+      ["EXPO_PUBLIC_REVENUECAT_IOS_KEY", "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY"].includes(key);
+    lines.push(
+      `# ${isPublic ? "@public " : ""}${isRevenueCatPlatformKey ? "@required=false " : ""}@type=${type}`,
+      `${key}=${value}`,
+      "",
+    );
   }
   return lines.join("\n");
 }

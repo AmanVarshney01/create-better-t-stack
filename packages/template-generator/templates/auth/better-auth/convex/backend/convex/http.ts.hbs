@@ -6,6 +6,9 @@ import { httpAction } from "./_generated/server";
 {{#if (eq payments "polar")}}
 import { polar } from "./polar";
 {{/if}}
+{{#if (eq payments "revenuecat")}}
+import { revenuecat } from "./revenuecat";
+{{/if}}
 
 const http = httpRouter();
 
@@ -49,6 +52,10 @@ authComponent.registerRoutes(http, createAuth);
 {{#if (eq payments "polar")}}
 
 polar.registerRoutes(http);
+{{/if}}
+{{#if (eq payments "revenuecat")}}
+
+revenuecat.registerRoutes(http);
 {{/if}}
 
 export default http;

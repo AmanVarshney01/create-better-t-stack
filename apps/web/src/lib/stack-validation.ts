@@ -5,6 +5,7 @@ import {
   supportsDatabaseSetupRuntime,
   supportsServerDeployRuntime,
   supportsPaymentsAuth,
+  supportsPaymentsFrontend,
 } from "@better-t-stack/types";
 import { ProjectNameSchema } from "@better-t-stack/types";
 import {
@@ -402,6 +403,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (!supportsPaymentsFrontend(nextStack.payments, getStackFrontends(nextStack))) {
+    nextStack.payments = "none";
+    changed = true;
+    changes.push({
+      category: "payments",
+      message: "Payments set to 'None' (RevenueCat requires a native frontend)",
+    });
+  }
+
   const incompatibleAddons = nextStack.addons.flatMap((addon) => {
     const issue = getAddonIssue(nextStack, addon);
     return issue ? [{ addon, issue }] : [];
@@ -737,6 +747,12 @@ export const getDisabledReason = (
   if (category === "payments" && optionId === "polar") {
     if (!supportsPaymentsAuth(optionId, currentStack.auth)) {
       return "Polar requires Better Auth";
+    }
+  }
+
+  if (category === "payments" && optionId === "revenuecat") {
+    if (!supportsPaymentsFrontend(optionId, getStackFrontends(currentStack))) {
+      return "RevenueCat requires a native frontend (Expo)";
     }
   }
 

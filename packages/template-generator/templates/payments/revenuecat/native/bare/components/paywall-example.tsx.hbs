@@ -1,0 +1,129 @@
+import { useState } from "react";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
+
+export function PaywallExample() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isBusy = isPurchasing || isRestoring;
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    if (isBusy) return;
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isBusy) return;
+    setIsRestoring(true);
+    try {
+      const success = await restorePurchases();
+      Alert.alert(success ? "Purchases restored" : "No purchases to restore");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host matchContents=\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              You're Premium
+            </ExpoUIText>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+              Thanks for your support — enjoy all features.
+            </ExpoUIText>
+          </Column>
+        </Host>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host style={styles.headerHost} matchContents=\{{ vertical: true }}>
+        <Column spacing={6}>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Upgrade to Premium
+          </ExpoUIText>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+            Unlock all features.
+          </ExpoUIText>
+        </Column>
+      </Host>
+
+      {isLoading ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color={theme.text} />
+        </View>
+      ) : (
+        <Host style={styles.actionsHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            {packages.length === 0 ? (
+              <Button label="View plans" onPress={loadPackages} />
+            ) : (
+              packages.map((pack) => (
+                <Button
+                  key={pack.identifier}
+                  label={`${pack.product.title} · ${pack.product.priceString}`}
+                  variant="outlined"
+                  onPress={() => handlePurchase(pack)}
+                />
+              ))
+            )}
+            <Button
+              label={isRestoring ? "Restoring..." : "Restore purchases"}
+              variant="outlined"
+              onPress={handleRestore}
+            />
+          </Column>
+        </Host>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+  headerHost: {
+    marginBottom: 12,
+  },
+  actionsHost: {
+    marginTop: 4,
+  },
+  loadingRow: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+});

@@ -65,6 +65,44 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["native-bare", "native-uniwind", "native-unistyles"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-revenuecat`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          api: "orpc",
+          auth: "none",
+          payments: "revenuecat",
+          addons: [],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
+  ...(["none", "better-auth"] as const).map(
+    (auth) =>
+      ({
+        name: `expo-convex-${auth}-revenuecat`,
+        config: {
+          ...baseConfig,
+          frontend: ["native-bare"],
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth,
+          payments: "revenuecat",
+          addons: ["turborepo"],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "react-router-server-auth-polar-types",
     packageManagers: ["bun"],
@@ -1892,6 +1930,16 @@ try {
           }
           try {
             await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+            if (sample.config.backend === "convex" && sample.config.payments === "revenuecat") {
+              await runCommand(sample.name, path.join(projectDir, "packages/backend"), "bun", [
+                "x",
+                "--no-install",
+                "tsc",
+                "--noEmit",
+                "-p",
+                "convex/tsconfig.json",
+              ]);
+            }
           } finally {
             // Build and boot the scaffold without the compile-only custom auth field.
             await restoreTypeFixtures?.();

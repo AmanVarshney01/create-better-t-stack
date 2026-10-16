@@ -190,6 +190,30 @@ describe("stack builder D1 compatibility", () => {
     });
   });
 
+  test.each(["native-bare", "native-uniwind", "native-unistyles"] as const)(
+    "keeps RevenueCat for %s and clears it when the native frontend is removed",
+    (frontend) => {
+      const stack = createStack({
+        webFrontend: ["none"],
+        nativeFrontend: [frontend],
+        auth: "none",
+        payments: "revenuecat",
+      });
+      expect(getDisabledReason(stack, "payments", "revenuecat")).toBeNull();
+      expect(resolveStackCompatibility(stack).stack.payments).toBe("revenuecat");
+      expect(generateStackCommand(stack)).toContain("--payments revenuecat");
+
+      const withoutNative = applyStackUpdate(stack, {
+        nativeFrontend: ["none"],
+        webFrontend: ["tanstack-router"],
+      }).stack;
+      expect(withoutNative.payments).toBe("none");
+      expect(getDisabledReason(withoutNative, "payments", "revenuecat")).toContain(
+        "native frontend",
+      );
+    },
+  );
+
   test("allows Polar when there is no frontend at all", () => {
     const stack = createStack({
       webFrontend: ["none"],

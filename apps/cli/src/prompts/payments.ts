@@ -1,3 +1,5 @@
+import { supportsPaymentsAuth, supportsPaymentsFrontend } from "@better-t-stack/types";
+
 import { DEFAULT_CONFIG } from "../constants";
 import type { Auth, Backend, Frontend, Payments } from "../types";
 import { UserCancelledError } from "../utils/errors";
@@ -7,33 +9,45 @@ export async function getPaymentsChoice(
   payments?: Payments,
   auth?: Auth,
   backend?: Backend,
-  _frontends?: Frontend[],
+  frontends?: Frontend[],
   previousValue?: Payments,
 ) {
   if (payments !== undefined) return payments;
 
   if (backend === "none") {
-    return "none" as Payments;
+    return "none";
   }
 
-  const isPolarCompatible = auth === "better-auth";
+  const isPolarCompatible = supportsPaymentsAuth("polar", auth);
+  const isRevenueCatCompatible = supportsPaymentsFrontend("revenuecat", frontends);
 
-  if (!isPolarCompatible) {
-    return "none" as Payments;
+  if (!isPolarCompatible && !isRevenueCatCompatible) {
+    return "none";
   }
 
-  const options = [
-    {
-      value: "polar" as Payments,
+  const options: Array<{ value: Payments; label: string; hint: string }> = [];
+
+  if (isPolarCompatible) {
+    options.push({
+      value: "polar",
       label: "Polar",
       hint: "Turn your software into a business. 6 lines of code.",
-    },
-    {
-      value: "none" as Payments,
-      label: "None",
-      hint: "No payments integration",
-    },
-  ];
+    });
+  }
+
+  if (isRevenueCatCompatible) {
+    options.push({
+      value: "revenuecat",
+      label: "RevenueCat",
+      hint: "In-app subscriptions and cross-platform monetization for mobile.",
+    });
+  }
+
+  options.push({
+    value: "none",
+    label: "None",
+    hint: "No payments integration",
+  });
 
   const response = await navigableSelect<Payments>({
     message: "Add payments?",
