@@ -20,25 +20,22 @@ Supply credentials in the local process environment or use the provider CLI's ex
 
 Account-free Neon claims use a separate context file per case, so parallel batches do not link the repository to a disposable project.
 
-| Provider                          | Runner input                                                            | Status                                                                                                |
-| --------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Neon                              | Optional `NEON_API_KEY`, `BTS_LIVE_NEON_ORG_ID`, `BTS_LIVE_NEON_REGION` | Account-free claimable project, or authenticated API project; deleted after the case                  |
-| Prisma Postgres                   | No account; optional `BTS_LIVE_PRISMA_POSTGRES_REGION`                  | Disposable database expires after two hours                                                           |
-| Vercel                            | Existing `vercel login`; `BTS_LIVE_VERCEL_SCOPE`                        | Disposable project; production and preview deployments; browser checks and runtime logs implemented   |
-| Cloudflare through Alchemy        | Project-local Alchemy profile; `CLOUDFLARE_ACCOUNT_ID`                  | Adapter needs an authenticated live run; Wrangler login alone is insufficient                         |
-| Clerk, Polar sandbox, Convex      | Dedicated test accounts to be added later                               | Blocked; provider-specific verification still required                                                |
-| Supabase                          | No account; Docker/Podman or a supported native platform                | Automatic CLI setup; assigned URLs checked against app env; disposable stack destroyed after the case |
-| Turso, PlanetScale, MongoDB Atlas | Dedicated test accounts to be added later                               | Blocked; database provisioners still required                                                         |
+| Provider                                    | Runner input                                                            | Status                                                                                              |
+| ------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Neon                                        | Optional `NEON_API_KEY`, `BTS_LIVE_NEON_ORG_ID`, `BTS_LIVE_NEON_REGION` | Account-free claimable project, or authenticated API project; deleted after the case                |
+| Prisma Postgres                             | No account; optional `BTS_LIVE_PRISMA_POSTGRES_REGION`                  | Disposable database expires after two hours                                                         |
+| Vercel                                      | Existing `vercel login`; `BTS_LIVE_VERCEL_SCOPE`                        | Disposable project; production and preview deployments; browser checks and runtime logs implemented |
+| Cloudflare through Alchemy                  | Project-local Alchemy profile; `CLOUDFLARE_ACCOUNT_ID`                  | Adapter needs an authenticated live run; Wrangler login alone is insufficient                       |
+| Clerk, Polar sandbox, Convex                | Dedicated test accounts to be added later                               | Blocked; provider-specific verification still required                                              |
+| Supabase, Turso, PlanetScale, MongoDB Atlas | Dedicated test accounts to be added later                               | Blocked; database provisioners still required                                                       |
 
 Vercel function cases require the Node runtime; Bun remains a supported package manager. The runner verifies production and preview on its disposable project. It creates a deployment-protection bypass secret scoped to that project and verifies that preview access without it is denied. Authorization exchanges the bypass header for Vercel's scoped cookie at each deployment origin, without following bootstrap redirects. Subsequent requests use cookies, so external resources do not receive the bypass header. Nuxt dashboards are also checked with JavaScript disabled to verify server-rendered sessions and private RPC data.
-
-Supabase cases default to `dbSetupOptions: { mode: "auto" }` and test local application servers only. The real CLI initializes and starts the stack during project creation; the runner checks that `DATABASE_URL` and `DIRECT_URL` match its JSON status output before running migrations. Its `SUPABASE_HOME` is isolated under `apps/cli/.smoke/supabase`, with a shared service download cache across cases. Stack cleanup is recorded before generation starts so interrupted setup can also be cleaned up. Supabase stacks and their native fallback are experimental; unsupported platforms need Docker/Podman. Manual Supabase setup and deploying against a local-only database are explicitly blocked.
 
 ## Verification and current limits
 
 - The CLI must save the requested selections in `bts.jsonc`; silently selecting a default is a failure.
 - Generated dependencies install, then the project typechecks. Local cases build and exercise both the generated development and production servers.
-- SQLite, Neon, Prisma Postgres, and Supabase cases generate and apply a migration, repeat it to check idempotence, then run `db:push`. Prisma generates its client and initial migration SQL with the documented `migrate diff` command before applying it.
+- SQLite and Neon cases generate and apply a migration, repeat it to check idempotence, then run `db:push`. Prisma generates its client and initial migration SQL with the documented `migrate diff` command before applying it.
 - Browser checks cover rendering, API health, Better Auth signup/login/logout, session persistence after reload, protected navigation, and todo create/update/delete with reloads. Browser crashes, hydration mismatches, failed requests, API errors, and incorrect API origins fail the case.
 - Direct SQLite/PostgreSQL queries verify signup and todo changes. The same account and a saved todo must survive the development-to-production restart or Vercel production-to-preview deployment. Server-only cases verify HTTP auth, protected RPC calls and todo CRUD. PWA cases check the manifest, icons, service worker, offline navigation, and exclusion of auth/RPC responses from caches.
 - Native devices, Docker, mixed deployment providers, AI, payments, and unsupported addons are explicitly blocked until their runtime checks exist.
@@ -73,8 +70,6 @@ BTS_LIVE_BROWSER_TESTS=1 bun test apps/cli/live-tests/protection.test.ts
 ```
 
 ## Selected validation run
-
-The [2026-10-16 Supabase verification record](./verification-2026-10-16.md) covers six generated applications using the native stack runtime, Prisma and Drizzle, Bun/npm/pnpm, and split/fullstack backends. It includes the Git identity and npm-hoisting findings and the limits of the selected coverage.
 
 The [2026-10-02 verification record](./verification-2026-10-02.md) lists the 19 local, five Postgres, and two Vercel fixtures that passed, including production and protected preview stages.
 

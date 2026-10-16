@@ -12,7 +12,6 @@ import type { PackageManager, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
-import { getInterruptSignal } from "../../utils/interrupt";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 import { cliLog } from "../../utils/terminal-output";
 import {
@@ -20,13 +19,11 @@ import {
   type DbSetupMode,
   resolveDbSetupMode,
 } from "../core/db-setup-options";
-import { prepareGitRepository } from "../core/git";
 
 type SupabaseSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
 
-// Stack flags and output are experimental, so use the tested release for every command.
+// Keep automatic setup and the printed manual commands on the same stable release.
 export const SUPABASE_CLI_PACKAGE = "supabase@2.121.0";
-const stackEnv = { SUPABASE_EXPERIMENTAL_STACK: "1" };
 const statusSchema = z.object({
   DB_URL: z.url().refine((value) => ["postgres:", "postgresql:"].includes(new URL(value).protocol)),
 });
@@ -66,13 +63,12 @@ async function writeSupabaseEnvFile(
 async function readSupabaseStatus(serverDir: string, packageManager: PackageManager) {
   const statusArgs = getPackageExecutionArgs(
     packageManager,
-    `${SUPABASE_CLI_PACKAGE} status --agent no --env --output-format json`,
+    `${SUPABASE_CLI_PACKAGE} status --agent no --output json`,
   );
   return Result.tryPromise({
     try: async () => {
       const { stdout } = await execa(statusArgs[0], statusArgs.slice(1), {
         cwd: serverDir,
-        env: stackEnv,
       });
       return statusSchema.parse(JSON.parse(stdout)).DB_URL;
     },
@@ -101,7 +97,6 @@ async function initializeSupabase(
       await execa(supabaseInitArgs[0], supabaseInitArgs.slice(1), {
         cwd: serverDir,
         stdio: "inherit",
-        env: stackEnv,
       });
       cliLog.success("Supabase project initialized");
     },
@@ -128,14 +123,13 @@ async function startSupabase(
   cliLog.info("Starting Supabase services (this may take a moment)...");
   const supabaseStartArgs = getPackageExecutionArgs(
     packageManager,
-    `${SUPABASE_CLI_PACKAGE} start --agent no --preparation on-demand`,
+    `${SUPABASE_CLI_PACKAGE} start --agent no`,
   );
 
   return Result.tryPromise({
     try: async () => {
       const subprocess = execa(supabaseStartArgs[0], supabaseStartArgs.slice(1), {
         cwd: serverDir,
-        env: stackEnv,
       });
 
       let stdoutData = "";
@@ -184,9 +178,9 @@ function displayManualSupabaseInstructions(
     `"Manual Supabase Setup Instructions:"
 1. Open your project's \`packages/db\` directory.
 2. Run \`${command} init\` if \`supabase/config.toml\` does not exist.
-3. Set \`stack = true\` under \`[experimental]\` in \`supabase/config.toml\` and remove fixed port settings to allow separate stacks per branch/worktree.
-4. Run \`${command} start --preparation on-demand\`. Docker/Podman is used when available; otherwise the native runtime supports macOS 14+ on Apple silicon and Linux with glibc 2.35+ on amd64/arm64. Windows and Intel Macs require Docker.
-5. Run \`${command} status --env --output-format json\` and copy \`DB_URL\`. Stack commands are experimental; use the pinned CLI version.${
+3. Ensure Docker or a Docker-compatible container runtime is installed and running.
+4. Run \`${command} start\`.
+5. Run \`${command} status --output json\` and copy \`DB_URL\`.${
       output
         ? `
 ${pc.bold("Relevant output from `supabase start`:")}
@@ -266,19 +260,6 @@ export async function setupSupabase(
     return Result.ok();
   }
 
-  // The stack identity includes the Git branch. Establish it before starting the
-  // database; the post-scaffold Git step will commit the completed project later.
-  const gitResult = await prepareGitRepository(projectDir, config.git, getInterruptSignal());
-  if (gitResult.isErr()) {
-    return Result.err(
-      new DatabaseSetupError({
-        provider: "supabase",
-        message: `Failed to prepare Git before Supabase setup: ${gitResult.error.message}`,
-        cause: gitResult.error,
-      }),
-    );
-  }
-
   const initResult = await initializeSupabase(serverDir, packageManager);
   if (initResult.isErr()) {
     cliLog.error(pc.red(initResult.error.message));
@@ -286,7 +267,6 @@ export async function setupSupabase(
     return initResult;
   }
 
-  cliLog.info(`Using experimental Supabase stacks with ${SUPABASE_CLI_PACKAGE}.`);
   const startResult = await startSupabase(serverDir, packageManager);
   if (startResult.isErr()) {
     cliLog.error(pc.red(startResult.error.message));

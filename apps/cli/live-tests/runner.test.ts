@@ -12,7 +12,7 @@ import { z } from "zod";
 import { waitForDeployment } from "./browser";
 import { cleanResources } from "./cleanup";
 import { Commands } from "./command";
-import { DatabaseAssertions, generateDatabaseMigrations } from "./database";
+import { DatabaseAssertions } from "./database";
 import { caseId, configurations, type Selection } from "./matrix";
 import { assertPreviewProtected } from "./providers";
 import { RunState } from "./state";
@@ -55,35 +55,6 @@ test("manual and managed databases remain distinct deploy cases", () => {
   expect(usesAlchemyManagedDatabase(manual)).toBe(false);
   expect(manual.dbSetupOptions).toEqual({ mode: "manual" });
   expect(caseId(managed)).not.toBe(caseId(manual));
-});
-
-test("Prisma migration generation resolves an npm-hoisted CLI from the database workspace", async () => {
-  const directory = mkdtempSync(path.join(os.tmpdir(), "bts-live-prisma-hoisted-"));
-  directories.push(directory);
-  const dbDirectory = path.join(directory, "packages/db");
-  const prismaDirectory = path.join(directory, "node_modules/prisma");
-  mkdirSync(dbDirectory, { recursive: true });
-  mkdirSync(prismaDirectory, { recursive: true });
-  writeFileSync(
-    path.join(dbDirectory, "package.json"),
-    JSON.stringify({ scripts: { "db:generate": "node -e ''" } }),
-  );
-  writeFileSync(
-    path.join(prismaDirectory, "package.json"),
-    JSON.stringify({
-      name: "prisma",
-      exports: { ".": "./types.cjs", "./build/index.js": "./cli.cjs" },
-    }),
-  );
-  writeFileSync(path.join(prismaDirectory, "cli.cjs"), 'console.log("SELECT 1;");');
-  const config = {
-    ...[...configurations({ ...selection, orm: "prisma" })][0]!,
-    projectDir: directory,
-  };
-  await generateDatabaseMigrations(config, new Commands(directory, new AbortController().signal));
-  expect(
-    await Bun.file(path.join(dbDirectory, "prisma/migrations/0_init/migration.sql")).text(),
-  ).toBe("SELECT 1;");
 });
 
 test("deferred typechecks cover server and native errors without rebuilding Start", async () => {

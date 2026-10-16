@@ -5,12 +5,12 @@ import pc from "picocolors";
 import { ProjectCreationError } from "../../utils/errors";
 import { cliLog } from "../../utils/terminal-output";
 
-export async function prepareGitRepository(
+export async function initializeGit(
   projectDir: string,
   useGit: boolean,
   signal?: AbortSignal,
-): Promise<Result<boolean, ProjectCreationError>> {
-  if (!useGit) return Result.ok(false);
+): Promise<Result<void, ProjectCreationError>> {
+  if (!useGit) return Result.ok(undefined);
 
   const cancelled = () =>
     Result.err(
@@ -30,7 +30,7 @@ export async function prepareGitRepository(
 
   if (gitVersionResult.exitCode !== 0) {
     cliLog.warn(pc.yellow("Git is not installed"));
-    return Result.ok(false);
+    return Result.ok(undefined);
   }
 
   const result = await $({
@@ -49,19 +49,6 @@ export async function prepareGitRepository(
       }),
     );
   }
-
-  return Result.ok(true);
-}
-
-export async function initializeGit(
-  projectDir: string,
-  useGit: boolean,
-  signal?: AbortSignal,
-): Promise<Result<void, ProjectCreationError>> {
-  if (!useGit) return Result.ok(undefined);
-  const prepared = await prepareGitRepository(projectDir, useGit, signal);
-  if (prepared.isErr()) return prepared;
-  if (!prepared.value) return Result.ok(undefined);
 
   return Result.tryPromise({
     try: async () => {

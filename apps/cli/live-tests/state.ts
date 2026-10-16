@@ -22,7 +22,6 @@ export const resourceSchema = z.object({
     "neon",
     "neon-intent",
     "neon-claim",
-    "supabase",
     "alchemy",
     "docker",
   ]),
