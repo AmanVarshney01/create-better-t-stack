@@ -5,9 +5,11 @@ import fs from "fs-extra";
 
 import type { CreateInput } from "../src";
 
-/** Select native samples that can verify navigation without external auth services. */
+/** Select native samples for explicitly requested local browser checks. */
 function canVerifyNavigation(config: CreateInput) {
   return (
+    !process.env.CI &&
+    process.env.BTS_LIVE_BROWSER_TESTS === "1" &&
     config.frontend?.some((frontend) => frontend.startsWith("native-")) &&
     config.backend === "hono" &&
     config.auth === "better-auth" &&
