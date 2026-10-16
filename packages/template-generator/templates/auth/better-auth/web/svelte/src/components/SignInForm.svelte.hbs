@@ -6,7 +6,7 @@
 
 	const session = authClient.useSession();
 
-	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
+	let { switchToSignUp }: { switchToSignUp: () => void } = $props();
 
 	const validationSchema = z.object({
 		email: z.email('Invalid email address'),

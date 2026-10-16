@@ -12228,7 +12228,7 @@ export default function Login() {
 
 	const session = authClient.useSession();
 
-	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
+	let { switchToSignUp }: { switchToSignUp: () => void } = $props();
 
 	const validationSchema = z.object({
 		email: z.email('Invalid email address'),
@@ -12345,7 +12345,7 @@ export default function Login() {
 
 	const session = authClient.useSession();
 
-	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
+	let { switchToSignIn }: { switchToSignIn: () => void } = $props();
 
 	const validationSchema = z.object({
 		name: z.string().min(2, 'Name must be at least 2 characters'),
