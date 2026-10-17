@@ -14,66 +14,11 @@ import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 import { cliLog, createSpinner } from "../../utils/terminal-output";
 
-type UltraciteLinter = "biome" | "oxlint";
-
-type UltraciteEditor =
-  | "vscode"
-  | "cursor"
-  | "windsurf"
-  | "codebuddy"
-  | "antigravity"
-  | "bob"
-  | "kiro"
-  | "trae"
-  | "void"
-  | "zed"
-  | "universal";
-
-type UltraciteAgent =
-  | "universal"
-  | "claude"
-  | "codex"
-  | "jules"
-  | "replit"
-  | "devin"
-  | "lovable"
-  | "zencoder"
-  | "ona"
-  | "openclaw"
-  | "continue"
-  | "snowflake-cortex"
-  | "deepagents"
-  | "qoder"
-  | "kimi-cli"
-  | "mcpjam"
-  | "mux"
-  | "pi"
-  | "adal"
-  | "copilot"
-  | "cline"
-  | "amp"
-  | "aider"
-  | "firebase-studio"
-  | "open-hands"
-  | "gemini"
-  | "junie"
-  | "augmentcode"
-  | "bob"
-  | "kilo-code"
-  | "goose"
-  | "roo-code"
-  | "warp"
-  | "droid"
-  | "opencode"
-  | "crush"
-  | "qwen"
-  | "amazon-q-cli"
-  | "firebender"
-  | "cursor-cli"
-  | "mistral-vibe"
-  | "vercel";
-
-type UltraciteHook = "cursor" | "windsurf" | "codebuddy" | "claude" | "copilot";
+type UltraciteOptions = NonNullable<NonNullable<ProjectConfig["addonOptions"]>["ultracite"]>;
+type UltraciteLinter = NonNullable<UltraciteOptions["linter"]>;
+type UltraciteEditor = NonNullable<UltraciteOptions["editors"]>[number];
+type UltraciteAgent = NonNullable<UltraciteOptions["agents"]>[number];
+type UltraciteHook = NonNullable<UltraciteOptions["hooks"]>[number];
 
 type UltraciteSetupResult = Result<void, AddonSetupError | UserCancelledError>;
 type UltraciteInitArgsInput = {
@@ -91,62 +36,42 @@ const LINTERS = {
   oxlint: { label: "Oxlint + Oxfmt" },
 } as const;
 
+const EDITORS = {
+  vscode: { label: "VS Code" },
+  cursor: { label: "Cursor" },
+  devin: { label: "Devin Desktop" },
+  codebuddy: { label: "CodeBuddy" },
+  antigravity: { label: "Antigravity IDE" },
+  bob: { label: "IBM Bob" },
+  kiro: { label: "Kiro" },
+  trae: { label: "Trae" },
+  void: { label: "Void" },
+  zed: { label: "Zed" },
+  universal: { label: "Universal (.vscode/settings.json)" },
+} as const;
+
 const AGENTS = {
   universal: { label: "Universal (AGENTS.md — covers all agents)" },
   claude: { label: "Claude Code" },
-  codex: { label: "Codex" },
-  jules: { label: "Jules" },
   replit: { label: "Replit Agent" },
-  devin: { label: "Devin" },
-  lovable: { label: "Lovable" },
-  zencoder: { label: "Zencoder" },
-  ona: { label: "Ona" },
-  openclaw: { label: "OpenClaw" },
-  continue: { label: "Continue" },
-  "snowflake-cortex": { label: "Snowflake Cortex" },
-  deepagents: { label: "Deepagents" },
-  qoder: { label: "Qoder" },
-  "kimi-cli": { label: "Kimi CLI" },
-  mcpjam: { label: "MCPJam" },
-  mux: { label: "Mux" },
-  pi: { label: "Pi" },
-  adal: { label: "AdaL" },
-  copilot: { label: "GitHub Copilot" },
-  cline: { label: "Cline" },
-  amp: { label: "AMP" },
   aider: { label: "Aider" },
-  "firebase-studio": { label: "Firebase Studio" },
-  "open-hands": { label: "OpenHands" },
-  gemini: { label: "Gemini" },
-  junie: { label: "Junie" },
-  augmentcode: { label: "Augment Code" },
-  bob: { label: "IBM Bob" },
-  "kilo-code": { label: "Kilo Code" },
-  goose: { label: "Goose" },
-  "roo-code": { label: "Roo Code" },
-  warp: { label: "Warp" },
-  droid: { label: "Droid" },
-  opencode: { label: "OpenCode" },
-  crush: { label: "Crush" },
-  qwen: { label: "Qwen Code" },
-  "amazon-q-cli": { label: "Amazon Q CLI" },
-  firebender: { label: "Firebender" },
-  "cursor-cli": { label: "Cursor CLI" },
-  "mistral-vibe": { label: "Mistral Vibe" },
-  vercel: { label: "Vercel Agent" },
+  gemini: { label: "Gemini CLI" },
 } as const;
 
 const HOOKS = {
   cursor: { label: "Cursor" },
-  windsurf: { label: "Windsurf" },
+  devin: { label: "Devin Desktop" },
   codebuddy: { label: "CodeBuddy" },
   claude: { label: "Claude Code" },
+  codex: { label: "Codex" },
+  deepagents: { label: "Deep Agents" },
   copilot: { label: "GitHub Copilot" },
+  grok: { label: "Grok Build" },
 } as const;
 
-// Pinned so upstream preset releases can't silently break scaffold lint compliance;
-// bump alongside a template compliance run (BTS_ULTRACITE_COMPLIANCE=1 bun test)
-const ULTRACITE_VERSION = "7.11.0";
+// Pin the preset version so generated lint behavior is reproducible.
+// Validate both linter presets against generated projects when bumping.
+const ULTRACITE_VERSION = "8.0.0";
 
 const DEFAULT_LINTER: UltraciteLinter = "biome";
 const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode"];
@@ -216,6 +141,7 @@ export function buildUltraciteInitArgs({
     `ultracite@${ULTRACITE_VERSION}`,
     ...ultraciteArgs,
     "--skip-install",
+    "--yes",
     "--quiet",
   ];
 }
@@ -281,11 +207,10 @@ export async function setupUltracite(
           return navigableMultiselect<UltraciteEditor>({
             message: "Which editors do you want to configure (recommended)?",
             required: false,
-            options: [
-              { value: "vscode", label: "VSCode / Cursor / Windsurf" },
-              { value: "zed", label: "Zed" },
-              { value: "universal", label: "Universal (.vscode/settings.json)" },
-            ],
+            options: Object.entries(EDITORS).map(([key, editor]) => ({
+              value: key as UltraciteEditor,
+              label: editor.label,
+            })),
           });
         },
         agents: async () => {

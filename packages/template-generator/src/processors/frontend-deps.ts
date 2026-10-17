@@ -11,6 +11,7 @@ export function processFrontendDeps(vfs: VirtualFileSystem, config: ProjectConfi
     addons.includes("electrobun") ||
     addons.includes("tauri") ||
     webDeploy === "cloudflare" ||
+    webDeploy === "prisma" ||
     webDeploy === "vercel"
   ) {
     return;

@@ -257,7 +257,9 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
       : 'export const web = Prisma.Compute("web", Effect.gen(function* () {',
   );
   writer.indent(() => {
-    writer.writeLine("const project = yield* prismaProject;");
+    writer.writeLine(
+      websiteFramework ? "const project = prismaProject;" : "const project = yield* prismaProject;",
+    );
     if (topology === "self") {
       writer.writeLine("const resolvedDatabaseEnv = yield* databaseEnv;");
     } else if (plan.server.target !== "none") {

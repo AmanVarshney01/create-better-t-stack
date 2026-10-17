@@ -28,7 +28,7 @@ export default function TabLayout() {
 				options=\{{
 					title: "Home",
 					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="home" size={size} color={color} />
+						<Ionicons name="home" size={size} style=\{{ color: color ?? themeColorForeground }} />
 					),
 				}}
 			/>
@@ -37,7 +37,7 @@ export default function TabLayout() {
 				options=\{{
 					title: "Explore",
 					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="compass" size={size} color={color} />
+						<Ionicons name="compass" size={size} style=\{{ color: color ?? themeColorForeground }} />
 					),
 				}}
 			/>

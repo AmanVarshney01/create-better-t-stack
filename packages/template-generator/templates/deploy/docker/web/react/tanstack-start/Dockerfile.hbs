@@ -1,4 +1,4 @@
-{{#if (and (eq packageManager "bun") (not (includes addons "vite-plus")))}}
+{{#if (and (eq packageManager "bun") (eq runtime "bun") (not (includes addons "vite-plus")))}}
 FROM oven/bun:1 AS builder
 {{else}}
 FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
