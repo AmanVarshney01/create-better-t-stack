@@ -2,6 +2,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import { parse, stringify } from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { dependencyVersionMap } from "../utils/add-deps";
 import { getAllowedDependencyScripts } from "../utils/dependency-scripts";
 import { type TemplateData, processSingleTemplate } from "./utils";
 
@@ -45,26 +46,35 @@ export function processPnpmWorkspaceConfig(vfs: VirtualFileSystem, config: Proje
   if (Object.keys(allowBuilds).length) {
     workspace.allowBuilds = { ...allowBuilds, ...workspace.allowBuilds };
   }
+  if (config.addons.includes("vite-plus")) {
+    if (workspace.overrides?.vite?.startsWith("npm:@voidzero-dev/vite-plus-core@")) {
+      delete workspace.overrides.vite;
+    }
+    workspace.overrides = {
+      ...workspace.overrides,
+      "vite@*": `npm:@voidzero-dev/vite-plus-core@${dependencyVersionMap["vite-plus"]}`,
+    };
+  }
   if (config.frontend.includes("solid")) {
     workspace.overrides = {
-      "solid-js": "2.0.0-rc.13",
-      "@solidjs/signals": "2.0.0-rc.13",
-      "@solidjs/compiler": "2.0.0-rc.13",
-      "@solidjs/babel-plugin": "2.0.0-rc.13",
+      "solid-js": "2.0.0-rc.14",
+      "@solidjs/signals": "2.0.0-rc.14",
+      "@solidjs/compiler": "2.0.0-rc.14",
+      "@solidjs/babel-plugin": "2.0.0-rc.14",
       ...workspace.overrides,
     };
     workspace.minimumReleaseAgeExclude = [
       ...new Set([
         ...(workspace.minimumReleaseAgeExclude ?? []),
-        "@solidjs/babel-plugin@2.0.0-rc.13",
-        "@solidjs/compiler@2.0.0-rc.13",
+        "@solidjs/babel-plugin@2.0.0-rc.14",
+        "@solidjs/compiler@2.0.0-rc.14",
         "@solidjs/meta@1.0.0-next.2",
-        "@solidjs/router@2.0.0-next.34",
-        "@solidjs/signals@2.0.0-rc.13",
-        "@solidjs/vite-plugin@3.0.0-next.47",
-        "@solidjs/web@2.0.0-rc.13",
+        "@solidjs/router@2.0.0-next.38",
+        "@solidjs/signals@2.0.0-rc.14",
+        "@solidjs/vite-plugin@3.0.0-next.49",
+        "@solidjs/web@2.0.0-rc.14",
         "@tanstack/solid-query@6.0.0-rc.5",
-        "solid-js@2.0.0-rc.13",
+        "solid-js@2.0.0-rc.14",
       ]),
     ];
   }

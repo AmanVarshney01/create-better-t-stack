@@ -196,6 +196,10 @@ create-better-t-stack --database postgres --db-setup neon
 
 If you need structured control over database provisioning behavior, use `dbSetupOptions` with `create-json` or the programmatic API. See [Agent Workflows](/docs/cli/agent-workflows).
 
+For local Supabase development, install and start Docker or a compatible container runtime before choosing automatic setup.
+
+If you choose manual setup, follow the commands printed by the CLI and add your database URL as `DATABASE_URL` and `DIRECT_URL` in your app's `.env` file. Run Supabase commands from `packages/db`. See Supabase's [local development guide](https://supabase.com/docs/guides/local-development/cli/getting-started) for managing your local database.
+
 ## Backend Options
 
 ### `--backend <framework>`

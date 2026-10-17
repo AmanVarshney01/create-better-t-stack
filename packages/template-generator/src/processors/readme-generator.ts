@@ -336,6 +336,7 @@ function generateStackDescription(
   return parts.length > 0 ? `${parts.join(", ")}, and more` : "";
 }
 
+/** Describe the selected app servers and native development-build workflow. */
 function generateRunningInstructions(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],
@@ -355,7 +356,9 @@ function generateRunningInstructions(
   }
 
   if (hasNative) {
-    instructions.push("Use the Expo Go app to run the mobile application.");
+    instructions.push(
+      "From `apps/native`, run the `ios` script for iOS or the `android` script for Android to build and launch the app. See [Expo development builds](https://docs.expo.dev/develop/development-builds/introduction/) for device setup.",
+    );
   }
 
   if (isConvex) {

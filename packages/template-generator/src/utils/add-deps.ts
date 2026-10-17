@@ -16,20 +16,20 @@ export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
 
-  "better-auth": "1.7.7",
-  "@better-auth/core": "1.7.7",
-  "@better-auth/drizzle-adapter": "1.7.7",
-  "@better-auth/expo": "1.7.7",
+  "better-auth": "1.7.10",
+  "@better-auth/core": "1.7.10",
+  "@better-auth/drizzle-adapter": "1.7.10",
+  "@better-auth/expo": "1.7.10",
 
-  "@clerk/backend": "^3.17.1",
-  "@clerk/express": "^2.1.66",
-  "@clerk/fastify": "^3.1.76",
-  "@clerk/nextjs": "^7.9.1",
-  "@clerk/react": "^6.15.1",
-  "@clerk/react-router": "^3.6.21",
+  "@clerk/backend": "^3.23.2",
+  "@clerk/express": "^2.1.78",
+  "@clerk/fastify": "^3.1.88",
+  "@clerk/nextjs": "^7.9.15",
+  "@clerk/react": "^6.17.8",
+  "@clerk/react-router": "^3.6.33",
   "@react-router/express": "^8.3.1",
-  "@clerk/tanstack-react-start": "^1.5.12",
-  "@clerk/expo": "^4.6.5",
+  "@clerk/tanstack-react-start": "^1.7.1",
+  "@clerk/expo": "^4.12.0",
 
   "drizzle-orm": "1.0.0-rc.4",
   "drizzle-kit": "1.0.0-rc.4",
@@ -61,19 +61,19 @@ export const dependencyVersionMap = {
   mongoose: "^9.9.5",
   mongodb: "^7.6.0",
 
-  "vite-plugin-pwa": "^1.3.0",
-  "@vite-pwa/assets-generator": "^1.0.2",
+  "vite-plugin-pwa": "^2.0.0",
+  "@vite-pwa/assets-generator": "^2.0.0",
 
-  "@tauri-apps/cli": "^2.11.4",
+  "@tauri-apps/cli": "^2.12.1",
 
-  "@biomejs/biome": "^2.5.12",
+  "@biomejs/biome": "^2.5.15",
 
-  oxlint: "^1.81.0",
-  oxfmt: "^0.66.0",
+  oxlint: "^1.87.0",
+  oxfmt: "^0.72.0",
 
   husky: "^9.1.7",
-  lefthook: "^2.1.12",
-  "lint-staged": "^17.5.0",
+  lefthook: "^2.2.1",
+  "lint-staged": "^17.6.0",
 
   tsx: "^4.23.13",
   "@types/node": "^26.4.1",
@@ -100,10 +100,10 @@ export const dependencyVersionMap = {
   fastify: "^5.12.3",
   "@fastify/cors": "^11.3.0",
 
-  turbo: "^2.10.12",
-  nx: "^23.2.0",
-  "vite-plus": "0.3.1",
-  rolldown: "1.2.7",
+  turbo: "^2.11.7",
+  nx: "^23.3.0",
+  "vite-plus": "1.1.0",
+  rolldown: "1.2.13",
   unwasm: "^0.6.0",
 
   ai: "^7.0.93",
@@ -115,15 +115,15 @@ export const dependencyVersionMap = {
   streamdown: "^2.6.0",
   shiki: "^4.4.3",
 
-  "@orpc/server": "^1.15.0",
-  "@orpc/client": "^1.15.0",
-  "@orpc/openapi": "^1.15.0",
-  "@orpc/zod": "^1.15.0",
-  "@orpc/tanstack-query": "^1.15.0",
+  "@orpc/server": "^1.15.6",
+  "@orpc/client": "^1.15.6",
+  "@orpc/openapi": "^1.15.6",
+  "@orpc/zod": "^1.15.6",
+  "@orpc/tanstack-query": "^1.15.6",
 
-  "@trpc/tanstack-react-query": "^11.18.0",
-  "@trpc/server": "^11.18.0",
-  "@trpc/client": "^11.18.0",
+  "@trpc/tanstack-react-query": "^11.19.0",
+  "@trpc/server": "^11.19.0",
+  "@trpc/client": "^11.19.0",
 
   next: "^16.3.4",
   nitro: "3.0.260903-beta",
@@ -143,10 +143,10 @@ export const dependencyVersionMap = {
   "@tanstack/vue-query-devtools": "^6.1.48",
   "@tanstack/vue-query": "^5.102.8",
 
-  "@tanstack/react-query-devtools": "^5.102.8",
-  "@tanstack/react-query": "^5.102.8",
+  "@tanstack/react-query-devtools": "^5.104.2",
+  "@tanstack/react-query": "^5.104.2",
   "@tanstack/react-form": "^1.33.5",
-  "@tanstack/react-router-ssr-query": "^1.167.2",
+  "@tanstack/react-router-ssr-query": "^1.167.3",
   "@tanstack/svelte-form": "^1.33.5",
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).
@@ -160,18 +160,18 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-node": "^6.0.0",
   "@sveltejs/adapter-vercel": "^7.0.0",
   "@cloudflare/workers-types": "^5.20260906.1",
-  "@alchemy.run/frontend-frameworks": "2.0.0-beta.81",
+  "@alchemy.run/frontend-frameworks": "2.0.0-beta.83",
   "@astrojs/node": "^11.1.5",
   "@astrojs/vercel": "^11.0.10",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
   "@vercel/nft": "^1.11.0",
-  alchemy: "2.0.0-beta.81",
-  effect: "^4.0.2",
-  "@effect/platform-node": "^4.0.2",
-  "@effect/platform-bun": "^4.0.2",
+  alchemy: "2.0.0-beta.83",
+  effect: "4.0.5",
+  "@effect/platform-node": "4.0.5",
+  "@effect/platform-bun": "4.0.5",
 
-  "babel-preset-expo": "~57.0.10",
+  "babel-preset-expo": "~58.0.16",
   varlock: "1.18.0",
   "@varlock/vite-integration": "1.5.1",
   "@varlock/nextjs-integration": "1.2.2",
@@ -189,7 +189,7 @@ export const dependencyVersionMap = {
   "@stripe/react-stripe-js": "^6.9.0",
   "@stripe/stripe-js": "^9.15.0",
 
-  evlog: "^2.28.1",
+  evlog: "^2.30.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

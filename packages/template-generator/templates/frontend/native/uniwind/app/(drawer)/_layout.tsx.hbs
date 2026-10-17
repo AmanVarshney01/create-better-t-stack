@@ -33,7 +33,7 @@ function DrawerLayout() {
             <Text style=\{{ color: focused ? color : themeColorForeground }}>Home</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons name="home-outline" size={size} color={focused ? color : themeColorForeground} />
+            <Ionicons name="home-outline" size={size} style=\{{ color: focused ? color : themeColorForeground }} />
           ),
         }}
       />
@@ -45,12 +45,12 @@ function DrawerLayout() {
             <Text style=\{{ color: focused ? color : themeColorForeground }}>Tabs</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <MaterialIcons name="border-bottom" size={size} color={focused ? color : themeColorForeground} />
+            <MaterialIcons name="border-bottom" size={size} style=\{{ color: focused ? color : themeColorForeground }} />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable className="mr-4">
-                <Ionicons name="add-outline" size={24} color={themeColorForeground} />
+                <Ionicons name="add-outline" size={24} style=\{{ color: themeColorForeground }} />
               </Pressable>
             </Link>
           ),
@@ -65,7 +65,7 @@ function DrawerLayout() {
             <Text style=\{{ color: focused ? color : themeColorForeground }}>Todos</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons name="checkbox-outline" size={size} color={focused ? color : themeColorForeground} />
+            <Ionicons name="checkbox-outline" size={size} style=\{{ color: focused ? color : themeColorForeground }} />
           ),
         }}
       />
@@ -79,7 +79,7 @@ function DrawerLayout() {
             <Text style=\{{ color: focused ? color : themeColorForeground }}>AI</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons name="chatbubble-ellipses-outline" size={size} color={focused ? color : themeColorForeground} />
+            <Ionicons name="chatbubble-ellipses-outline" size={size} style=\{{ color: focused ? color : themeColorForeground }} />
           ),
         }}
       />

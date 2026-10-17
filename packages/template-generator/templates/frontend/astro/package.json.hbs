@@ -5,12 +5,12 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro build",
 
 {{/unless}}
 		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro check",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "preview": "astro preview",
 {{/unless}}
     "astro": "astro"

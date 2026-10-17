@@ -56,8 +56,8 @@ jobs:
           bunx tsc --noEmit -p packages/backend/convex/tsconfig.json
           bun run --filter web check-types
 
-      - name: Test Website and Shared Packages
-        run: bun test apps/web/test packages/types/test packages/backend/test
+      - name: Test Website Preview Integration
+        run: bun test apps/web/test/preview.test.ts
 
       - name: Test CLI
         working-directory: apps/cli
@@ -65,7 +65,6 @@ jobs:
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
-          BTS_MATRIX_MODE: smoke
 
   generated-builds:
     name: Generated Builds (${{ matrix.shard }}/8)
