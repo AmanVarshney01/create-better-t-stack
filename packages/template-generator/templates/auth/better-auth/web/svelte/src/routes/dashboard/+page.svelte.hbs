@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	{{#if (eq payments "polar")}}
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	{{/if}}
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
 	let { data }: PageProps = $props();
