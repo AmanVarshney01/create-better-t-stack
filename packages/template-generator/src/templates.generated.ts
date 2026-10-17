@@ -30438,8 +30438,13 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: [
+{{#if (eq packageManager "npm")}}
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+{{else}}
         "nuxt > @nuxt/devtools > @vue/devtools-core",
         "nuxt > @nuxt/devtools > @vue/devtools-kit",
+{{/if}}
 {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
         "better-auth/vue",
         "zod",
