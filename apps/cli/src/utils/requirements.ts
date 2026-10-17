@@ -84,7 +84,7 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
         addNodeRequirement(requirements, ">=22.12.0", "Astro 7");
         break;
       case "nuxt":
-        addNodeRequirement(requirements, "^22.19.0 || ^24.11.0 || >=26.0.0", "Nuxt 4");
+        addNodeRequirement(requirements, "^22.22.3 || ^24.15.0 || >=26.0.0", "Nuxt 4.6");
         break;
       case "solid":
         addNodeRequirement(requirements, ">=24.0.0", "Solid");

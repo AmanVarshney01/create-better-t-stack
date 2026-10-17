@@ -9826,6 +9826,8 @@ export default defineNuxtPlugin(() => {
     },
     {{#if (ne backend "self")}}
     baseURL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}\`\${serverOrigin}/auth\`{{else}}new URL("/api/auth", serverOrigin).toString(){{/if}},
+    {{else}}
+    baseURL: useRequestURL().origin,
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -30433,21 +30435,39 @@ export default defineNuxtConfig({
     localApiEndpoint: "/_nuxt_icon",
   },
   {{/if}}
-{{#if (or (and (eq auth "better-auth") (ne backend "convex")) (and (eq api "orpc") (ne backend "convex") (ne backend "none")))}}
   vite: {
     optimizeDeps: {
       include: [
+{{#if (eq packageManager "npm")}}
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+{{else}}
+        "nuxt > @nuxt/devtools > @vue/devtools-core",
+        "nuxt > @nuxt/devtools > @vue/devtools-kit",
+{{/if}}
 {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
         "better-auth/vue",
+        "zod",
 {{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
         "@orpc/client",
         "@orpc/client/fetch",
         "@orpc/tanstack-query",
         "@tanstack/vue-query",
+        "@tanstack/vue-query > @vue/devtools-api",
         "@tanstack/vue-query-devtools",
 {{/if}}
       ],
+    },
+  },
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  hooks: {
+    "vite:extendConfig"(config, { isClient }) {
+      if (!isClient || !config.optimizeDeps) return;
+      // Vue Query uses devtools-api 6, whose CommonJS entry needs optimization.
+      config.optimizeDeps.exclude = config.optimizeDeps.exclude?.filter(
+        (dependency) => dependency !== "@vue/devtools-api",
+      );
     },
   },
 {{/if}}
@@ -30509,14 +30529,17 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.11.0",
-    "nuxt": "^4.5.2",
-    "vue": "^3.5.42",
+    "nuxt": "^4.6.2",
+    "vue": "^3.5.44",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "tailwindcss": "^4.3.3",
     "@iconify-json/lucide": "^1.2.129",
     "vue-tsc": "^3.3.11"
+  },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   }
 }
 `],
