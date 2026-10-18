@@ -1060,7 +1060,9 @@ async function validatePwaBuildArtifacts(sample: SelectedBuildSample, projectDir
     }
     return;
   }
-  expect(await fs.pathExists(path.join(publicDir, "registerSW.js"))).toBe(true);
+  if (frontend.includes("tanstack-router")) {
+    expect(await fs.pathExists(path.join(publicDir, "registerSW.js"))).toBe(true);
+  }
   const manifest = await fs.readJson(path.join(publicDir, "manifest.webmanifest"));
   expect(manifest.start_url).toBe("/");
   expect(manifest.icons.length).toBeGreaterThan(0);

@@ -63,6 +63,7 @@ export const dependencyVersionMap = {
 
   "vite-plugin-pwa": "^2.0.0",
   "@vite-pwa/assets-generator": "^2.0.0",
+  "workbox-window": "^7.4.1",
 
   "@tauri-apps/cli": "^2.12.1",
 

@@ -63,7 +63,9 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         vfs,
         packagePath: webPkgPath,
         dependencies: ["vite-plugin-pwa"],
-        devDependencies: ["@vite-pwa/assets-generator"],
+        devDependencies: config.frontend.some((f) => ["react-router", "solid"].includes(f))
+          ? ["@vite-pwa/assets-generator", "workbox-window"]
+          : ["@vite-pwa/assets-generator"],
       });
       const webPkg = vfs.readJson<PackageJson>(webPkgPath);
       if (webPkg) {

@@ -403,6 +403,14 @@ export default function PwaRegistration() {
   </body>
 </html>
 `],
+  ["addons/pwa/apps/web/vite-ssr/src/pwa-registration.ts", `/// <reference types="vite-plugin-pwa/client" />
+
+if (!import.meta.env.SSR) {
+  import("virtual:pwa-register").then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
+`],
   ["addons/pwa/apps/web/vite/public/logo.png", `[Binary file]`],
   ["addons/pwa/apps/web/vite/pwa-assets.config.ts.hbs", `import {
   defineConfig,
@@ -35645,4 +35653,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 532;
+export const TEMPLATE_COUNT = 533;
