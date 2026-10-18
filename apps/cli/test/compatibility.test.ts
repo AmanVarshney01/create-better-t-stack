@@ -152,6 +152,99 @@ const invalidStacks = [
     options: { addonOptions: { mcp: { scope: "project", invented: true } } },
     error: /Unrecognized key.*invented/,
   },
+  {
+    name: "drizzle-mongodb",
+    options: { database: "mongodb" },
+    error: /Drizzle ORM does not support MongoDB/,
+  },
+  {
+    name: "turso-postgres",
+    options: { database: "postgres", dbSetup: "turso" },
+    error: /Turso setup requires SQLite/,
+  },
+  {
+    name: "prisma-postgres-mysql",
+    options: { database: "mysql", dbSetup: "prisma-postgres" },
+    error: /Prisma PostgreSQL setup requires PostgreSQL/,
+  },
+  {
+    name: "supabase-sqlite",
+    options: { dbSetup: "supabase" },
+    error: /Supabase setup requires PostgreSQL/,
+  },
+  {
+    name: "atlas-postgres",
+    options: { database: "postgres", dbSetup: "mongodb-atlas" },
+    error: /MongoDB Atlas setup requires MongoDB/,
+  },
+  {
+    name: "planetscale-sqlite",
+    options: { dbSetup: "planetscale" },
+    error: /PlanetScale setup requires PostgreSQL or MySQL/,
+  },
+  {
+    name: "docker-sqlite",
+    options: { dbSetup: "docker" },
+    error: /Docker setup is not compatible with SQLite/,
+  },
+  {
+    name: "workers-mongodb",
+    options: { runtime: "workers", database: "mongodb", orm: "prisma" },
+    error: /Workers runtime.*not compatible with MongoDB/,
+  },
+  {
+    name: "self-runtime",
+    options: { frontend: ["next"], backend: "self" },
+    error: /self.*requires '--runtime none'/,
+  },
+  {
+    name: "frontend-only-api",
+    options: { backend: "none", runtime: "none", database: "none", orm: "none" },
+    error: /none.*requires '--api none'/,
+  },
+  {
+    name: "convex-mixed-better-auth",
+    options: {
+      frontend: ["nuxt", "native-bare"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "better-auth",
+    },
+    error: /Better Auth.*convex.*not compatible.*nuxt/,
+  },
+  {
+    name: "desktop-fullstack",
+    options: { frontend: ["next"], backend: "self", runtime: "none", addons: ["tauri"] },
+    error: /tauri addon requires a separate backend/,
+  },
+  {
+    name: "d1-postgres",
+    options: {
+      database: "postgres",
+      dbSetup: "d1",
+      runtime: "workers",
+      serverDeploy: "cloudflare",
+    },
+    error: /D1 setup requires SQLite/,
+  },
+  {
+    name: "alchemy-split-ownership",
+    options: {
+      database: "postgres",
+      dbSetup: "neon",
+      dbSetupOptions: { mode: "alchemy" },
+      webDeploy: "cloudflare",
+    },
+    error: /Alchemy database provisioning requires/,
+  },
+  {
+    name: "yes-with-stack-flags",
+    options: { yes: true },
+    error: /Cannot combine --yes with core stack configuration flags/,
+  },
 ];
 
 function run(json: string) {
