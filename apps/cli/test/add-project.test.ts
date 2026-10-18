@@ -21,10 +21,7 @@ async function snapshot(projectDir: string) {
     await Promise.all(
       entries.map(async (entry) => {
         const file = join(entry.parentPath, entry.name);
-        return [
-          relative(projectDir, file),
-          entry.isFile() ? await fs.readFile(file, "utf8") : null,
-        ];
+        return [relative(projectDir, file), entry.isFile() ? await fs.readFile(file) : null];
       }),
     ),
   );

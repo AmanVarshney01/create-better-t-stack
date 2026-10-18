@@ -245,6 +245,48 @@ const invalidStacks = [
     options: { yes: true },
     error: /Cannot combine --yes with core stack configuration flags/,
   },
+  {
+    name: "orm-without-database",
+    options: { database: "none" },
+    error: /ORM selection requires a database/,
+  },
+  {
+    name: "server-without-runtime",
+    options: { runtime: "none" },
+    error: /runtime none.*only supported/,
+  },
+  {
+    name: "workers-without-deployment",
+    options: { runtime: "workers" },
+    error: /Workers runtime requires a server deployment/,
+  },
+  {
+    name: "cloudflare-bun-runtime",
+    options: { serverDeploy: "cloudflare" },
+    error: /cloudflare.*requires '--runtime workers'/,
+  },
+  {
+    name: "prisma-workers-runtime",
+    options: { runtime: "workers", serverDeploy: "prisma" },
+    error: /server-deploy prisma.*requires '--runtime bun' or '--runtime node'/,
+  },
+  {
+    name: "next-cloudflare-manual-prisma-postgres",
+    options: {
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "postgres",
+      orm: "prisma",
+      webDeploy: "cloudflare",
+    },
+    error: /OpenNext does not preserve pg-cloudflare's workerd files/,
+  },
+  {
+    name: "unsupported-pwa-frontend",
+    options: { frontend: ["nuxt"], api: "orpc", addons: ["pwa"] },
+    error: /Incompatible addon\/frontend combination: pwa addon requires/,
+  },
 ];
 
 function run(json: string) {
