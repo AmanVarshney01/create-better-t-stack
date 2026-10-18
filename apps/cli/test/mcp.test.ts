@@ -548,11 +548,11 @@ describe("MCP server", () => {
 
   it("starts over stdio through the CLI entrypoint", async () => {
     const cliRoot = path.join(import.meta.dir, "..");
-    const cliEntrypoint = path.join(cliRoot, "src", "cli.ts");
+    const cliEntrypoint = path.join(cliRoot, "dist", "cli.mjs");
     const client = new Client({ name: "mcp-stdio-test", version: "0.0.0" }, { capabilities: {} });
 
     const transport = new StdioClientTransport({
-      command: "bun",
+      command: "node",
       args: [cliEntrypoint, "mcp"],
       cwd: cliRoot,
       env: {
