@@ -148,7 +148,7 @@ export default {
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.3",
     "concurrently": "^10.0.6",
     "electrobun": "^2.0.2",
     "typescript": "^6.0.3"
