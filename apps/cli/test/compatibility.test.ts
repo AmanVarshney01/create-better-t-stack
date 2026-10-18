@@ -24,7 +24,7 @@ const base = {
   packageManager: "bun",
   install: false,
   git: false,
-  dryRun: true,
+  dryRun: false,
   disableAnalytics: true,
 };
 
@@ -198,7 +198,7 @@ const acceptedStacks = [
 for (const { name, options } of acceptedStacks) {
   test(`plans supported ${name} without dropping selections`, async () => {
     const projectName = join(SMOKE_DIR, `compatibility-${name}`);
-    const result = await run(JSON.stringify({ ...base, ...options, projectName }));
+    const result = await run(JSON.stringify({ ...base, ...options, projectName, dryRun: true }));
     expect(result.exitCode).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
       success: true,
