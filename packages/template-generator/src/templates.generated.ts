@@ -27352,7 +27352,10 @@ const styles = StyleSheet.create({
 `],
   ["frontend/native/bare/babel.config.js.hbs", `module.exports = {
   presets: ["babel-preset-expo"],
-  plugins: [require("@varlock/expo-integration/babel-plugin")],
+  plugins: [
+    require("@varlock/expo-integration/babel-plugin"),
+    require("./babel-plugins/hermes-async-arrow-rest-params"),
+  ],
 };
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `import React from "react";
@@ -27578,6 +27581,33 @@ module.exports = withVarlockMetroConfig(config);
   ["frontend/native/base/assets/images/react-logo@2x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/react-logo@3x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/splash-icon.png", `[Binary file]`],
+  ["frontend/native/base/babel-plugins/hermes-async-arrow-rest-params.js", `// Hermes 260318099.0.4 (react-native 0.88) cannot compile async arrow functions
+// with a rest parameter, such as \`async (...[input, options = {}]) => {}\` in
+// @orpc/client. babel-preset-expo 58.0.18 dropped the transform that rewrote them.
+// Remove this plugin once Hermes compiles the syntax again:
+// https://github.com/expo/expo/issues/51842
+module.exports = function hermesAsyncArrowRestParams({ types: t }) {
+  return {
+    name: "hermes-async-arrow-rest-params",
+    visitor: {
+      ArrowFunctionExpression(path) {
+        const { node } = path;
+        if (!node.async || !node.params.some((param) => t.isRestElement(param))) {
+          return;
+        }
+
+        // A sync arrow keeps the parameters and returns the result of an
+        // async arrow that closes over them, so callers still get a promise.
+        const body = t.isBlockStatement(node.body)
+          ? node.body
+          : t.blockStatement([t.returnStatement(node.body)]);
+        node.async = false;
+        node.body = t.callExpression(t.arrowFunctionExpression([], body, true), []);
+      },
+    },
+  };
+};
+`],
   ["frontend/native/unistyles/_gitignore", `# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -28747,6 +28777,7 @@ const styles = StyleSheet.create((theme) => ({
 		presets: ["babel-preset-expo"],
 		plugins: [
       require("@varlock/expo-integration/babel-plugin"),
+			require("./babel-plugins/hermes-async-arrow-rest-params"),
 			[
 				"react-native-unistyles/plugin",
 				{
@@ -29871,7 +29902,10 @@ export default Modal;
 `],
   ["frontend/native/uniwind/babel.config.js.hbs", `module.exports = {
   presets: ["babel-preset-expo"],
-  plugins: [require("@varlock/expo-integration/babel-plugin")],
+  plugins: [
+    require("@varlock/expo-integration/babel-plugin"),
+    require("./babel-plugins/hermes-async-arrow-rest-params"),
+  ],
 };
 `],
   ["frontend/native/uniwind/components/container.tsx.hbs", `import { cn } from "heroui-native";
@@ -35653,4 +35687,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 533;
+export const TEMPLATE_COUNT = 534;
