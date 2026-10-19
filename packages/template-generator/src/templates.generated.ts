@@ -27596,12 +27596,20 @@ module.exports = function hermesAsyncArrowRestParams({ types: t }) {
           return;
         }
 
-        // A sync arrow keeps the parameters and returns the result of an
-        // async arrow that closes over them, so callers still get a promise.
+        // \`async (a, ...[b]) => body\` becomes
+        // \`(...args) => (async () => { let [a, ...[b]] = args; body })()\`.
+        // The sync wrapper only collects arguments, so a failure while binding
+        // them still rejects the returned promise instead of throwing.
+        const args = path.scope.generateUidIdentifier("args");
+        const binding = t.variableDeclaration("let", [
+          t.variableDeclarator(t.arrayPattern(node.params), args),
+        ]);
         const body = t.isBlockStatement(node.body)
-          ? node.body
-          : t.blockStatement([t.returnStatement(node.body)]);
+          ? t.blockStatement([binding, ...node.body.body], node.body.directives)
+          : t.blockStatement([binding, t.returnStatement(node.body)]);
+
         node.async = false;
+        node.params = [t.restElement(t.cloneNode(args))];
         node.body = t.callExpression(t.arrowFunctionExpression([], body, true), []);
       },
     },
