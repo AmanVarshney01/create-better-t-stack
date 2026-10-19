@@ -63,8 +63,4 @@ With Chromium installed, the optional credential-scoping regression checks brows
 BTS_LIVE_BROWSER_TESTS=1 bun test apps/cli/live-tests/protection.test.ts
 ```
 
-## Selected validation run
-
-The [2026-10-02 verification record](./verification-2026-10-02.md) lists the 19 local, five Postgres, and two Vercel fixtures that passed, including production and protected preview stages.
-
-The [official documentation and type audit](./docs-audit-2026-10-02.md) explains the reviewed changes, upstream sources and corrections to verified PR findings.
+Record the results of a validation run in the pull request that makes the change, not in this directory.

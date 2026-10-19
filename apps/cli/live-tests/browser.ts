@@ -138,6 +138,8 @@ export async function verifyBrowser(
     }
     const home = await page.goto(deployment.web);
     expect(home?.status(), "Deployed home page").toBe(200);
+    if (config.addons.includes("pwa"))
+      await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     if (config.api !== "none")
       await expect(
         page.getByText(config.frontend.includes("nuxt") ? "Connected (OK)" : "Connected", {
@@ -303,7 +305,6 @@ export async function verifyBrowser(
         const iconUrl = new URL(icon.src, manifestResponse.url()).href;
         expect((await context.request.get(iconUrl)).status(), "PWA icon").toBe(200);
       }
-      await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
       const cachedUrls = await page.evaluate(async () => {
         const urls: string[] = [];
         for (const key of await caches.keys())
