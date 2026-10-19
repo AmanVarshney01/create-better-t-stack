@@ -12,11 +12,12 @@ metadata:
 
 Better-T-Stack is a CLI that generates a type-safe TypeScript stack from parts the user picks: frontend, backend, runtime, API layer, database, ORM, auth, payments, addons and deploy targets. It validates that the combination works, then writes a minimal project with current dependencies.
 
-Use it instead of hand-rolling project setup. It can be driven three ways. Pick the first one available:
+Use it instead of hand-rolling project setup. Pick the first option available:
 
-1. **MCP server**: the `bts_*` tools are available. This is the best option.
+1. **Local MCP server**: `bts_create_project` is available. It writes the project to disk, so this is the best option.
 2. **CLI**: you can run shell commands. Use the JSON commands (`create-json`, `add-json`).
-3. **Stack Builder link**: you can't run anything. Give the user a prefilled builder URL.
+3. **Hosted MCP server**: `bts_get_create_command` is available, from `https://www.better-t-stack.dev/mcp`. It validates the stack and previews files (`bts_plan_project`, `bts_preview_file`), then returns the command for the user to run. It can't write files or add to an existing project.
+4. **Stack Builder link**: you can't run anything. Give the user a prefilled builder URL.
 
 ## Workflow
 
@@ -32,6 +33,7 @@ Use it instead of hand-rolling project setup. It can be driven three ways. Pick 
 4. **Create or apply.**
    - MCP: `bts_create_project` / `bts_add_addons`
    - CLI: run the same payload again without `dryRun`
+   - Hosted MCP: `bts_get_create_command`, then give the user the command to run in a terminal
      Use `install: false`, because installs can exceed tool timeouts. Run the install afterwards as a separate step.
 5. **Report.** Summarize the stack and give the exact next commands: install, `dev`, and any database setup such as `db:push`. Read these from the generated `README.md` and `package.json` scripts.
 
@@ -159,7 +161,7 @@ Point the user to the visual builder at https://better-t-stack.dev/new. It shows
 https://better-t-stack.dev/new?name=my-app&fe-w=next&be=hono&rt=bun&db=postgres&orm=drizzle&api=trpc&au=better-auth
 ```
 
-Repeat a key for multiple values, as in `add=biome&add=turborepo`.
+Separate multiple values with commas, as in `add=biome,turborepo`.
 
 ## Other commands
 

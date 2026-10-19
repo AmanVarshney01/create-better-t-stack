@@ -22,9 +22,10 @@ If the directory already has a `bts.jsonc`, the project exists — use the **add
 
 Use the first one available:
 
-1. **MCP server** (`bts_*` tools) — preferred.
-2. **CLI** via `create-json` — when you can run shell commands but the MCP isn't connected.
-3. **Stack Builder link** — when you can't run anything. Hand the user a prefilled URL (below).
+1. **Local MCP server** (`bts_create_project` available) — preferred; it writes the project to disk.
+2. **CLI** via `create-json` — when you can run shell commands but the local MCP isn't connected.
+3. **Hosted MCP server** (`bts_get_create_command` available, from `https://www.better-t-stack.dev/mcp`) — validates and previews with `bts_plan_project` / `bts_preview_file`, then returns the command for the user to run. It can't write files.
+4. **Stack Builder link** — when you can't run anything. Hand the user a prefilled URL (below).
 
 ## Workflow (always in this order)
 
@@ -34,7 +35,7 @@ Use the first one available:
    - CLI: `npx create-better-t-stack@latest schema --name createInput` (also `addonOptions`, `dbSetupOptions`).
 3. **Build a full explicit config.** Set every field — use `"none"`, `[]`, `true`/`false` rather than omitting.
 4. **Plan (dry run).** MCP: `bts_plan_project`. CLI: the same payload with `"dryRun": true`. Show the resolved stack and confirm it matches intent.
-5. **Create.** MCP: `bts_create_project`. CLI: re-run without `dryRun`. Set `install: false` — installs can exceed tool timeouts. Then run (or hand back) `<packageManager> install` in the new directory.
+5. **Create.** MCP: `bts_create_project`. CLI: re-run without `dryRun`. Set `install: false` — installs can exceed tool timeouts. Then run (or hand back) `<packageManager> install` in the new directory. Hosted MCP: call `bts_get_create_command` and give the user the command to run in a terminal.
 6. **Report.** Summarize the stack and the exact next commands (`install`, `dev`, any DB setup), taken from the generated `README.md` and `package.json` scripts.
 
 ### CLI payload
@@ -66,7 +67,7 @@ If the user wants a command to paste instead, give the flag form: `bun create be
 
 ### Stack Builder link
 
-`https://better-t-stack.dev/new` accepts query params: `name`, `fe-w` (web frontend), `fe-n` (native frontend), `rt`, `be`, `api`, `db`, `orm`, `dbs`, `au`, `pay`, `pm`, `add`, `ex`, `wd`, `sd`. Repeat a key for multiple values, e.g. `?name=my-app&fe-w=next&be=hono&rt=bun&db=postgres&orm=drizzle&api=trpc&add=turborepo`.
+`https://better-t-stack.dev/new` accepts query params: `name`, `fe-w` (web frontend), `fe-n` (native frontend), `rt`, `be`, `api`, `db`, `orm`, `dbs`, `au`, `pay`, `pm`, `add`, `ex`, `wd`, `sd`. Separate multiple values with commas, e.g. `?name=my-app&fe-w=next&be=hono&rt=bun&db=postgres&orm=drizzle&api=trpc&add=turborepo,biome`.
 
 ## Required config fields
 
