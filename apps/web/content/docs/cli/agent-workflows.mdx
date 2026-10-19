@@ -192,7 +192,7 @@ The hosted server validates stacks and previews generated files, but it can't wr
 - `bts_preview_file`: returns the contents of one generated file
 - `bts_get_create_command`: returns the `create-better-t-stack` command and a Stack Builder link
 
-It validates with the same compatibility rules as the [Stack Builder](https://www.better-t-stack.dev/new). An incompatible stack is rejected with the nearest valid values rather than silently changed. When the config includes `addonOptions` or `dbSetupOptions`, the returned command uses `create-json` so the nested options are kept.
+It validates with the same compatibility rules as the [Stack Builder](https://www.better-t-stack.dev/new). An incompatible stack is rejected with the nearest valid values rather than silently changed. `addonOptions` and `dbSetupOptions` aren't accepted, because their rules are enforced by the CLI. Use `create-json` or the local server when you need them.
 
 To create files directly or to add addons to an existing project, use the local `mcp` server above.
 

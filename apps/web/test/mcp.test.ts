@@ -117,16 +117,24 @@ describe("hosted MCP over HTTP", () => {
     expect(result.data?.command).toContain("--no-install");
   });
 
-  test("uses create-json when nested options are set", async () => {
-    const result = await call("bts_get_create_command", {
-      ...baseStack,
-      addons: ["wxt"],
-      addonOptions: { wxt: { template: "react" } },
+  test("rejects nested options the CLI would have to validate", async () => {
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: { ...baseStack, dbSetupOptions: { mode: "auto" } },
     });
-    expect(result.ok).toBe(true);
-    expect(result.data?.command).toStartWith(
-      "bunx create-better-t-stack@latest create-json --input '",
-    );
+    expect(result.isError).toBe(true);
+  });
+
+  test("rejects none mixed with concrete selections", async () => {
+    const plan = await call("bts_plan_project", { ...baseStack, frontend: ["none", "next"] });
+    expect(plan.ok).toBe(false);
+    expect(plan.error).toContain('"none" can\'t be combined');
+  });
+
+  test("returns the same normalized project name it previews", async () => {
+    const plan = await call("bts_plan_project", { ...baseStack, projectName: "my app" });
+    expect(plan.ok).toBe(true);
+    expect(plan.data?.command).toBe("bun create better-t-stack@latest my-app --yes");
   });
 
   test("serves 2025-era clients statelessly, without a session", async () => {

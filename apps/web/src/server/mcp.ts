@@ -1,20 +1,17 @@
 import { EMBEDDED_TEMPLATES, generate, type VirtualNode } from "@better-t-stack/template-generator";
 import {
-  AddonOptionsSchema,
   AddonsSchema,
   APISchema,
   AuthSchema,
   BackendSchema,
   DatabaseSchema,
   DatabaseSetupSchema,
-  DbSetupOptionsSchema,
   ExamplesSchema,
   FrontendSchema,
   FULLSTACK_FRONTENDS,
   ORMSchema,
   PackageManagerSchema,
   PaymentsSchema,
-  ProjectConfigSchema,
   RuntimeSchema,
   ServerDeploySchema,
   WebDeploySchema,
@@ -85,11 +82,12 @@ const HostedProjectInputSchema = z
     dbSetup: DatabaseSetupSchema.describe("Explicit database setup/provisioning choice"),
     webDeploy: WebDeploySchema.describe("Explicit web deployment choice"),
     serverDeploy: ServerDeploySchema.describe("Explicit server deployment choice"),
-    addonOptions: AddonOptionsSchema.optional(),
-    dbSetupOptions: DbSetupOptionsSchema.optional(),
   })
+  // Nested addonOptions/dbSetupOptions have cross-field rules only the CLI enforces, so the
+  // hosted server rejects them rather than returning a command the CLI would refuse.
+  .strict()
   .describe(
-    "Explicit Better T Stack project configuration. Provide the full stack config instead of relying on inferred defaults.",
+    "Explicit Better T Stack project configuration. Provide the full stack config instead of relying on inferred defaults. addonOptions and dbSetupOptions are not supported here; use the local CLI's create-json for them.",
   );
 
 const PreviewFileInputSchema = HostedProjectInputSchema.safeExtend({
@@ -144,7 +142,7 @@ function toStackState(input: HostedProjectInput): StackState {
   }
 
   return {
-    projectName: input.projectName,
+    projectName: formatProjectName(input.projectName),
     webFrontend: (webFrontend.length ? webFrontend : ["none"]) as StackState["webFrontend"],
     nativeFrontend: (nativeFrontend.length
       ? nativeFrontend
@@ -189,6 +187,14 @@ function resolveHostedStack(input: HostedProjectInput) {
   const nameError = validateProjectName(formatProjectName(input.projectName));
   if (nameError) throw new Error(nameError);
 
+  for (const field of ["frontend", "addons", "examples"] as const) {
+    if (input[field].includes("none") && input[field].length > 1) {
+      throw new Error(
+        `"none" can't be combined with other values in ${field}. Use [] or "none" alone.`,
+      );
+    }
+  }
+
   const resolved = resolveStackCompatibility(toStackState(input));
   const config = stackStateToConfig(resolved.stack);
   const differences = STACK_FIELDS.filter((field) => !sameValue(input[field], config[field])).map(
@@ -214,14 +220,7 @@ function resolveHostedStack(input: HostedProjectInput) {
 
 async function generateProject(input: HostedProjectInput) {
   const { stack, config, notes } = resolveHostedStack(input);
-  const result = await generate({
-    config: ProjectConfigSchema.parse({
-      ...config,
-      addonOptions: input.addonOptions,
-      dbSetupOptions: input.dbSetupOptions,
-    }),
-    templates: EMBEDDED_TEMPLATES,
-  });
+  const result = await generate({ config, templates: EMBEDDED_TEMPLATES });
   if (result.isErr()) throw new Error("Unable to generate this project. Please try again.");
   return { stack, config, notes, tree: result.value };
 }
@@ -232,20 +231,9 @@ function listFiles(node: VirtualNode, files: VirtualNode[] = []) {
   return files;
 }
 
-function getJsonCommand(input: HostedProjectInput) {
-  const runner = {
-    npm: "npx create-better-t-stack@latest",
-    pnpm: "pnpm dlx create-better-t-stack@latest",
-    bun: "bunx create-better-t-stack@latest",
-  }[input.packageManager];
-  const payload = JSON.stringify(input).replaceAll("'", "'\\''");
-  return `${runner} create-json --input '${payload}'`;
-}
-
-function getCreateCommands(input: HostedProjectInput, stack: StackState) {
-  const hasNestedOptions = input.addonOptions !== undefined || input.dbSetupOptions !== undefined;
+function getCreateCommands(stack: StackState) {
   return {
-    command: hasNestedOptions ? getJsonCommand(input) : generateStackCommand(stack),
+    command: generateStackCommand(stack),
     builderUrl: generateStackUrlFromState(stack),
   };
 }
@@ -259,11 +247,11 @@ function getStackGuidance() {
       "Build a full explicit config, then call bts_plan_project to validate it and preview the generated files.",
       "Use bts_preview_file to show the contents of specific generated files when that helps the user.",
       "Call bts_get_create_command once the plan matches the user's intent, and give the user the command to run in a terminal.",
-      "To write files directly, or to add addons to an existing project, use the local server instead: npx -y create-better-t-stack@latest mcp",
+      "To write files directly, add addons to an existing project, or set addonOptions/dbSetupOptions, use the local server or the CLI's create-json instead: npx -y create-better-t-stack@latest mcp",
     ],
     createContract: {
       requiresExplicitFields: ["projectName", ...STACK_FIELDS, "git", "packageManager", "install"],
-      optionalFields: ["addonOptions", "dbSetupOptions"],
+      unsupportedFields: ["addonOptions", "dbSetupOptions"],
       rule: "Send the full explicit stack config. Use 'none', [], true or false instead of omitting fields.",
     },
     ambiguityRules: [
@@ -334,7 +322,7 @@ export function createHostedMcpServer() {
           directoryCount: tree.directoryCount,
           files: files.slice(0, MAX_LISTED_FILES),
           filesTruncated: files.length > MAX_LISTED_FILES,
-          ...getCreateCommands(input, stack),
+          ...getCreateCommands(stack),
         });
       } catch (error) {
         return formatToolError(error);
@@ -388,7 +376,7 @@ export function createHostedMcpServer() {
       try {
         const { stack } = resolveHostedStack(input);
         return formatToolSuccess({
-          ...getCreateCommands(input, stack),
+          ...getCreateCommands(stack),
           instructions:
             "Run the command in a terminal, in the folder where the project should be created.",
         });
