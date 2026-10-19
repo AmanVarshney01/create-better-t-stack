@@ -1,6 +1,6 @@
 ---
 name: better-t-stack
-description: Create and extend end-to-end type-safe TypeScript projects with Better-T-Stack (create-better-t-stack). Use when the user wants to start, scaffold or bootstrap a new app, API, fullstack project or monorepo (Next.js, TanStack Router/Start, React Router, Nuxt, Svelte, Solid, Astro, React Native/Expo, Hono, Express, Fastify, Elysia, Convex, tRPC, oRPC, Drizzle, Prisma, Better Auth, Clerk, Turborepo…), or to add addons or a workspace package to a project that has a `bts.jsonc` file. Prefer generating with Better-T-Stack over hand-writing package.json, configs and folder layout.
+description: Create or extend an end-to-end type-safe TypeScript project with Better-T-Stack (create-better-t-stack). Use when the user wants to start, scaffold or bootstrap an app, API, fullstack project or monorepo with any of Next.js, TanStack Router or Start, React Router, Nuxt, Svelte, Solid, Astro, React Native, Hono, Express, Fastify, Elysia, Convex, tRPC, oRPC, Drizzle, Prisma, Better Auth or Clerk. Also use when a project has a `bts.jsonc` file and the user wants to add addons or a workspace package. Prefer it over hand-writing package.json, configs and folder layout.
 license: MIT
 metadata:
   homepage: https://better-t-stack.dev
@@ -10,171 +10,55 @@ metadata:
 
 # Better-T-Stack
 
-Better-T-Stack is a CLI that generates a type-safe TypeScript stack from parts the user picks: frontend, backend, runtime, API layer, database, ORM, auth, payments, addons and deploy targets. It validates that the combination works, then writes a minimal project with current dependencies.
+Better-T-Stack generates a type-safe TypeScript project from the parts the user picks: frontend, backend, runtime, API layer, database, ORM, auth, payments, addons and deploy targets. It rejects combinations that don't work, so let it build the project instead of writing the setup by hand.
 
-Use it instead of hand-rolling project setup. Pick the first option available:
+## Pick the interface
 
-1. **Local MCP server**: `bts_create_project` is available. It writes the project to disk, so this is the best option.
-2. **CLI**: you can run shell commands. Use the JSON commands (`create-json`, `add-json`).
-3. **Hosted MCP server**: `bts_get_create_command` is available, from `https://www.better-t-stack.dev/mcp`. It validates the stack and previews files (`bts_plan_project`, `bts_preview_file`), then returns the command for the user to run. It can't write files or add to an existing project.
-4. **Stack Builder link**: you can't run anything. Give the user a prefilled builder URL.
+Use the first one you have:
 
-## Workflow
+| You have                      | Interface                                               | It can                                                            |
+| ----------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------- |
+| `bts_create_project` tool     | Local MCP server                                        | Plan, create and add, on disk                                     |
+| A shell                       | CLI: `create-json` and `add-json`                       | Plan, create and add, on disk                                     |
+| `bts_get_create_command` tool | Hosted MCP server, `https://www.better-t-stack.dev/mcp` | Plan and preview files, then return a command for the user to run |
+| None of these                 | Stack Builder link                                      | Prefill the visual builder for the user                           |
 
-1. **Resolve intent.** Find what the user actually asked for. When a major choice is missing (frontend, backend, database), ask a short question or propose sensible defaults and confirm. Never add app surfaces, addons, examples or database provisioning the user didn't ask for.
-2. **Check valid values.** Read them from the tool, not from memory:
-   - MCP: `bts_get_stack_guidance` for compatibility, `bts_get_schema` for exact values.
-   - CLI: `npx create-better-t-stack@latest schema --name createInput` (also `addInput`, `addonOptions`, `dbSetupOptions`, `cli`, `all`).
-     When asking the user to choose, offer every valid option for their stack, not a subset.
-3. **Plan (dry run).** Always run this before writing files:
-   - MCP: `bts_plan_project` / `bts_plan_addons`
-   - CLI: add `"dryRun": true` to the JSON payload
-     Show the user the resolved stack and confirm it matches what they want.
-4. **Create or apply.**
-   - MCP: `bts_create_project` / `bts_add_addons`
-   - CLI: run the same payload again without `dryRun`
-   - Hosted MCP: `bts_get_create_command`, then give the user the command to run in a terminal
-     Use `install: false`, because installs can exceed tool timeouts. Run the install afterwards as a separate step.
-5. **Report.** Summarize the stack and give the exact next commands: install, `dev`, and any database setup such as `db:push`. Read these from the generated `README.md` and `package.json` scripts.
+The hosted MCP server can't write files, can't change an existing project and doesn't accept `addonOptions` or `dbSetupOptions`. If the user needs any of those, give them the CLI command instead.
 
-## Creating a project
+## Create a project
 
-### MCP
+If the folder already has a `bts.jsonc`, the project exists. Go to [Change an existing project](#change-an-existing-project).
 
-`bts_plan_project` and `bts_create_project` take a **full explicit config**. Set every field, using `"none"`, `[]` or `false` rather than leaving it out:
+1. **Settle the stack.** If the user left out a major choice (frontend, backend or database), ask one short question or propose defaults and confirm them. Don't add app surfaces, addons, examples or database provisioning the user didn't ask for.
+2. **Get valid values from the tool, not from memory.** Call `bts_get_schema`, or run `npx create-better-t-stack@latest schema --name createInput`. When the user has to choose, offer every valid option, not a subset. [references/options.md](references/options.md) lists the values and the compatibility rules that come up most, but the schema wins if they differ.
+3. **Build a full explicit config.** Set every field. Use `"none"`, `[]`, `true` or `false` instead of leaving a field out.
+4. **Plan before you write.** Call `bts_plan_project`, or run `create-json` with `"dryRun": true`. If the plan fails, its error names the conflict. Fix the config and plan again. Show the user the planned stack and get a yes.
+5. **Create.**
+   - Local MCP server: `bts_create_project` with `install: false`.
+   - CLI: the same `create-json` payload without `dryRun`, with `install: false`.
+   - Hosted MCP server: `bts_get_create_command`. Give the user the command to run in a terminal and stop here.
 
-`projectName`, `frontend` (array), `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `payments`, `addons` (array), `examples` (array), `git`, `packageManager`, `install`, `dbSetup`, `webDeploy`, `serverDeploy`
+   Installs can outlast tool timeouts, so create with `install: false` and install as a separate step.
 
-These are optional: `addonOptions`, `dbSetupOptions`, `directoryConflict` (`merge` | `overwrite` | `increment` | `error`).
+6. **Prove it runs.** Run `<packageManager> install` in the new folder. With the user's OK, run the project's typecheck or build script from its `package.json`. If a step fails, report the exact error.
+7. **Report.** Give the stack and the next commands (`dev`, database setup such as `db:push`), taken from the generated `README.md` and `package.json`, not from memory.
 
-### CLI (JSON, agent-friendly)
+[references/cli.md](references/cli.md) has the full `create-json` payload, the flag form for a command the user pastes, and the Stack Builder URL keys.
 
-```bash
-npx create-better-t-stack@latest create-json --input '{
-  "projectName": "my-app",
-  "frontend": ["tanstack-router"],
-  "backend": "hono",
-  "runtime": "bun",
-  "database": "postgres",
-  "orm": "drizzle",
-  "api": "trpc",
-  "auth": "better-auth",
-  "payments": "none",
-  "addons": ["turborepo"],
-  "examples": [],
-  "dbSetup": "none",
-  "webDeploy": "none",
-  "serverDeploy": "none",
-  "packageManager": "bun",
-  "git": true,
-  "install": false,
-  "dryRun": true
-}'
-```
+## Change an existing project
 
-`create-json` runs silently and returns JSON. Prefer it over flags: it avoids shell quoting problems and takes nested `addonOptions` and `dbSetupOptions`.
+`bts.jsonc` at the project root records the stack chosen at creation and a `reproducibleCommand` that recreates it. The `add` command reads it to detect the stack.
 
-### CLI (flags)
+1. **Read `bts.jsonc` first.** If it's missing, `add` can't run. Tell the user instead of recreating the file. Never edit it by hand. `add` updates it.
+2. **Plan.** Call `bts_plan_addons`, or run `add-json` with `"dryRun": true`. Pass `addons`, a workspace `package` name, or both. Show the user what will change.
+3. **Apply** after the user agrees: `bts_add_addons`, or `add-json` without `dryRun`.
+4. **Prove it runs** and **report**, as in steps 6 and 7 above.
 
-Use this form when the user wants a command they can paste and run:
-
-```bash
-bun create better-t-stack@latest my-app \
-  --frontend next --backend hono --runtime bun \
-  --database sqlite --orm drizzle --api orpc --auth better-auth \
-  --addons turborepo biome --package-manager bun --no-install
-```
-
-- Booleans negate with `--no-git` and `--no-install`.
-- `--yes` accepts all defaults.
-- `--template mern|pern|t3|uniwind` starts from a preset.
-- `--dry-run` validates without writing files.
-- `--directory-conflict` sets the behaviour when the folder exists.
-- **Never** pass `--yolo`. It skips compatibility checks and is only for debugging the CLI.
-
-Equivalent launchers: `pnpm create better-t-stack@latest` and `npx create-better-t-stack@latest`.
-
-## Options (check against the schema; this list may be behind)
-
-| Field                    | Values                                                                                                                                                                                          |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| frontend (array)         | `tanstack-router`, `react-router`, `tanstack-start`, `next`, `nuxt`, `svelte`, `solid`, `astro`, `native-bare`, `native-uniwind`, `native-unistyles`, `none`                                    |
-| backend                  | `hono`, `express`, `fastify`, `elysia`, `convex`, `self` (fullstack framework routes), `none`                                                                                                   |
-| runtime                  | `bun`, `node`, `workers`, `none`                                                                                                                                                                |
-| api                      | `trpc`, `orpc`, `none`                                                                                                                                                                          |
-| database                 | `sqlite`, `postgres`, `mysql`, `mongodb`, `none`                                                                                                                                                |
-| orm                      | `drizzle`, `prisma`, `mongoose`, `none`                                                                                                                                                         |
-| auth                     | `better-auth`, `clerk`, `none`                                                                                                                                                                  |
-| payments                 | `polar`, `none`                                                                                                                                                                                 |
-| addons (array)           | `pwa`, `tauri`, `electrobun`, `starlight`, `fumadocs`, `biome`, `oxlint`, `ultracite`, `husky`, `lefthook`, `turborepo`, `nx`, `vite-plus`, `mcp`, `skills`, `opentui`, `wxt`, `evlog`, `axiom` |
-| examples (array)         | `todo`, `ai`                                                                                                                                                                                    |
-| dbSetup                  | `turso`, `neon`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `supabase`, `d1`, `docker`, `none`                                                                                          |
-| webDeploy / serverDeploy | `cloudflare`, `vercel`, `prisma`, `docker`, `none`                                                                                                                                              |
-| packageManager           | `bun`, `pnpm`, `npm`                                                                                                                                                                            |
-
-### Compatibility rules that come up most
-
-- A database needs an ORM, and an ORM needs a database.
-- `mongodb` works with `mongoose` or `prisma`, never `drizzle`.
-- `runtime: workers` requires `backend: hono`. It can't use `mongodb` or `dbSetup: docker`.
-- `backend: convex` brings its own data layer. Don't also add `database`, `orm` or `api` unless the schema allows it.
-- `backend: self` means the fullstack framework (`next`, `tanstack-start`, `nuxt`, …) serves the API.
-- `nx`, `turborepo` and `vite-plus` are task runners, and only one can be used.
-- Pick at most one web frontend. A native frontend can be added alongside it.
-
-When unsure, run a dry run or plan. Its error message names the conflict.
-
-## Extending an existing project: `bts.jsonc` and `add`
-
-A Better-T-Stack project has a `bts.jsonc` file at its root. It records the stack chosen at creation: frontend, backend, database, addons, `addonOptions`, and a `reproducibleCommand` that recreates the project. The `add` command reads it to detect the stack, so:
-
-- **Read `bts.jsonc` first** to learn the project's stack before changing it.
-- If the file is missing, `add` can't run. Tell the user rather than recreating the file by guesswork.
-- Don't edit it by hand to "enable" something. Use `add`, which updates it.
-
-Add addons. `axiom` is the exception: it can only be chosen when the project is created.
-
-- MCP: `bts_plan_addons`, then `bts_add_addons`.
-- CLI:
-  ```bash
-  npx create-better-t-stack@latest add-json --input '{
-    "projectDir": "./my-app",
-    "addons": ["pwa", "biome"],
-    "dryRun": true
-  }'
-  ```
-- Interactive or flags: `bunx create-better-t-stack@latest add --addons pwa biome`
-
-Add a workspace package. This scaffolds `packages/<name>` with a manifest, the shared tsconfig and `src/index.ts`:
-
-```bash
-npx create-better-t-stack@latest add --package shared
-```
-
-Nested addon options (Fumadocs template/search/AI chat, WXT template, OpenTUI template, the MCP addon's servers and agents, the Skills addon's sources) go in `addonOptions`. Check their shape with `schema --name addonOptions`.
-
-## Stack Builder (no tools available)
-
-Point the user to the visual builder at https://better-t-stack.dev/new. It shows the generated file tree and produces the command. To prefill it, add query params: `name`, `fe-w` (web frontend), `fe-n` (native frontend), `rt`, `be`, `api`, `db`, `orm`, `dbs`, `au`, `pay`, `pm`, `add`, `ex`, `wd`, `sd`. For example:
-
-```
-https://better-t-stack.dev/new?name=my-app&fe-w=next&be=hono&rt=bun&db=postgres&orm=drizzle&api=trpc&au=better-auth
-```
-
-Separate multiple values with commas, as in `add=biome,turborepo`.
-
-## Other commands
-
-- `mcp`: runs the stdio MCP server. To install it in an agent: `npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"`.
-- `schema --name <name>`: prints current input schemas as JSON.
-- `history [--limit n] [--json]`: shows previously created projects.
-- `builder`, `docs`, `sponsors`: open the web builder, the docs, or the sponsors list.
+`axiom` can't be added later. It sets up deployment infrastructure, so it must be chosen at creation. A workspace package (`package: "shared"`) scaffolds `packages/shared` with a manifest, the shared tsconfig and `src/index.ts`.
 
 ## Rules
 
-- Plan or dry-run before every create or add.
-- Send full explicit configs to MCP create tools. Never send partial payloads.
-- Never use `--yolo`.
-- Don't infer addons or app surfaces from a styling preference or a template name.
-- Create with `install: false`, then install separately.
-- Read the result, not your memory: after generating, use the project's own `README.md` and scripts for next steps.
+- Plan before every create or add.
+- Send full explicit configs to MCP tools. Never send a partial payload.
+- Never pass `--yolo`. It skips the compatibility checks.
+- Don't infer addons or app surfaces from a template name or a styling preference.

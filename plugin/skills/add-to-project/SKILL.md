@@ -1,6 +1,6 @@
 ---
 name: add-to-project
-description: Add addons, features, or a workspace package (PWA, Tauri, Starlight/Fumadocs docs, Biome/Oxlint/Ultracite, Husky/Lefthook, Turborepo/Nx, the MCP or Skills addon, `packages/<name>`, etc.) to an existing Better-T-Stack project. Use when the user wants to extend, enhance, or add tooling to a project that has a `bts.jsonc` file.
+description: Add addons, tooling or a workspace package to an existing Better-T-Stack project, such as PWA, Tauri, Starlight or Fumadocs docs, Biome, Oxlint, Ultracite, Husky, Lefthook, Turborepo, Nx, the MCP or Skills addon, or a shared `packages/<name>`. Use when the project has a `bts.jsonc` file and the user wants to extend it or add tooling.
 metadata:
   priority: 7
   docs:
@@ -11,57 +11,48 @@ metadata:
 
 # Add to an existing Better-T-Stack project
 
-Use Better-T-Stack to install addons or scaffold workspace packages into an existing project rather than wiring the tooling by hand.
+Add tooling to a Better-T-Stack project with its `add` flow instead of wiring it by hand. For a new project, use the **scaffold-project** skill.
 
-## When this applies
+`bts.jsonc` at the project root records the stack chosen at creation and a `reproducibleCommand` that recreates it. The `add` flow reads it to detect the stack and updates it afterwards.
 
-The project has a `bts.jsonc` at its root and the user wants to add tooling, features, or a shared package — e.g. "add PWA support", "add a docs site", "switch to Biome", "add Turborepo", "wire up the MCP addon", "add a shared package".
+## Pick the interface
 
-For brand-new projects, use the **scaffold-project** skill instead.
+- `bts_add_addons` tool: the local MCP server.
+- A shell: the CLI's `add-json`.
+- Neither: give the user the command `bunx create-better-t-stack@latest add --addons <names>`, using the project's package runner.
 
-## `bts.jsonc`
+The hosted MCP server can't change an existing project.
 
-`bts.jsonc` records the stack chosen at creation (frontend, backend, database, addons, `addonOptions`, …) plus a `reproducibleCommand` that recreates the project. The add flow reads it to detect the stack.
+## Steps
 
-- **Read it first** to understand the current stack before planning.
-- **Never edit it by hand** to "enable" something — the add flow updates it.
-- If it's missing, the add flow can't run. Tell the user rather than recreating it by guesswork.
+1. **Read `bts.jsonc`.** It tells you the current stack. If it's missing, `add` can't run. Tell the user instead of recreating the file. Never edit it by hand.
+2. **Check nested options.** Some addons take options in `addonOptions`: the Fumadocs template, search and AI chat, the WXT and OpenTUI templates, the MCP addon's servers and agents, and the Skills addon's sources. Get their shape from `bts_get_schema` or `npx create-better-t-stack@latest schema --name addonOptions`.
+3. **Plan.** Call `bts_plan_addons`, or run:
 
-## Workflow
+   ```bash
+   npx create-better-t-stack@latest add-json --json '{
+     "projectDir": "./my-app",
+     "addons": ["pwa", "biome"],
+     "dryRun": true
+   }'
+   ```
 
-1. **Confirm the target project** and its directory (where `bts.jsonc` lives).
-2. **Check valid values** for any nested options: MCP `bts_get_schema`, or CLI `npx create-better-t-stack@latest schema --name addonOptions` (also `addInput`).
-3. **Plan (dry run).**
-   - MCP: `bts_plan_addons` with `projectDir` and `addons` (plus `addonOptions`) and/or `package`.
-   - CLI (no MCP):
-     ```bash
-     npx create-better-t-stack@latest add-json --input '{
-       "projectDir": "./my-app",
-       "addons": ["pwa", "biome"],
-       "dryRun": true
-     }'
-     ```
-   Review the planned changes with the user.
-4. **Apply** only after the plan succeeds and matches intent: MCP `bts_add_addons`, or re-run `add-json` without `dryRun`.
-5. **Report** what changed and the follow-up commands (e.g. `<packageManager> install`).
+   Pass `addons`, a workspace `package` name, or both. Show the user what will change, including any conflict the plan reports.
 
-For a command the user can run themselves: `bunx create-better-t-stack@latest add --addons pwa biome` (use the project's package manager runner).
+4. **Apply** after the user agrees: `bts_add_addons`, or `add-json` without `dryRun`.
+5. **Prove it runs.** Run `<packageManager> install`. With the user's OK, run the project's typecheck or build script. Report the exact error if a step fails.
+6. **Report** what changed and the follow-up commands.
 
-## Workspace packages
+## What can be added
 
-`package: "<name>"` (CLI: `add --package <name>`) scaffolds `packages/<name>` with a package manifest, the shared TypeScript config, and `src/index.ts`. Both the MCP add tools and `add-json` accept it.
+Addons: `pwa`, `tauri`, `electrobun`, `starlight`, `fumadocs`, `biome`, `oxlint`, `ultracite`, `husky`, `lefthook`, `turborepo`, `nx`, `vite-plus`, `mcp`, `skills`, `opentui`, `wxt`, `evlog`.
 
-## Available addons
-
-`pwa`, `tauri`, `electrobun`, `starlight`, `biome`, `lefthook`, `husky`, `mcp`, `turborepo`, `nx`, `vite-plus`, `fumadocs`, `ultracite`, `oxlint`, `opentui`, `wxt`, `skills`, `evlog`.
-
-`axiom` can't be added to an existing project: it configures Alchemy infrastructure and deployment bindings, so it must be chosen when the project is created. If the user asks for it, say so instead of planning it.
-
-Nested options live in `addonOptions` (Fumadocs template/search/AI chat, WXT template, OpenTUI template, MCP servers/agents, Skills sources). `nx`, `turborepo`, and `vite-plus` are mutually exclusive task runners.
+- `turborepo`, `nx` and `vite-plus` are task runners. A project can have one.
+- `axiom` can't be added later. It sets up deployment infrastructure, so it must be chosen at creation. If the user asks for it, say so instead of planning it.
+- A workspace package (`package: "shared"`, or `add --package shared`) scaffolds `packages/shared` with a manifest, the shared tsconfig and `src/index.ts`.
 
 ## Rules
 
-- Always plan/dry-run before applying.
+- Plan before every apply.
 - Don't add addons the user didn't ask for.
-- Surface conflicts from the plan (e.g. two task runners, an addon already installed) before applying.
 - Never hand-edit `bts.jsonc`.
