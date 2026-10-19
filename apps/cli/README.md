@@ -94,9 +94,9 @@ Options:
 
 ```bash
 # Raw JSON payload input (agent-friendly)
-create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
-create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
-create-better-t-stack create-json --input '{"projectName":"db-app","database":"postgres","orm":"drizzle","dbSetup":"neon","dbSetupOptions":{"mode":"manual"}}'
+create-better-t-stack create-json --json '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack add-json --json '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+create-better-t-stack create-json --json '{"projectName":"db-app","database":"postgres","orm":"drizzle","dbSetup":"neon","dbSetupOptions":{"mode":"manual"}}'
 
 # Runtime schema/introspection output
 create-better-t-stack schema --name all
