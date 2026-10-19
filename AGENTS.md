@@ -49,11 +49,20 @@ This repo is a Bun + Turborepo monorepo.
 
 ## Testing Guidelines
 
-- Use `bun:test` for integration tests in `apps/cli/test` and `apps/web/test`.
-- Verify behavior through CLI, MCP, and oRPC interfaces and generated-project installation, typechecking, and builds.
-- Reuse shared setup utilities in `apps/cli/test/setup.ts` for disposable project directories.
-- Run live browser, database, and deployment checks locally through `apps/cli/live-tests`; keep them out of CI.
-- Do not add isolated unit tests, mocked helper tests, or assertions that copy static template source.
+A test earns its place when it can fail while a user would get hurt. Tests live in three tiers, each with one job:
+
+| Tier             | Where                                      | Runs                     | Proves                                                                                                 |
+| ---------------- | ------------------------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Contract         | `apps/cli/test/*.test.ts`, `apps/web/test` | Every PR                 | The CLI, MCP and oRPC interfaces reject bad input, write the right files and keep existing ones        |
+| Generated builds | `apps/cli/test/generated-builds.test.ts`   | Every PR and daily       | Generated projects install the latest dependencies, typecheck, build and, where a sample opts in, boot |
+| Live             | `apps/cli/live-tests`                      | Locally, before releases | Generated apps work in a browser against real databases and deployments                                |
+
+- Use `bun:test`. Reuse `apps/cli/test/setup.ts` for disposable project directories.
+- Never assert that generated output contains text copied from a template. The generated-builds tier already proves templates compile and run.
+- Do not add isolated unit tests or mocked helper tests.
+- To cover a new stack, add a sample to `apps/cli/test/generated-builds/samples.ts`. If it needs a runtime check, name it in the sample's `checks` and implement it in `probes.ts`.
+- When an upstream release breaks a generated build, fix the template so it works on the latest version. Never pin an older dependency.
+- Keep live tests out of CI. Record their results in the pull request, not in the repository.
 
 ## Commit & Pull Request Guidelines
 
