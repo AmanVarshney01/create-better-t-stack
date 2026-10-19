@@ -5,7 +5,7 @@ Make your AI assistant scaffold and extend projects with [Better-T-Stack](https:
 The plugin bundles:
 
 - **MCP server** — the official `create-better-t-stack mcp` server (stdio, no auth/key). Exposes `bts_get_stack_guidance`, `bts_get_schema`, `bts_plan_project`, `bts_create_project`, `bts_plan_addons`, `bts_add_addons`.
-- **Skills** — `scaffold-project` (start a new project) and `add-to-project` (add addons). These steer the assistant to plan a valid stack and generate it through the MCP rather than writing config by hand.
+- **Skills** — `scaffold-project` (start a new project) and `add-to-project` (add addons or a workspace package to a project with a `bts.jsonc`). These steer the assistant to plan a valid stack and generate it through the MCP rather than writing config by hand.
 - **Commands** — `/better-t-stack:new` and `/better-t-stack:add`.
 - **Agent** — `stack-architect`, which designs a coherent stack from a product description and generates it.
 
@@ -58,3 +58,5 @@ args = ["-y", "create-better-t-stack@latest", "mcp"]
 5. Report the stack and the exact `install` / `dev` commands.
 
 Plan always precedes create; configs are always sent in full (explicit `"none"`, `[]`, booleans).
+
+Without the MCP server, the skills fall back to the CLI's JSON commands (`create-json` / `add-json` with `"dryRun": true` first), and to a prefilled Stack Builder link (`https://better-t-stack.dev/new?...`) when no tools can run.
