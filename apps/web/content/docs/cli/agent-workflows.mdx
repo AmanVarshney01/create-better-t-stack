@@ -22,7 +22,7 @@ If you are automating the CLI from an LLM, CI job, or another tool, start here i
 Create a project from a single JSON payload instead of many flags.
 
 ```bash
-create-better-t-stack create-json --input '{
+create-better-t-stack create-json --json '{
   "projectName": "my-app",
   "frontend": ["tanstack-router"],
   "backend": "hono",
@@ -55,7 +55,7 @@ This is the best path when:
 Add addons to an existing project with a single JSON payload.
 
 ```bash
-create-better-t-stack add-json --input '{
+create-better-t-stack add-json --json '{
   "projectDir": "./my-app",
   "addons": ["skills", "ultracite"],
   "addonOptions": {
@@ -174,6 +174,28 @@ npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
 
 For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` server command inside `add-mcp`. That means MCP-capable agents inside the generated project can talk back to Better-T-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
 
+## Hosted MCP
+
+For clients that can't run a local server, such as claude.ai, ChatGPT, and other web or mobile apps, Better-T-Stack also runs a hosted MCP server:
+
+```
+https://www.better-t-stack.dev/mcp
+```
+
+It uses Streamable HTTP and needs no API key. Add it as a remote or custom connector in your client.
+
+The hosted server validates stacks and previews generated files, but it can't write to your machine. It returns the command to run instead:
+
+- `bts_get_stack_guidance`
+- `bts_get_schema`
+- `bts_plan_project`: validates a full explicit config and lists the files it generates
+- `bts_preview_file`: returns the contents of one generated file
+- `bts_get_create_command`: returns the `create-better-t-stack` command and a Stack Builder link
+
+It validates with the same compatibility rules as the [Stack Builder](https://www.better-t-stack.dev/new). An incompatible stack is rejected with the nearest valid values rather than silently changed. `addonOptions` and `dbSetupOptions` aren't accepted, because their rules are enforced by the CLI. Use `create-json` or the local server when you need them.
+
+To create files directly or to add addons to an existing project, use the local `mcp` server above.
+
 ## Use it inside your AI agent
 
 Install the Better-T-Stack plugin and your assistant will scaffold and extend projects for you — just ask in plain English, like _"create a fullstack app with Next, Hono, Postgres and Better Auth"_, and it builds a valid stack instead of hand-writing boilerplate.
@@ -269,7 +291,7 @@ The supported modes are:
 Example:
 
 ```bash
-create-better-t-stack create-json --input '{
+create-better-t-stack create-json --json '{
   "projectName": "db-app",
   "database": "postgres",
   "orm": "drizzle",
@@ -313,8 +335,8 @@ Use `--dry-run` to validate inputs and target directories without writing files.
 
 ```bash
 create-better-t-stack --yes --dry-run
-create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
-create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["mcp"],"dryRun":true}'
+create-better-t-stack create-json --json '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack add-json --json '{"projectDir":"./my-app","addons":["mcp"],"dryRun":true}'
 ```
 
 This is especially useful for:
