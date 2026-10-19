@@ -53,7 +53,9 @@ For a command the user can run themselves: `bunx create-better-t-stack@latest ad
 
 ## Available addons
 
-`pwa`, `tauri`, `electrobun`, `starlight`, `biome`, `lefthook`, `husky`, `mcp`, `turborepo`, `nx`, `vite-plus`, `fumadocs`, `ultracite`, `oxlint`, `opentui`, `wxt`, `skills`, `evlog`, `axiom`.
+`pwa`, `tauri`, `electrobun`, `starlight`, `biome`, `lefthook`, `husky`, `mcp`, `turborepo`, `nx`, `vite-plus`, `fumadocs`, `ultracite`, `oxlint`, `opentui`, `wxt`, `skills`, `evlog`.
+
+`axiom` can't be added to an existing project: it configures Alchemy infrastructure and deployment bindings, so it must be chosen when the project is created. If the user asks for it, say so instead of planning it.
 
 Nested options live in `addonOptions` (Fumadocs template/search/AI chat, WXT template, OpenTUI template, MCP servers/agents, Skills sources). `nx`, `turborepo`, and `vite-plus` are mutually exclusive task runners.
 

@@ -132,7 +132,7 @@ A Better-T-Stack project has a `bts.jsonc` file at its root. It records the stac
 - If the file is missing, `add` can't run. Tell the user rather than recreating the file by guesswork.
 - Don't edit it by hand to "enable" something. Use `add`, which updates it.
 
-Add addons:
+Add addons. `axiom` is the exception: it can only be chosen when the project is created.
 
 - MCP: `bts_plan_addons`, then `bts_add_addons`.
 - CLI:
