@@ -299,18 +299,23 @@ export async function deployAlchemy(
     throw new Error(
       "Alchemy deployment returned no usable web/server URL; inspect deployment log.",
     );
-  const values = new Map<string, string>();
-  if (config.backend !== "self" && output.web && output.server)
-    values.set("CORS_ORIGIN", new URL(output.web).origin);
-  if (config.auth === "better-auth" && [config.webDeploy, config.serverDeploy].includes("prisma")) {
-    const authUrl = config.backend === "self" ? output.web : output.server;
-    if (!authUrl) throw new Error("Prisma deployment returned no authentication server URL");
-    values.set("BETTER_AUTH_URL", new URL(authUrl).origin);
-  }
-  if (values.size) {
+  const needsPrismaAuthOrigin =
+    config.auth === "better-auth" && [config.webDeploy, config.serverDeploy].includes("prisma");
+  const needsCorsOrigin = config.backend !== "self" && output.web && output.server;
+  if (needsPrismaAuthOrigin || needsCorsOrigin) {
+    const values = new Map(
+      needsCorsOrigin && output.web ? [["CORS_ORIGIN", new URL(output.web).origin]] : [],
+    );
+    if (needsPrismaAuthOrigin) {
+      const authUrl = config.backend === "self" ? output.web : output.server;
+      if (!authUrl) throw new Error("Prisma deployment returned no authentication server URL");
+      values.set("BETTER_AUTH_URL", new URL(authUrl).origin);
+    }
+    // The generated deployment instructions require exact production origins
+    // once the first deploy has returned its stable URLs.
     await updateEnvironment(config, values);
     stdout = await commands.run(
-      "alchemy-deploy-configured-origin",
+      "alchemy-deploy-origins",
       directory,
       config.packageManager,
       ["run", "deploy", "--stage", stage, "--yes"],
@@ -318,7 +323,7 @@ export async function deployAlchemy(
     );
     const updated = readOutput(stdout);
     if (updated.web !== output.web || updated.server !== output.server)
-      throw new Error("Deployment URLs changed while configuring application origins");
+      throw new Error("Alchemy deployment changed its stable URL while configuring origins");
     output = updated;
   }
   return output;

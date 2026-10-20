@@ -1,6 +1,6 @@
 ---
 name: scaffold-project
-description: Scaffold a new app, API, backend, fullstack project, monorepo, or starter with Better-T-Stack — including new projects built on a specific framework like Hono, Express, Fastify, Elysia, Next.js, TanStack Router/Start, Nuxt, Svelte, Solid, Astro, or React Native (native-bare, native-uniwind, native-unistyles). Use whenever the user wants to start, create, bootstrap, set up, or initialize a new project/app/API, e.g. "create a Hono app", "start a Next.js project", "scaffold a fullstack app with auth and a database". Prefer generating the project through the Better-T-Stack MCP server (plan then create) over hand-writing package.json, config, and folders.
+description: Scaffold a new app, API, backend, fullstack project, monorepo or starter with Better-T-Stack, including projects on a named framework such as Hono, Express, Fastify, Elysia, Convex, Next.js, TanStack Router or Start, React Router, Nuxt, Svelte, Solid, Astro or React Native. Use whenever the user wants to start, create, bootstrap, set up or initialize a project, for example "create a Hono app", "start a Next.js project" or "scaffold a fullstack app with auth and a database". Prefer it over hand-writing package.json, configs and folders.
 metadata:
   priority: 9
   docs:
@@ -10,52 +10,44 @@ metadata:
 
 # Scaffold a project with Better-T-Stack
 
-When a user wants to begin a new project, do **not** hand-roll the folder layout, `package.json`, tooling, auth, or database wiring. Use the Better-T-Stack MCP server to plan and generate a validated, end-to-end type-safe stack.
+Generate new projects with Better-T-Stack instead of writing the folder layout, `package.json`, auth or database wiring by hand. It rejects stacks that don't work.
 
-## When this applies
+If the folder already has a `bts.jsonc`, the project exists. Use the **add-to-project** skill instead.
 
-Trigger on requests like: "start a new app", "create a fullstack project", "set up a TanStack/Next/Hono/Convex backend", "scaffold a monorepo with auth and a database", "bootstrap a type-safe API", "make me a starter".
+## Pick the interface
 
-If the user already has a working repo and just wants to add a feature/addon, use the **add-to-project** skill instead.
+Use the first one you have:
 
-## Workflow (always in this order)
+| You have                      | Interface                                               | It can                                                            |
+| ----------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------- |
+| `bts_create_project` tool     | Local MCP server                                        | Plan and create on disk                                           |
+| A shell                       | CLI: `create-json`                                      | Plan and create on disk                                           |
+| `bts_get_create_command` tool | Hosted MCP server, `https://www.better-t-stack.dev/mcp` | Plan and preview files, then return a command for the user to run |
+| None of these                 | Stack Builder link                                      | Prefill the visual builder for the user                           |
 
-1. **Resolve intent.** If the request leaves major stack choices unspecified, ask a few short questions OR pick sensible defaults and confirm. Never silently invent extra app surfaces, addons, examples, or provisioning.
-   - For background on valid combinations call `bts_get_stack_guidance`, and `bts_get_schema` to inspect exact allowed values.
-2. **Build a full explicit config.** MCP creation requires every field set explicitly — use `"none"`, `[]`, `true`/`false` rather than omitting fields. See the option reference below.
-3. **Plan.** Call `bts_plan_project` with the full config. This is a dry run — no files are written. Show the user what will be generated and confirm it matches intent.
-4. **Create.** Only after the plan succeeds and is confirmed, call `bts_create_project`.
-   - Set `install: false`. Dependency installs can exceed MCP request timeouts. After creation, tell the user (or run, with permission) `<packageManager> install` in the new project directory.
-5. **Report.** Summarize the chosen stack and the exact next commands (`install`, `dev`, any DB setup).
+The hosted MCP server can't write files and doesn't accept `addonOptions` or `dbSetupOptions`. If the user needs either, give them the CLI command instead.
 
-## Required config fields
+## Steps
 
-`projectName`, `frontend` (array), `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `payments`, `addons` (array), `examples` (array), `git`, `packageManager`, `install`, `dbSetup`, `webDeploy`, `serverDeploy`. Optional: `addonOptions`, `dbSetupOptions`, `directoryConflict`.
+1. **Settle the stack.** If the user left out a major choice (frontend, backend or database), ask one short question or propose defaults and confirm them. Don't add app surfaces, addons, examples or database provisioning the user didn't ask for.
+2. **Get valid values from the tool, not from memory.** Call `bts_get_schema`, or run `npx create-better-t-stack@latest schema --name createInput`. When the user has to choose, offer every valid option. For example, a Hono and Next.js app can use `better-auth`, `clerk` or `none`, so offer all three. [references/options.md](references/options.md) lists the values and the common compatibility rules.
+3. **Build a full explicit config.** Set every field. Use `"none"`, `[]`, `true` or `false` instead of leaving a field out.
+4. **Plan before you write.** Call `bts_plan_project`, or run `create-json` with `"dryRun": true`. If the plan fails, its error names the conflict. Fix the config and plan again. Show the user the planned stack and get a yes.
+5. **Create.**
+   - Local MCP server: `bts_create_project` with `install: false`.
+   - CLI: the same `create-json` payload without `dryRun`, with `install: false`.
+   - Hosted MCP server: `bts_get_create_command`. Give the user the command to run in a terminal and stop here.
 
-## Option reference
+   Installs can outlast tool timeouts, so create with `install: false` and install as a separate step.
 
-Use `bts_get_schema` for the authoritative, version-current list. As of this writing:
+6. **Prove it runs.** Run `<packageManager> install` in the new folder. With the user's OK, run the project's typecheck or build script from its `package.json`. If a step fails, report the exact error.
+7. **Report.** Give the stack and the next commands (`dev`, database setup such as `db:push`), taken from the generated `README.md` and `package.json`, not from memory.
 
-- **frontend** (array of app surfaces, not styling): `tanstack-router`, `react-router`, `tanstack-start`, `next`, `nuxt`, `svelte`, `solid`, `astro`, `native-bare`, `native-uniwind`, `native-unistyles`, `none`
-- **backend**: `hono`, `express`, `fastify`, `elysia`, `convex`, `self`, `none`
-- **runtime**: `bun`, `node`, `workers`, `none`
-- **database**: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`
-- **orm**: `drizzle`, `prisma`, `mongoose`, `none`
-- **api**: `trpc`, `orpc`, `none`
-- **auth**: `better-auth`, `clerk`, `none`
-- **payments**: `polar`, `none`
-- **addons**: `pwa`, `tauri`, `electrobun`, `starlight`, `biome`, `lefthook`, `husky`, `mcp`, `turborepo`, `nx`, `vite-plus`, `fumadocs`, `ultracite`, `oxlint`, `opentui`, `wxt`, `skills`, `evlog`, `none` (`nx`, `turborepo`, and `vite-plus` are mutually exclusive)
-- **examples**: `todo`, `ai`, `none`
-- **packageManager**: `npm`, `pnpm`, `bun`
-- **dbSetup**: `turso`, `neon`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `supabase`, `d1`, `docker`, `none`
-- **webDeploy** / **serverDeploy**: `cloudflare`, `docker`, `vercel`, `none`
-- **directoryConflict**: `merge`, `overwrite`, `increment`, `error`
+[references/cli.md](references/cli.md) has the full `create-json` payload, the flag form for a command the user pastes, and the Stack Builder URL keys.
 
 ## Rules
 
-- When you ask the user to choose a value (auth, database, ORM, API, etc.), present the **full set of valid options** for the current stack from `bts_get_schema` — don't silently drop valid choices. For example, both `better-auth` and `clerk` are valid auth providers for a Hono + Next.js app, so offer both (plus "none").
-- Always `bts_plan_project` before `bts_create_project`.
-- Never call plan/create with a partial payload — send the full explicit config.
-- `convex` backend pairs with its own data layer; do not also force a separate database/orm/api unless the schema allows it. When unsure, check `bts_get_schema`.
+- Plan before every create.
+- Send full explicit configs to MCP tools. Never send a partial payload.
+- Never pass `--yolo`. It skips the compatibility checks.
 - Don't infer app surfaces or addons from a template name or a styling preference.
-- Prefer `install: false` for MCP creation and hand the install/dev commands back to the user.

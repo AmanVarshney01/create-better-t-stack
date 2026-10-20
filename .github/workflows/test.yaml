@@ -3,12 +3,17 @@ name: Test
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  # Generated projects install the latest dependencies, so an upstream release can
+  # break them with no change here. The daily run catches that on main first.
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: test-${{ github.head_ref }}
+  group: test-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
