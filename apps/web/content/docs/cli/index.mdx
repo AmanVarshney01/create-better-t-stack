@@ -106,7 +106,7 @@ create-better-t-stack add --package shared
 Create a project from a raw JSON payload.
 
 ```bash
-create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack create-json --json '{"projectName":"my-app","yes":true,"dryRun":true}'
 ```
 
 Use this when you want a single machine-readable input object instead of many flags.
@@ -116,7 +116,7 @@ Use this when you want a single machine-readable input object instead of many fl
 Add addons from a raw JSON payload.
 
 ```bash
-create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+create-better-t-stack add-json --json '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
 ```
 
 ## `schema`

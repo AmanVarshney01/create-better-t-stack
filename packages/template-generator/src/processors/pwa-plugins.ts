@@ -62,6 +62,7 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
   const usesSsr = config.frontend.some((frontend) => ["solid", "react-router"].includes(frontend));
   const ssrOptions = usesSsr
     ? `
+  injectRegister: null,
   includeAssets: ["offline.html"],
   integration: {
     closeBundleOrder: "post",
@@ -185,8 +186,6 @@ function processPwaDocument(vfs: VirtualFileSystem, config: ProjectConfig): void
     }
     if (tag === "body" && !body.includes("<PwaRegistration")) {
       additions.push("<PwaRegistration />");
-    } else if (tag === "head" && !body.includes('src="/registerSW.js"')) {
-      additions.push('<script src="/registerSW.js" defer></script>');
     }
     if (additions.length) element.setBodyText(`${additions.join("\n")}\n${body}`);
   }
@@ -197,6 +196,17 @@ function processPwaDocument(vfs: VirtualFileSystem, config: ProjectConfig): void
     });
   }
   vfs.writeFile(documentPath, source.getFullText());
+  if (tag === "head") {
+    const entryPath = config.frontend.includes("solid") ? "apps/web/src/App.tsx" : documentPath;
+    const entry =
+      entryPath === documentPath
+        ? source
+        : project.createSourceFile(entryPath, vfs.readFile(entryPath));
+    if (!entry.getImportDeclaration("./pwa-registration")) {
+      entry.addImportDeclaration({ moduleSpecifier: "./pwa-registration" });
+    }
+    vfs.writeFile(entryPath, entry.getFullText());
+  }
 }
 
 function processNextPwaConfig(vfs: VirtualFileSystem): void {

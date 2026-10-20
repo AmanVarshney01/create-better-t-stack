@@ -148,7 +148,7 @@ export default {
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.3",
     "concurrently": "^10.0.6",
     "electrobun": "^2.0.2",
     "typescript": "^6.0.3"
@@ -402,6 +402,14 @@ export default function PwaRegistration() {
     </main>
   </body>
 </html>
+`],
+  ["addons/pwa/apps/web/vite-ssr/src/pwa-registration.ts", `/// <reference types="vite-plugin-pwa/client" />
+
+if (!import.meta.env.SSR) {
+  import("virtual:pwa-register").then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
 `],
   ["addons/pwa/apps/web/vite/public/logo.png", `[Binary file]`],
   ["addons/pwa/apps/web/vite/pwa-assets.config.ts.hbs", `import {
@@ -27359,7 +27367,10 @@ const styles = StyleSheet.create({
 `],
   ["frontend/native/bare/babel.config.js.hbs", `module.exports = {
   presets: ["babel-preset-expo"],
-  plugins: [require("@varlock/expo-integration/babel-plugin")],
+  plugins: [
+    require("@varlock/expo-integration/babel-plugin"),
+    require("./babel-plugins/hermes-async-arrow-rest-params"),
+  ],
 };
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `import React from "react";
@@ -27585,6 +27596,37 @@ module.exports = withVarlockMetroConfig(config);
   ["frontend/native/base/assets/images/react-logo@2x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/react-logo@3x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/splash-icon.png", `[Binary file]`],
+  ["frontend/native/base/babel-plugins/hermes-async-arrow-rest-params.js", `// Hermes 260318099.0.4 (react-native 0.88) cannot compile async arrow functions
+// with a rest parameter, such as \`async (...[input, options = {}]) => {}\` in
+// @orpc/client. babel-preset-expo 58.0.18 dropped the transform that rewrote them.
+// Remove this plugin once Hermes compiles the syntax again:
+// https://github.com/expo/expo/issues/51842
+module.exports = function hermesAsyncArrowRestParams({ types: t }) {
+  return {
+    name: "hermes-async-arrow-rest-params",
+    visitor: {
+      ArrowFunctionExpression(path) {
+        const { node } = path;
+        if (!node.async || !node.params.some((param) => t.isRestElement(param))) {
+          return;
+        }
+
+        // \`async (a, ...[b]) => body\` becomes
+        // \`(...args) => (async ([a, ...[b]]) => body)(args)\`.
+        // The sync wrapper only collects arguments. The async arrow keeps them in
+        // a parameter, so defaults still resolve in the parameter scope and a
+        // failure while binding them rejects the returned promise.
+        const args = path.scope.generateUidIdentifier("args");
+        const inner = t.arrowFunctionExpression([t.arrayPattern(node.params)], node.body, true);
+
+        node.async = false;
+        node.params = [t.restElement(t.cloneNode(args))];
+        node.body = t.callExpression(inner, [t.cloneNode(args)]);
+      },
+    },
+  };
+};
+`],
   ["frontend/native/unistyles/_gitignore", `# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -28754,6 +28796,7 @@ const styles = StyleSheet.create((theme) => ({
 		presets: ["babel-preset-expo"],
 		plugins: [
       require("@varlock/expo-integration/babel-plugin"),
+			require("./babel-plugins/hermes-async-arrow-rest-params"),
 			[
 				"react-native-unistyles/plugin",
 				{
@@ -29878,7 +29921,10 @@ export default Modal;
 `],
   ["frontend/native/uniwind/babel.config.js.hbs", `module.exports = {
   presets: ["babel-preset-expo"],
-  plugins: [require("@varlock/expo-integration/babel-plugin")],
+  plugins: [
+    require("@varlock/expo-integration/babel-plugin"),
+    require("./babel-plugins/hermes-async-arrow-rest-params"),
+  ],
 };
 `],
   ["frontend/native/uniwind/components/container.tsx.hbs", `import { cn } from "heroui-native";
@@ -35651,4 +35697,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 531;
+export const TEMPLATE_COUNT = 533;

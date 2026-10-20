@@ -28,6 +28,15 @@ export async function processAddonTemplates(
         config.frontend.some((f) => ["tanstack-router", "react-router", "solid"].includes(f))
       ) {
         processTemplatesFromPrefix(vfs, templates, "addons/pwa/apps/web/vite", "apps/web", config);
+        if (config.frontend.some((f) => ["react-router", "solid"].includes(f))) {
+          processTemplatesFromPrefix(
+            vfs,
+            templates,
+            "addons/pwa/apps/web/vite-ssr",
+            "apps/web",
+            config,
+          );
+        }
       }
       continue;
     }
