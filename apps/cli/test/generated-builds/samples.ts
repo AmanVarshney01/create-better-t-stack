@@ -141,6 +141,77 @@ const buildSamples: BuildSample[] = [
       }) satisfies BuildSample,
   ),
   {
+    name: "sveltekit-auth-evlog",
+    config: {
+      ...baseConfig,
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["evlog"],
+      examples: ["todo"],
+    },
+  },
+  {
+    name: "sveltekit-cloudflare-d1",
+    config: {
+      ...baseConfig,
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: [],
+      examples: ["todo"],
+      webDeploy: "cloudflare",
+    },
+  },
+  ...(
+    [
+      { name: "sveltekit-default", packageManagers: ["bun", "npm", "pnpm"] },
+      { name: "sveltekit-vercel", webDeploy: "vercel" },
+      { name: "sveltekit-cloudflare", webDeploy: "cloudflare" },
+      { name: "sveltekit-desktop", addons: ["tauri"] },
+      { name: "sveltekit-convex", backend: "convex" },
+      { name: "sveltekit-fullstack", backend: "self", api: "orpc", addons: ["evlog"] },
+    ] satisfies Array<{
+      name: string;
+      packageManagers?: BuildSample["packageManagers"];
+      webDeploy?: CreateInput["webDeploy"];
+      addons?: CreateInput["addons"];
+      backend?: CreateInput["backend"];
+      api?: CreateInput["api"];
+    }>
+  ).map(
+    (sample) =>
+      ({
+        name: sample.name,
+        packageManagers: "packageManagers" in sample ? sample.packageManagers : ["bun"],
+        config: {
+          ...baseConfig,
+          frontend: ["svelte"],
+          backend: "backend" in sample ? sample.backend : "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "api" in sample ? sample.api : "none",
+          auth: "none",
+          payments: "none",
+          addons: "addons" in sample ? sample.addons : [],
+          examples: [],
+          webDeploy: "webDeploy" in sample ? sample.webDeploy : "none",
+        },
+      }) satisfies BuildSample,
+  ),
+  {
     name: "react-router-server-auth-polar-types",
     packageManagers: ["bun"],
     config: {
