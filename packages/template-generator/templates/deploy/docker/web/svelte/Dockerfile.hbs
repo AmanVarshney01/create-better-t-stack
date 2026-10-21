@@ -24,6 +24,8 @@ ENV PUBLIC_SERVER_URL=${PUBLIC_SERVER_URL}
 ARG PUBLIC_CONVEX_URL
 ENV PUBLIC_CONVEX_URL=${PUBLIC_CONVEX_URL}
 {{/if}}
+# SvelteKit 3 reads ORIGIN when the app is built (vite.config.ts `paths.origin`), not at
+# runtime. Pass it as a build argument; setting it with `docker run -e` has no effect.
 ARG ORIGIN=http://localhost:3001
 ENV ORIGIN=${ORIGIN}
 ENV NODE_ENV=production
