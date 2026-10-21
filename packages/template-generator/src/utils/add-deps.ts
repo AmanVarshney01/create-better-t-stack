@@ -190,7 +190,7 @@ export const dependencyVersionMap = {
   "@stripe/react-stripe-js": "^6.9.0",
   "@stripe/stripe-js": "^9.15.0",
 
-  evlog: "^2.30.1",
+  evlog: "^2.33.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
