@@ -1003,11 +1003,16 @@ export default defineNuxtPlugin(() => {
   };
 });
 `],
-  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
+  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "../../src/env.server";
+{{/if}}
 
+// During server rendering, call the router directly instead of over HTTP.
+// The context comes from the incoming request, so the user's session applies.
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -1015,14 +1020,18 @@ export default defineNuxtPlugin(() => {
     throw new Error("Missing Nuxt request event");
   }
 
-  const rpcLink = new RPCLink({
-    url: new URL("/rpc", useRequestURL()).href,
-    fetch(request, init) {
-      return event.fetch(request, init);
-    },
-  });
+  // Composables must run during plugin setup, so read the request headers here.
+  const headers = useRequestHeaders();
 
-  const client: AppRouterClient = createORPCClient(rpcLink);
+  const client = createRouterClient(appRouter, {
+    context: () =>
+      createContext({
+        headers: new Headers(headers),
+        {{#if (eq webDeploy "cloudflare")}}
+        env: (event.context.cloudflare as { env: CloudflareEnv }).env,
+        {{/if}}
+      }),
+  });
   const orpc = createTanstackQueryUtils(client);
 
   return {
@@ -30595,10 +30604,6 @@ export default defineNuxtConfig({
   ["frontend/nuxt/public/robots.txt", `User-Agent: *
 Disallow:
 `],
-  ["frontend/nuxt/server/tsconfig.json", `{
-  "extends": "../.nuxt/tsconfig.server.json"
-}
-`],
   ["frontend/nuxt/tsconfig.json.hbs", `{
   // https://nuxt.com/docs/guide/concepts/typescript
   "files": [],
@@ -35699,4 +35704,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 533;
+export const TEMPLATE_COUNT = 532;
