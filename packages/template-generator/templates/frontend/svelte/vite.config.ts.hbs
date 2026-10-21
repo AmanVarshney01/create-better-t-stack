@@ -3,6 +3,18 @@ import { varlockVitePlugin } from "@varlock/vite-integration";
 {{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from "@sveltejs/adapter-static";
+{{else if (eq webDeploy "cloudflare")}}
+import adapter from "@sveltejs/adapter-cloudflare";
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
+import adapter from "@sveltejs/adapter-node";
+{{else if (eq webDeploy "vercel")}}
+import adapter from "@sveltejs/adapter-vercel";
+{{else}}
+import adapter from "@sveltejs/adapter-auto";
+{{/if}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { unwasm } from "unwasm/plugin";
@@ -17,13 +29,26 @@ export default defineConfig({
     unwasm({ esmImport: true }),
 {{/if}}
     tailwindcss(),
-    sveltekit(),
+    sveltekit({
+      preprocess: vitePreprocess(),
+{{#if (eq webDeploy "docker")}}
+      paths: { origin: process.env.ORIGIN },
+{{/if}}
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+      adapter: adapter({ pages: "build", assets: "build", fallback: "index.html" }),
+{{else if (eq webDeploy "vercel")}}
+      adapter: adapter({ runtime: "nodejs24.x" }),
+{{else}}
+      adapter: adapter(),
+{{/if}}
+    }),
   ],
 {{#if (eq webDeploy "prisma")}}
   // Prisma Compute uploads only the build artifact, so keep the official
-  // adapter-node output self-contained instead of requiring node_modules.
+  // adapter-node output self-contained. The adapter respects noExternal rules
+  // when deciding which production dependencies to externalize.
   ssr: {
-    noExternal: true,
+    noExternal: [/.*/],
   },
 {{/if}}
 });

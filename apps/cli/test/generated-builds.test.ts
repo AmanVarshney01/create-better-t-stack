@@ -24,6 +24,7 @@ import {
   writeNuxtSsrAuthProbe,
   writeOrpcInferenceChecks,
   writeStartCsrfProbe,
+  writeSvelteHookTypeChecks,
   writeSyntheticBuildConfig,
 } from "./generated-builds/probes";
 import { getSelectedBuildSamples } from "./generated-builds/samples";
@@ -84,11 +85,13 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             ? undefined
             : await writeOrpcInferenceChecks(sample, projectDir);
           await writeNuxtSsrAuthProbe(sample, projectDir);
+          const restoreSvelteHookTypes = await writeSvelteHookTypeChecks(sample, projectDir);
           try {
             await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
           } finally {
             // Build and boot the scaffold without the compile-only custom auth field.
             await restoreTypeFixtures?.();
+            await restoreSvelteHookTypes?.();
           }
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
