@@ -42,12 +42,9 @@
 				"useExhaustiveDependencies": "info"
 			},
 			"nursery": {
-				"useSortedClasses": {
+				"useTailwindSortedClasses": {
 					"level": "warn",
-					"fix": "safe",
-					"options": {
-						"functions": ["clsx", "cva", "cn"]
-					}
+					"fix": "safe"
 				}
 			},
 			"style": {
@@ -73,6 +70,10 @@
 		"parser": {
 			"tailwindDirectives": true
 		}
+	},
+	"tailwind": {
+		"mergeFunctions": ["clsx", "cn"],
+		"variantFunctions": ["cva"]
 	}
 	{{#if (or (includes frontend "svelte") (includes frontend "nuxt"))}}
 	,
