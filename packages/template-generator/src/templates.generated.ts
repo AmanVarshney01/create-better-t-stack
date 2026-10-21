@@ -1003,11 +1003,16 @@ export default defineNuxtPlugin(() => {
   };
 });
 `],
-  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
+  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "../../src/env.server";
+{{/if}}
 
+// During server rendering, call the router directly instead of over HTTP.
+// The context comes from the incoming request, so the user's session applies.
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -1015,14 +1020,18 @@ export default defineNuxtPlugin(() => {
     throw new Error("Missing Nuxt request event");
   }
 
-  const rpcLink = new RPCLink({
-    url: new URL("/rpc", useRequestURL()).href,
-    fetch(request, init) {
-      return event.fetch(request, init);
-    },
-  });
+  // Composables must run during plugin setup, so read the request headers here.
+  const headers = useRequestHeaders();
 
-  const client: AppRouterClient = createORPCClient(rpcLink);
+  const client = createRouterClient(appRouter, {
+    context: () =>
+      createContext({
+        headers: new Headers(headers),
+        {{#if (eq webDeploy "cloudflare")}}
+        env: (event.context.cloudflare as { env: CloudflareEnv }).env,
+        {{/if}}
+      }),
+  });
   const orpc = createTanstackQueryUtils(client);
 
   return {
@@ -9834,6 +9843,8 @@ export default defineNuxtPlugin(() => {
     },
     {{#if (ne backend "self")}}
     baseURL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}\`\${serverOrigin}/auth\`{{else}}new URL("/api/auth", serverOrigin).toString(){{/if}},
+    {{else}}
+    baseURL: useRequestURL().origin,
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -30481,21 +30492,39 @@ export default defineNuxtConfig({
     localApiEndpoint: "/_nuxt_icon",
   },
   {{/if}}
-{{#if (or (and (eq auth "better-auth") (ne backend "convex")) (and (eq api "orpc") (ne backend "convex") (ne backend "none")))}}
   vite: {
     optimizeDeps: {
       include: [
+{{#if (eq packageManager "npm")}}
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+{{else}}
+        "nuxt > @nuxt/devtools > @vue/devtools-core",
+        "nuxt > @nuxt/devtools > @vue/devtools-kit",
+{{/if}}
 {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
         "better-auth/vue",
+        "zod",
 {{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
         "@orpc/client",
         "@orpc/client/fetch",
         "@orpc/tanstack-query",
         "@tanstack/vue-query",
+        "@tanstack/vue-query > @vue/devtools-api",
         "@tanstack/vue-query-devtools",
 {{/if}}
       ],
+    },
+  },
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  hooks: {
+    "vite:extendConfig"(config, { isClient }) {
+      if (!isClient || !config.optimizeDeps) return;
+      // Vue Query uses devtools-api 6, whose CommonJS entry needs optimization.
+      config.optimizeDeps.exclude = config.optimizeDeps.exclude?.filter(
+        (dependency) => dependency !== "@vue/devtools-api",
+      );
     },
   },
 {{/if}}
@@ -30557,24 +30586,23 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.11.0",
-    "nuxt": "^4.5.2",
-    "vue": "^3.5.42",
+    "nuxt": "^4.6.2",
+    "vue": "^3.5.44",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "tailwindcss": "^4.3.3",
     "@iconify-json/lucide": "^1.2.129",
     "vue-tsc": "^3.3.11"
+  },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   }
 }
 `],
   ["frontend/nuxt/public/favicon.ico", `[Binary file]`],
   ["frontend/nuxt/public/robots.txt", `User-Agent: *
 Disallow:
-`],
-  ["frontend/nuxt/server/tsconfig.json", `{
-  "extends": "../.nuxt/tsconfig.server.json"
-}
 `],
   ["frontend/nuxt/tsconfig.json.hbs", `{
   // https://nuxt.com/docs/guide/concepts/typescript
@@ -35676,4 +35704,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 533;
+export const TEMPLATE_COUNT = 532;

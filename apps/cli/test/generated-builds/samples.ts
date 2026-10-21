@@ -48,6 +48,27 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["none", "cloudflare"] as const).map(
+    (webDeploy) =>
+      ({
+        name: `nuxt-self-orpc-auth${webDeploy === "cloudflare" ? "-cloudflare-d1" : ""}`,
+        config: {
+          ...baseConfig,
+          frontend: ["nuxt"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "orpc",
+          auth: "better-auth",
+          payments: "none",
+          addons: [],
+          examples: ["todo"],
+          webDeploy,
+          dbSetup: webDeploy === "cloudflare" ? "d1" : "none",
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "sveltekit-auth-evlog",
     config: {
