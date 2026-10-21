@@ -142,8 +142,11 @@ export async function verifyBrowser(
         await expect
           .poll(
             async () => {
-              const response = await page.goto(url, { timeout: 10_000 });
-              const status = response?.status();
+              // A failed navigation must not end the poll: the deployment may not be up yet.
+              const status = await page
+                .goto(url, { timeout: 10_000 })
+                .then((response) => response?.status())
+                .catch(() => undefined);
               activationStatuses.push({ url, status });
               if (url === webUrl) homeStatus = status;
               return status;
