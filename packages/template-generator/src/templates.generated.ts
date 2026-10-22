@@ -32180,10 +32180,11 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
 {{#if (eq api "trpc")}}
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { QueryCache, QueryClient, useQueryClient } from "@tanstack/react-query";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { TRPCProvider } from "./utils/trpc";
@@ -32284,6 +32285,15 @@ const trpcClient = createTRPCClient<AppRouter>({
 		}),
 	],
 });
+
+function TRPCWrap({ children }: { children: ReactNode }) {
+	const queryClient = useQueryClient();
+	return (
+		<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+			{children}
+		</TRPCProvider>
+	);
+}
 {{else if (eq api "orpc")}}
 {{/if}}
 
@@ -32312,14 +32322,7 @@ export const getRouter = () => {
 		defaultPendingComponent: () => <Loader />,
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 {{#if (eq api "trpc")}}
-{{#if (includes addons "biome")}}
-		// biome-ignore lint/correctness/noComponentHookFactories: getRouter runs once per router, so Wrap is not recreated on render
-{{/if}}
-		Wrap: ({ children }) => (
-			<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-				{children}
-			</TRPCProvider>
-		),
+		Wrap: TRPCWrap,
 {{/if}}
 	});
 {{#if (or (eq api "trpc") (eq api "orpc"))}}
