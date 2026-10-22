@@ -48,6 +48,25 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["tanstack-router", "svelte"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-biome`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          api: "orpc",
+          auth: "none",
+          payments: "none",
+          addons: ["biome", "turborepo"],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
   ...(["none", "cloudflare"] as const).map(
     (webDeploy) =>
       ({
