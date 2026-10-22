@@ -1,5 +1,6 @@
 let stepInterrupted = false;
 let anyStepInterrupted = false;
+let stepFailures: string[] = [];
 let controller: AbortController | null = null;
 let listener: (() => void) | null = null;
 
@@ -12,6 +13,7 @@ export function beginInterruptibleScope(): void {
   endInterruptibleScope();
   stepInterrupted = false;
   anyStepInterrupted = false;
+  stepFailures = [];
   listener = () => {
     stepInterrupted = true;
     anyStepInterrupted = true;
@@ -38,6 +40,15 @@ export function wasInterrupted(): boolean {
 
 export function wasAnyStepInterrupted(): boolean {
   return anyStepInterrupted;
+}
+
+/** Records an optional step that failed, so silent/JSON callers can report it. */
+export function recordStepFailure(message: string): void {
+  stepFailures.push(message);
+}
+
+export function getStepFailures(): string[] {
+  return [...stepFailures];
 }
 
 export function getInterruptSignal(): AbortSignal | undefined {

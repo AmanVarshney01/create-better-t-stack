@@ -30,7 +30,11 @@ import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../u
 import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
-import { beginInterruptibleScope, endInterruptibleScope } from "../../utils/interrupt";
+import {
+  beginInterruptibleScope,
+  endInterruptibleScope,
+  getStepFailures,
+} from "../../utils/interrupt";
 import { renderTitle } from "../../utils/render-title";
 import { checkLocalRequirements } from "../../utils/requirements";
 import { setupAddons } from "../addons/addons-setup";
@@ -693,6 +697,13 @@ async function addHandlerInternal(
 
   if (setupResult.isErr()) {
     return Result.err(setupResult.error);
+  }
+
+  const stepFailures = getStepFailures();
+  if (stepFailures.length > 0) {
+    // Interactive runs already printed each failure as it happened
+    const message = isSilent() ? stepFailures.join("\n") : "Addon setup failed";
+    return Result.err(new CLIError({ message }));
   }
 
   // Update bts.jsonc with new addons

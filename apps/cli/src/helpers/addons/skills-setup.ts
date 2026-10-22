@@ -10,7 +10,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
-import { cliLog, createSpinner } from "../../utils/terminal-output";
+import { createSpinner } from "../../utils/terminal-output";
 import { supportsEvlogLocalLogs } from "./evlog-setup";
 
 type SkillSource = {
@@ -612,6 +612,8 @@ export async function setupSkills(
   const globalFlags = scope === "global" ? ["-g"] : [];
   const agentTargets = expandSkillsAgentTargets(selectedAgents);
 
+  const failures: AddonSetupError[] = [];
+
   // Install skills grouped by source (project scope, no -g flag)
   for (const [source, skills] of Object.entries(skillsBySource)) {
     const installResult = await Result.tryPromise({
@@ -639,8 +641,19 @@ export async function setupSkills(
     });
 
     if (installResult.isErr()) {
-      cliLog.warn(pc.yellow(`Warning: Could not install skills from ${source}`));
+      failures.push(installResult.error);
     }
+  }
+
+  if (failures.length > 0) {
+    installSpinner.stop(pc.red("Failed to install skills"));
+    return Result.err(
+      new AddonSetupError({
+        addon: "skills",
+        message: failures.map((failure) => failure.message).join("\n"),
+        cause: failures.map((failure) => failure.cause),
+      }),
+    );
   }
 
   installSpinner.stop("Skills installed");

@@ -2,7 +2,7 @@ import type { Result } from "better-result";
 import pc from "picocolors";
 
 import { UserCancelledError } from "./errors";
-import { startInterruptibleStep, wasInterrupted } from "./interrupt";
+import { recordStepFailure, startInterruptibleStep, wasInterrupted } from "./interrupt";
 import { cliConsola, cliLog } from "./terminal-output";
 
 /**
@@ -21,5 +21,6 @@ export async function runOptionalStep<T>(
     cliLog.warn(pc.yellow(cancelledMessage));
     return;
   }
+  recordStepFailure(result.error.message);
   cliConsola.error(pc.red(result.error.message));
 }
