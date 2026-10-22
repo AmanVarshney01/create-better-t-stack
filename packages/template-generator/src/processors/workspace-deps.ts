@@ -36,15 +36,12 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   });
 
   if (packages.infra) {
-    // Alchemy runs the app's dev process, so infra's `dev` must wait for Prisma Client generation
-    const infraDbDep =
-      orm === "prisma" && packages.db ? { [`@${projectName}/db`]: workspaceVersion } : {};
     addPackageDependency({
       vfs,
       packagePath: "packages/infra/package.json",
       dependencies: commonDeps,
       devDependencies: ["typescript"],
-      customDevDependencies: { ...configDep, ...infraDbDep },
+      customDevDependencies: configDep,
     });
   }
 

@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=
 {{/if}}
 
 ENV NODE_ENV=production
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local {{#if (eq orm "prisma")}}{{packageManager}} run db:generate && {{/if}}cd apps/server && {{packageManager}} run build
+RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/server && {{packageManager}} run build
 
 {{#if (eq runtime "bun")}}
 FROM oven/bun:1 AS runner

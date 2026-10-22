@@ -72,15 +72,6 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
   if (config.addons.includes("electrobun")) Object.assign(targetDefaults, getElectrobunTargets());
   if (isConvex) Object.assign(targetDefaults, getConvexTargets());
   if (!isConvex && hasDatabase) Object.assign(targetDefaults, getDatabaseTargets(dbSupport));
-  if (!isConvex && hasDatabase && config.orm === "prisma") {
-    // Prisma Client is generated code, so the db package and its dependents need it first
-    for (const target of ["build", "check-types", "dev"]) {
-      targetDefaults[target] = {
-        ...targetDefaults[target],
-        dependsOn: [...(targetDefaults[target]?.dependsOn ?? []), "^db:generate", "db:generate"],
-      };
-    }
-  }
   if (isDocker) Object.assign(targetDefaults, getDockerTargets());
   if (isSqliteLocal) Object.assign(targetDefaults, getSqliteLocalTarget());
   if (hasLocalD1) Object.assign(targetDefaults, getLocalD1Target());

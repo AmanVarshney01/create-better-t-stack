@@ -60,15 +60,6 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   if (config.addons.includes("electrobun")) Object.assign(tasks, getElectrobunTasks());
   if (isConvex) Object.assign(tasks, getConvexTasks());
   if (!isConvex && hasDatabase) Object.assign(tasks, getDatabaseTasks(dbSupport, config.orm));
-  if (!isConvex && hasDatabase && config.orm === "prisma") {
-    // Prisma Client is generated code, so the db package and its dependents need it first
-    for (const task of ["build", "check-types", "dev"]) {
-      tasks[task] = {
-        ...tasks[task],
-        dependsOn: [...(tasks[task]?.dependsOn ?? []), "^db:generate", "db:generate"],
-      };
-    }
-  }
   if (isDocker) Object.assign(tasks, getDockerTasks());
   if (isSqliteLocal) Object.assign(tasks, getSqliteLocalTask());
   if (hasLocalD1) Object.assign(tasks, getLocalD1Task());

@@ -172,14 +172,6 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
         scripts["db:migrate"] = pmConfig.filter(dbPackageName, "db:migrate");
       }
     }
-
-    if (orm === "prisma" && !hasTurborepo && !hasNx) {
-      // Turborepo and Nx order this through task dependencies; plain workspace runs need it first
-      const generate = `${getLocalRunCommand(packageManager)} db:generate`;
-      for (const script of ["dev", "build", "check-types"]) {
-        scripts[script] = `${generate} && ${scripts[script]}`;
-      }
-    }
   }
 
   if (usesTursoDevServer(config)) {

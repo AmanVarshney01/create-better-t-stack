@@ -629,7 +629,7 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
   let setup = "## Database Setup\n\n";
 
   if (orm === "prisma" && !isD1Alchemy) {
-    setup += `The root \`dev\`, \`build\`, and \`check-types\` scripts generate the Prisma client first. To regenerate it after changing the Prisma schema, run:\n
+    setup += `Generate the Prisma client before development, typechecking, or building, including in CI and deployment builds. Run this again after changing the Prisma schema:\n
 \`\`\`bash
 ${packageManagerRunCmd} db:generate
 \`\`\`\n\n`;
