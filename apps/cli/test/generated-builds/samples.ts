@@ -284,6 +284,23 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "tanstack-start-self-auth-evlog",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["evlog"],
+      examples: ["todo"],
+      webDeploy: "docker",
+    },
+  },
+  {
     name: "tanstack-start-axiom-pnpm",
     packageManagers: ["pnpm"],
     config: {
