@@ -67,7 +67,7 @@ export const dependencyVersionMap = {
 
   "@tauri-apps/cli": "^2.12.1",
 
-  "@biomejs/biome": "^2.5.15",
+  "@biomejs/biome": "^2.6.2",
 
   oxlint: "^1.87.0",
   oxfmt: "^0.72.0",
