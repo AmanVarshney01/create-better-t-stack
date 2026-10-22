@@ -17,6 +17,7 @@ import {
   getLocalD1Owner,
   isAlchemyDeployTarget,
   usesAlchemyManagedDatabase,
+  usesTursoDevServer,
   webFrontends,
 } from "../../types";
 import { getDockerStatus } from "../../utils/docker-utils";
@@ -164,9 +165,11 @@ export async function displayPostInstallInstructions(
     output += `${pc.cyan(`${stepCounter++}.`)} ${packageManager} install\n`;
   }
 
-  if (database === "sqlite" && dbSetup !== "d1") {
+  if (usesTursoDevServer(config)) {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:local\n${pc.dim(
-      "   (optional - starts local SQLite database)",
+      dbSetup === "turso"
+        ? "   (optional - starts a local Turso database)"
+        : "   (starts the local SQLite server)",
     )}\n`;
   }
 

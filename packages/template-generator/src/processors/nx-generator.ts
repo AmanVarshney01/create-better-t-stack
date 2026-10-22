@@ -3,7 +3,12 @@
  * Generates a minimal nx.json for workspace orchestration when the Nx addon is selected.
  */
 
-import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
+import {
+  getLocalD1Owner,
+  isAlchemyDeployTarget,
+  usesTursoDevServer,
+  type ProjectConfig,
+} from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -32,12 +37,12 @@ export function processNxConfig(vfs: VirtualFileSystem, config: ProjectConfig): 
 }
 
 export function generateNxConfig(config: ProjectConfig): NxConfig {
-  const { backend, database, dbSetup, webDeploy, serverDeploy } = config;
+  const { backend, dbSetup, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const dbSupport = getDbScriptSupport(config);
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
-  const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
+  const isSqliteLocal = usesTursoDevServer(config) && hasDatabase;
   const hasAlchemy =
     isAlchemyDeployTarget(webDeploy) ||
     isAlchemyDeployTarget(serverDeploy) ||
@@ -57,11 +62,25 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
       cache: false,
       continuous: true,
     },
+    start: {
+      dependsOn: ["build"],
+      cache: false,
+      continuous: true,
+    },
   };
 
   if (config.addons.includes("electrobun")) Object.assign(targetDefaults, getElectrobunTargets());
   if (isConvex) Object.assign(targetDefaults, getConvexTargets());
   if (!isConvex && hasDatabase) Object.assign(targetDefaults, getDatabaseTargets(dbSupport));
+  if (!isConvex && hasDatabase && config.orm === "prisma") {
+    // Prisma Client is generated code, so the db package and its dependents need it first
+    for (const target of ["build", "check-types", "dev"]) {
+      targetDefaults[target] = {
+        ...targetDefaults[target],
+        dependsOn: [...(targetDefaults[target]?.dependsOn ?? []), "^db:generate", "db:generate"],
+      };
+    }
+  }
   if (isDocker) Object.assign(targetDefaults, getDockerTargets());
   if (isSqliteLocal) Object.assign(targetDefaults, getSqliteLocalTarget());
   if (hasLocalD1) Object.assign(targetDefaults, getLocalD1Target());

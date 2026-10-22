@@ -64,15 +64,12 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
               ["run", "dev", ...(sample.packageManager === "npm" ? ["--"] : []), "--help"],
             );
           }
+          const build = getPackageManagerCommand(sample.packageManager, "build");
           if (sample.config.orm === "prisma") {
+            // A fresh checkout has no Prisma Client, so the root build has to generate it itself
             const generatedClient = path.join(projectDir, "packages/db/prisma/generated/client.ts");
             expect(await fs.pathExists(generatedClient)).toBe(false);
-            await runCommand(
-              sample.name,
-              path.join(projectDir, "packages/db"),
-              sample.packageManager,
-              ["run", "db:generate"],
-            );
+            await runCommand(sample.name, projectDir, build.command, build.args);
             expect(await fs.pathExists(generatedClient)).toBe(true);
           }
           if (sample.checks.includes("auth-generate")) {
@@ -93,7 +90,6 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             await restoreTypeFixtures?.();
             await restoreSvelteHookTypes?.();
           }
-          const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAstroWebsite(sample, projectDir);
