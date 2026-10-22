@@ -19,6 +19,7 @@ import {
   bootAndValidateSolidRuntime,
   bootAndValidateStartAuthRuntime,
   bootAndValidateStartCsrf,
+  validateBiomeConfig,
   validatePwaBuildArtifacts,
   validateSolidBuildArtifacts,
   writeNuxtSsrAuthProbe,
@@ -56,6 +57,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
+          await validateBiomeConfig(sample, projectDir);
           if (await fs.pathExists(path.join(projectDir, "packages/infra/alchemy.run.ts"))) {
             await runCommand(
               sample.name,
