@@ -1,7 +1,7 @@
 {{#if (includes frontend 'next')}}
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { environmentManager, QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import { createTRPCContext } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
@@ -12,63 +12,76 @@ import { toast } from 'sonner';
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: () => {
-						query.invalidate();
-					},
-				},
-			});
-		},
-	}),
-});
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+	createTRPCContext<AppRouter>();
 
-const trpcClient = createTRPCClient<AppRouter>({
-	links: [
-		httpBatchLink({
+function makeQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+	});
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return makeQueryClient();
+	}
+
+	browserQueryClient ??= makeQueryClient();
+	return browserQueryClient;
+}
+
+export function makeTRPCClient() {
+	return createTRPCClient<AppRouter>({
+		links: [
+			httpBatchLink({
 {{#if (eq backend "self")}}
-			url: "/api/trpc",
+				url: "/api/trpc",
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-			url: `${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc`,
+				url: `${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc`,
 {{else}}
-			url: `${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\/$/, "")}/trpc`,
+				url: `${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\/$/, "")}/trpc`,
 {{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
-			headers: async () => {
-				if (typeof window !== "undefined") {
-					const token = await getClerkAuthToken();
+				headers: async () => {
+					if (typeof window !== "undefined") {
+						const token = await getClerkAuthToken();
+						return token ? { Authorization: `Bearer ${token}` } : {};
+					}
+
+					const { auth } = await import("@clerk/nextjs/server");
+					const clerkAuth = await auth();
+					const token = await clerkAuth.getToken();
+
 					return token ? { Authorization: `Bearer ${token}` } : {};
-				}
-
-				const { auth } = await import("@clerk/nextjs/server");
-				const clerkAuth = await auth();
-				const token = await clerkAuth.getToken();
-
-				return token ? { Authorization: `Bearer ${token}` } : {};
-			},
+				},
 {{/if}}
 {{#if (eq auth "better-auth")}}
-			fetch(url, options) {
-				return fetch(url, {
-					...options,
-					credentials: "include",
-				});
-			},
+				fetch(url, options) {
+					return fetch(url, {
+						...options,
+						credentials: "include",
+					});
+				},
 {{/if}}
-		}),
-	],
-})
-
-export const trpc = createTRPCOptionsProxy<AppRouter>({
-	client: trpcClient,
-	queryClient,
-});
+			}),
+		],
+	});
+}
 
 {{else if (includes frontend 'tanstack-start')}}
 import { createTRPCContext } from "@trpc/tanstack-react-query";

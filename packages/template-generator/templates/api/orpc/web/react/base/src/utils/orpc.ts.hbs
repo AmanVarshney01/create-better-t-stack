@@ -1,7 +1,7 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { {{#if (includes frontend "next")}}environmentManager, {{/if}}QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 import { createRouterClient } from "@orpc/server";
@@ -46,9 +46,20 @@ export function createQueryClient() {
 	});
 }
 
-{{#unless (includes frontend "tanstack-start")}}
+{{#if (includes frontend "next")}}
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return createQueryClient();
+	}
+
+	browserQueryClient ??= createQueryClient();
+	return browserQueryClient;
+}
+{{else if (not (includes frontend "tanstack-start"))}}
 export const queryClient = createQueryClient();
-{{/unless}}
+{{/if}}
 
 {{#unless (eq backend "self")}}
 {{> getServerUrl}}
