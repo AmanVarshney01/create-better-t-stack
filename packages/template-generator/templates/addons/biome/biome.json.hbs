@@ -71,11 +71,12 @@
 			"tailwindDirectives": true
 		}
 	}
-	{{#if (or (includes frontend "svelte") (includes frontend "nuxt"))}}
+	{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
 	,
 	"overrides": [
+		{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro"))}}
 		{
-			"includes": ["**/*.svelte", "**/*.vue"],
+			"includes": ["**/*.svelte", "**/*.vue", "**/*.astro"],
 			"linter": {
 				"rules": {
 					"style": {
@@ -89,6 +90,20 @@
 				}
 			}
 		}
+		{{else}}
+		{
+			"includes": ["packages/ui/src/components/**"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noLabelWithoutControl": "off",
+						"useKeyWithClickEvents": "off",
+						"useSemanticElements": "off"
+					}
+				}
+			}
+		}
+		{{/if}}
 	]
 	{{/if}}
 }

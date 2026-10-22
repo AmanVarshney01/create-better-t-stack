@@ -764,14 +764,14 @@ export const checkedHandleError: HandleServerError = handleError;
   return () => fs.remove(probe);
 }
 
-/** Biome refuses to format when its config has a key the installed version doesn't know. */
+/** Runs the generated `check` script: Biome fails on config keys it doesn't know and on lint errors. */
 export async function validateBiomeConfig(sample: SelectedBuildSample, projectDir: string) {
   if (!sample.config.addons?.includes("biome")) return;
   await runCommand(sample.name, projectDir, "bun", [
     "x",
     "--no-install",
     "biome",
-    "format",
+    "check",
     "--write",
     ".",
   ]);

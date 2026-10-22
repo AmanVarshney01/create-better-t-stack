@@ -75,11 +75,12 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 			"tailwindDirectives": true
 		}
 	}
-	{{#if (or (includes frontend "svelte") (includes frontend "nuxt"))}}
+	{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
 	,
 	"overrides": [
+		{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro"))}}
 		{
-			"includes": ["**/*.svelte", "**/*.vue"],
+			"includes": ["**/*.svelte", "**/*.vue", "**/*.astro"],
 			"linter": {
 				"rules": {
 					"style": {
@@ -93,6 +94,20 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 				}
 			}
 		}
+		{{else}}
+		{
+			"includes": ["packages/ui/src/components/**"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noLabelWithoutControl": "off",
+						"useKeyWithClickEvents": "off",
+						"useSemanticElements": "off"
+					}
+				}
+			}
+		}
+		{{/if}}
 	]
 	{{/if}}
 }
@@ -237,7 +252,8 @@ pre-commit:
 `],
   ["addons/pwa/apps/web/next/public/favicon/apple-touch-icon.png", `[Binary file]`],
   ["addons/pwa/apps/web/next/public/favicon/favicon-96x96.png", `[Binary file]`],
-  ["addons/pwa/apps/web/next/public/favicon/favicon.svg", `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92"><svg width="92" height="92" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+  ["addons/pwa/apps/web/next/public/favicon/favicon.svg", `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92"><title>Favicon</title><svg width="92" height="92" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Favicon</title>
   <rect x="8" y="8" width="76" height="76" rx="12" fill="#F5EEFF" stroke="#B79AFF" stroke-width="3"></rect>
   <text x="46" y="56" text-anchor="middle" font-family="monospace" font-size="40" fill="#8F5BFF">$<tspan dx="0" dy="0">_</tspan></text>
 </svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
@@ -1464,6 +1480,9 @@ import type { SessionAuthObject } from "@clerk/backend";
 import type { Database } from "@{{projectName}}/db";
 {{/if}}
 
+{{#if (and (eq auth "none") (eq database "none"))}}
+export type Context = Record<string, never>;
+{{else}}
 export type Context = {
 {{#if (eq auth "clerk")}}
   auth: Pick<SessionAuthObject, "userId"> | null;
@@ -1474,6 +1493,7 @@ export type Context = {
   db: Database;
 {{/if}}
 };
+{{/if}}
 `],
   ["api/orpc/server/src/index.ts.hbs", `import { {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}ORPCError, {{/if}}os } from "@orpc/server";
 import type { Context } from "./context";
@@ -2449,6 +2469,9 @@ import type { SessionAuthObject } from "@clerk/backend";
 import type { Database } from "@{{projectName}}/db";
 {{/if}}
 
+{{#if (and (eq auth "none") (eq database "none"))}}
+export type Context = Record<string, never>;
+{{else}}
 export type Context = {
 {{#if (eq auth "clerk")}}
   auth: Pick<SessionAuthObject, "userId"> | null;
@@ -2459,6 +2482,7 @@ export type Context = {
   db: Database;
 {{/if}}
 };
+{{/if}}
 `],
   ["api/trpc/server/src/index.ts.hbs", `import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, TRPCError{{/if}} } from "@trpc/server";
 import type { Context } from "./context";
@@ -26157,6 +26181,7 @@ export default defineConfig({
 }
 `],
   ["frontend/astro/public/favicon.svg", `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 128 128">
+    <title>Astro</title>
     <path d="M50.4 78.5a75.1 75.1 0 0 0-28.5 6.9l24.2-65.7c.7-2 1.9-3.2 3.4-3.2h29c1.5 0 2.7 1.2 3.4 3.2l24.2 65.7s-11.6-7-28.5-7L67 45.5c-.4-1.7-1.6-2.8-2.9-2.8-1.3 0-2.5 1.1-2.9 2.7L50.4 78.5Zm-1.1 28.2Zm-4.2-20.2c-2 6.6-.6 15.8 4.2 20.2a17.5 17.5 0 0 1 .2-.7 5.5 5.5 0 0 1 5.7-4.5c2.8.1 4.3 1.5 4.7 4.7.2 1.1.2 2.3.2 3.5v.4c0 2.7.7 5.2 2.2 7.4a13 13 0 0 0 5.7 4.9v-.3l-.2-.3c-1.8-5.6-.5-9.5 4.4-12.8l1.5-1a73 73 0 0 0 3.2-2.2 16 16 0 0 0 6.8-11.4c.3-2 .1-4-.6-6l-.8.6-1.6 1a37 37 0 0 1-22.4 2.7c-5-.7-9.7-2-13.2-6.2Z" />
     <style>
         path { fill: #000; }
@@ -30864,7 +30889,6 @@ export default function Home() {
 `],
   ["frontend/react/next/src/components/mode-toggle.tsx.hbs", `"use client"
 
-import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@{{projectName}}/ui/components/button"
@@ -31501,7 +31525,7 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
   return [{ title: "{{projectName}}" }, { name: "description", content: "{{projectName}} is a web application" }];
 }
 
@@ -31877,13 +31901,9 @@ if (!rootElement.innerHTML) {
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq api "orpc")}}
-import { link, orpc } from "@/utils/orpc";
+import type { orpc } from "@/utils/orpc";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-import { createORPCClient } from "@orpc/client";
 {{/if}}
 {{#if (eq api "trpc")}}
 import type { trpc } from "@/utils/trpc";
@@ -31934,11 +31954,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
-  {{#if (eq api "orpc")}}
-  const [client] = useState<AppRouterClient>(() => createORPCClient(link));
-  const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
-  {{/if}}
-
   return (
     <>
       <HeadContent />
@@ -32297,6 +32312,9 @@ export const getRouter = () => {
 		defaultPendingComponent: () => <Loader />,
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 {{#if (eq api "trpc")}}
+{{#if (includes addons "biome")}}
+		// biome-ignore lint/correctness/noComponentHookFactories: getRouter runs once per router, so Wrap is not recreated on render
+{{/if}}
 		Wrap: ({ children }) => (
 			<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
 				{children}

@@ -143,6 +143,9 @@ export const getRouter = () => {
 		defaultPendingComponent: () => <Loader />,
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 {{#if (eq api "trpc")}}
+{{#if (includes addons "biome")}}
+		// biome-ignore lint/correctness/noComponentHookFactories: getRouter runs once per router, so Wrap is not recreated on render
+{{/if}}
 		Wrap: ({ children }) => (
 			<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
 				{children}
