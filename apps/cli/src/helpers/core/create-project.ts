@@ -16,6 +16,7 @@ import {
   beginInterruptibleScope,
   endInterruptibleScope,
   getInterruptSignal,
+  getStepFailures,
   startInterruptibleStep,
   wasAnyStepInterrupted,
   wasInterrupted,
@@ -39,6 +40,7 @@ export interface CreateProjectOutcome {
   install: "installed" | "skipped" | "cancelled" | "failed";
   installError: ProjectCreationError | null;
   interrupted: boolean;
+  stepFailures: string[];
 }
 
 /**
@@ -177,7 +179,13 @@ async function* runPostScaffoldSteps(
     });
   }
 
-  return Result.ok({ projectDir, install, installError, interrupted: wasAnyStepInterrupted() });
+  return Result.ok({
+    projectDir,
+    install,
+    installError,
+    interrupted: wasAnyStepInterrupted(),
+    stepFailures: getStepFailures(),
+  });
 }
 
 async function setPackageManagerVersion(
