@@ -77,7 +77,7 @@ const SKILL_SOURCES = {
   "elysiajs/skills": {
     label: "ElysiaJS",
   },
-  "waynesutton/convexskills": {
+  "get-convex/agent-skills": {
     label: "Convex",
   },
   "msmps/opentui-skill": {
@@ -315,7 +315,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   }
 
   if (backend === "convex") {
-    sources.push("waynesutton/convexskills");
+    sources.push("get-convex/agent-skills");
   }
 
   if (addons.includes("opentui")) {
@@ -405,45 +405,39 @@ const CURATED_SKILLS_BY_SOURCE = {
 
     return [];
   },
-  "expo/skills": (config) => {
-    const skills = [
-      "expo-overview",
-      "expo-router",
-      "expo-dev-client",
-      "expo-native-ui",
-      "expo-data-fetching",
-      "eas-app-stores",
-      "eas-workflows",
-    ];
-    if (config.frontend.includes("native-uniwind")) {
-      skills.push("expo-tailwind-setup");
-    }
-    return skills;
-  },
+  "expo/skills": () => [
+    "expo-overview",
+    "expo-router",
+    "expo-dev-client",
+    "expo-native-ui",
+    "expo-data-fetching",
+    "eas-app-stores",
+    "eas-workflows",
+  ],
   "prisma/skills": (config) => {
     const skills: string[] = [];
 
     if (config.orm === "prisma") {
-      skills.push("prisma-cli", "prisma-client-api", "prisma-database-setup");
+      skills.push("prisma-cli", "prisma-client-api", "prisma-orm-setup");
     }
 
     if (config.dbSetup === "prisma-postgres") {
-      skills.push("prisma-postgres");
+      skills.push("prisma-postgres-setup");
     }
 
     return skills;
   },
   "elysiajs/skills": () => ["elysiajs"],
-  "waynesutton/convexskills": () => [
-    "convex-best-practices",
-    "convex-functions",
-    "convex-schema-validator",
-    "convex-realtime",
-    "convex-http-actions",
-    "convex-cron-jobs",
-    "convex-file-storage",
-    "convex-migrations",
-    "convex-security-check",
+  "get-convex/agent-skills": () => [
+    "convex",
+    "convex-design",
+    "convex-docs",
+    "convex-reviewer",
+    "convex-authz",
+    "convex-crons",
+    "convex-migrate",
+    "convex-env",
+    "convex-test",
   ],
   "msmps/opentui-skill": () => ["opentui"],
   "haydenbleasel/ultracite": () => ["ultracite"],
