@@ -1,3 +1,5 @@
+import { tryGetContext } from "./context";
+
 let stepInterrupted = false;
 let anyStepInterrupted = false;
 let controller: AbortController | null = null;
@@ -12,6 +14,8 @@ export function beginInterruptibleScope(): void {
   endInterruptibleScope();
   stepInterrupted = false;
   anyStepInterrupted = false;
+  const ctx = tryGetContext();
+  if (ctx) ctx.stepFailures = [];
   listener = () => {
     stepInterrupted = true;
     anyStepInterrupted = true;
@@ -38,6 +42,15 @@ export function wasInterrupted(): boolean {
 
 export function wasAnyStepInterrupted(): boolean {
   return anyStepInterrupted;
+}
+
+/** Records an optional step that failed, so silent/JSON callers can report it. */
+export function recordStepFailure(message: string): void {
+  tryGetContext()?.stepFailures.push(message);
+}
+
+export function getStepFailures(): string[] {
+  return [...(tryGetContext()?.stepFailures ?? [])];
 }
 
 export function getInterruptSignal(): AbortSignal | undefined {

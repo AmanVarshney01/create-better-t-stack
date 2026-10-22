@@ -28,6 +28,8 @@ export type CLIContext = {
   projectDir?: string;
   projectName?: string;
   packageManager?: PackageManager;
+  /** Optional post-scaffold steps that failed during this run. */
+  stepFailures: string[];
 };
 
 const cliStorage = new AsyncLocalStorage<CLIContext>();
@@ -53,6 +55,7 @@ function defaultContext(): CLIContext {
     verbose: false,
     promptShown: false,
     analyticsDisabled: false,
+    stepFailures: [],
   };
 }
 
@@ -176,6 +179,7 @@ function createContext(options: ContextOptions): CLIContext {
     projectDir: options.projectDir,
     projectName: options.projectName,
     packageManager: options.packageManager,
+    stepFailures: [],
   };
 }
 
