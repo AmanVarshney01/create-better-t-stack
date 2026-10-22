@@ -75,7 +75,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 			"tailwindDirectives": true
 		}
 	}
-	{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+	{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "native-bare") (includes frontend "native-uniwind"))}}
 	,
 	"overrides": [
 		{{#if (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro"))}}
@@ -94,7 +94,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 				}
 			}
 		}
-		{{else}}
+		{{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
 		{
 			"includes": ["packages/ui/src/components/**"],
 			"linter": {
@@ -103,6 +103,36 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 						"noLabelWithoutControl": "off",
 						"useKeyWithClickEvents": "off",
 						"useSemanticElements": "off"
+					}
+				}
+			}
+		}
+		{{/if}}
+		{{#if (and (or (includes frontend "svelte") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next")) (or (includes frontend "native-bare") (includes frontend "native-uniwind")))}}
+		,
+		{{/if}}
+		{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind"))}}
+		{
+			"includes": ["apps/native/**"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noReactNativeRawText": {
+							"level": "error",
+							"options": {
+								"skip": [
+									{{#if (includes frontend "native-bare")}}
+									"ExpoUIText"
+									{{else}}
+									"Button",
+									"Button.Label",
+									"Card.Title",
+									"Chip.Label",
+									"Label"
+									{{/if}}
+								]
+							}
+						}
 					}
 				}
 			}
