@@ -2628,43 +2628,45 @@ export function getQueryClient() {
 	return browserQueryClient;
 }
 
-export const trpcClient = createTRPCClient<AppRouter>({
-	links: [
-		httpBatchLink({
+export function makeTRPCClient() {
+	return createTRPCClient<AppRouter>({
+		links: [
+			httpBatchLink({
 {{#if (eq backend "self")}}
-			url: "/api/trpc",
+				url: "/api/trpc",
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-			url: \`\${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc\`,
+				url: \`\${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc\`,
 {{else}}
-			url: \`\${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\\/$/, "")}/trpc\`,
+				url: \`\${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\\/$/, "")}/trpc\`,
 {{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
-			headers: async () => {
-				if (typeof window !== "undefined") {
-					const token = await getClerkAuthToken();
+				headers: async () => {
+					if (typeof window !== "undefined") {
+						const token = await getClerkAuthToken();
+						return token ? { Authorization: \`Bearer \${token}\` } : {};
+					}
+
+					const { auth } = await import("@clerk/nextjs/server");
+					const clerkAuth = await auth();
+					const token = await clerkAuth.getToken();
+
 					return token ? { Authorization: \`Bearer \${token}\` } : {};
-				}
-
-				const { auth } = await import("@clerk/nextjs/server");
-				const clerkAuth = await auth();
-				const token = await clerkAuth.getToken();
-
-				return token ? { Authorization: \`Bearer \${token}\` } : {};
-			},
+				},
 {{/if}}
 {{#if (eq auth "better-auth")}}
-			fetch(url, options) {
-				return fetch(url, {
-					...options,
-					credentials: "include",
-				});
-			},
+				fetch(url, options) {
+					return fetch(url, {
+						...options,
+						credentials: "include",
+					});
+				},
 {{/if}}
-		}),
-	],
-});
+			}),
+		],
+	});
+}
 
 {{else if (includes frontend 'tanstack-start')}}
 import { createTRPCContext } from "@trpc/tanstack-react-query";
@@ -30933,8 +30935,10 @@ export function ModeToggle() {
   ["frontend/react/next/src/components/providers.tsx.hbs", `"use client";
 
 {{#if (and (eq auth "clerk") (ne api "none"))}}
-import { useEffect } from "react";
+import { useEffect{{#if (eq api "trpc")}}, useState{{/if}} } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{else if (eq api "trpc")}}
+import { useState } from "react";
 {{/if}}
 {{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
 import { useAuth } from "@clerk/nextjs";
@@ -30961,7 +30965,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { getQueryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
-import { getQueryClient, TRPCProvider, trpcClient } from "@/utils/trpc";
+import { getQueryClient, makeTRPCClient, TRPCProvider } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 {{/if}}
@@ -31001,6 +31005,9 @@ export default function Providers({
 }) {
 {{#if (and (ne backend "convex") (ne api "none"))}}
   const queryClient = getQueryClient();
+{{#if (eq api "trpc")}}
+  const [trpcClient] = useState(makeTRPCClient);
+{{/if}}
 
 {{/if}}
   return (
