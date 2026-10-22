@@ -75,7 +75,7 @@ describe("adding to an existing project", () => {
     });
   }
 
-  test("preserves JSONC comments and migrates legacy options when saving addons", async () => {
+  test("preserves JSONC comments and addon options when saving addons", async () => {
     const projectDir = await createProject("add-legacy-config");
     const file = join(projectDir, "bts.jsonc");
     const config = parse(await fs.readFile(file, "utf8"));
@@ -83,7 +83,7 @@ describe("adding to an existing project", () => {
       skills: {
         scope: "project",
         agents: ["claude-code"],
-        selections: [{ source: "yusukebe/hono-skill", skills: ["hono"] }],
+        selections: [{ source: "honojs/skills", skills: ["hono"] }],
       },
     };
     await fs.writeFile(file, `// keep my project settings\n${JSON.stringify(config, null, 2)}`);
