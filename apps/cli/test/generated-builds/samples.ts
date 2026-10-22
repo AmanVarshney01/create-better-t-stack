@@ -284,6 +284,23 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "tanstack-start-self-auth-evlog",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["evlog"],
+      examples: ["todo"],
+      webDeploy: "docker",
+    },
+  },
+  {
     name: "tanstack-start-axiom-pnpm",
     packageManagers: ["pnpm"],
     config: {
@@ -902,6 +919,22 @@ const buildSamples: BuildSample[] = [
       payments: "polar",
       addons: ["turborepo"],
       examples: ["todo"],
+    },
+  },
+  {
+    name: "next-expo-convex-better-auth",
+    config: {
+      ...baseConfig,
+      frontend: ["next", "native-uniwind"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
     },
   },
   {
