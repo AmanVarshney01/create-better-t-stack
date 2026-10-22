@@ -83,7 +83,13 @@ describe("adding to an existing project", () => {
       skills: {
         scope: "project",
         agents: ["claude-code"],
-        selections: [{ source: "yusukebe/hono-skill", skills: ["hono"] }],
+        selections: [
+          { source: "yusukebe/hono-skill", skills: ["hono"] },
+          {
+            source: "waynesutton/convexskills",
+            skills: ["convex-best-practices", "convex-functions", "convex-cron-jobs"],
+          },
+        ],
       },
     };
     await fs.writeFile(file, `// keep my project settings\n${JSON.stringify(config, null, 2)}`);
@@ -99,7 +105,10 @@ describe("adding to an existing project", () => {
         skills: {
           scope: "project",
           agents: ["claude-code"],
-          selections: [{ source: "honojs/skills", skills: ["hono"] }],
+          selections: [
+            { source: "honojs/skills", skills: ["hono"] },
+            { source: "get-convex/agent-skills", skills: ["convex", "convex-crons"] },
+          ],
         },
       },
     });

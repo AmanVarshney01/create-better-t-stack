@@ -9,6 +9,13 @@ import { CLIError } from "./errors";
 
 const BTS_CONFIG_FILE = "bts.jsonc";
 
+// waynesutton/convexskills was replaced by get-convex/agent-skills, which groups skills differently
+const LEGACY_CONVEX_SKILLS = new Map([
+  ["convex-cron-jobs", "convex-crons"],
+  ["convex-migrations", "convex-migrate"],
+  ["convex-security-check", "convex-authz"],
+]);
+
 function parseBtsConfig(content: string): BetterTStackConfig {
   const errors: ParseError[] = [];
   const value = parse(content, errors, { allowTrailingComma: true });
@@ -18,6 +25,16 @@ function parseBtsConfig(content: string): BetterTStackConfig {
     for (const selection of selections) {
       if (selection?.source === "yusukebe/hono-skill") {
         selection.source = "honojs/skills";
+      }
+      if (selection?.source === "waynesutton/convexskills") {
+        selection.source = "get-convex/agent-skills";
+        if (Array.isArray(selection.skills)) {
+          selection.skills = [
+            ...new Set(
+              selection.skills.map((skill: string) => LEGACY_CONVEX_SKILLS.get(skill) ?? "convex"),
+            ),
+          ];
+        }
       }
     }
   }
