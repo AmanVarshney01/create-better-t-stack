@@ -25983,7 +25983,7 @@ export default function Todos() {
 
 	const isAdding = $derived(addMutation.isPending);
 	const canAdd = $derived(!isAdding && newTodoText.trim().length > 0);
-	const isLoadingTodos = $derived(todosQuery.isLoading);
+	const isLoadingTodos = $derived(todosQuery.isPending);
 	const todos = $derived(todosQuery.data ?? []);
 	const hasTodos = $derived(todos.length > 0);
 
@@ -33613,7 +33613,7 @@ const TITLE_TEXT = \`
 					class={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
 				></div>
 				<span class="text-muted-foreground text-sm">
-					{healthCheck.isLoading
+					{healthCheck.isPending
 						? "Checking..."
 						: healthCheck.data
 							? "Connected"
