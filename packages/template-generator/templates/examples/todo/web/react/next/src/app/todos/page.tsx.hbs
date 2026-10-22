@@ -23,7 +23,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
@@ -78,6 +78,7 @@ export default function TodosPage() {
     );
     {{/if}}
     {{#if (eq api "trpc")}}
+    const trpc = useTRPC();
     const todos = useQuery(trpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       trpc.todo.create.mutationOptions({

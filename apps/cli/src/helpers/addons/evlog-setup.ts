@@ -853,16 +853,19 @@ export const { register, onRequestError } = createInstrumentation({
 `;
 }
 
+const NITRO_V3_PLUGIN_IMPORT = 'import { definePlugin as defineNitroPlugin } from "nitro";\n';
+
 function getNitroEvlogDrainFile(axiom = false, nitroV3 = false) {
+  const pluginImport = nitroV3 ? NITRO_V3_PLUGIN_IMPORT : "";
   if (axiom)
-    return `${nitroV3 ? 'import { definePlugin as defineNitroPlugin } from "nitro";\n' : ""}import { createAxiomDrain } from "evlog/axiom";
+    return `${pluginImport}import { createAxiomDrain } from "evlog/axiom";
 
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("evlog:drain", createAxiomDrain());
 });
 `;
 
-  return `import { createFsDrain } from "evlog/fs";
+  return `${pluginImport}import { createFsDrain } from "evlog/fs";
 
 export default defineNitroPlugin((nitroApp) => {
   if (!import.meta.dev) return;
@@ -920,34 +923,37 @@ export async function identifyEvlogUser(request: Request) {
 `;
 }
 
-function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
+// evlog documents createAuthMiddleware in a server middleware: it runs before the route
+// handler, so requests that throw are still tagged with the user.
+function getTanstackStartEvlogAuthMiddlewareFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
     return `${getAuthImportLine(config, "../../src/services")}
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
+import { useLogger } from "evlog/nitro/v3";
+import { defineHandler } from "nitro";
 
-export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("request", async (event) => {
-    const identify = createAuthIdentifier(${getAuthExpression(config)} as BetterAuthInstance, {
-      exclude: ["/api/auth/**"],
-      maskEmail: true,
-    });
-    await identify(event);
+export default defineHandler(async (event) => {
+  const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+    exclude: ["/api/auth/**"],
+    maskEmail: true,
   });
+  await identifyUser(useLogger(event), event.req.headers, event.url.pathname);
 });
 `;
   }
 
   return `${getAuthImportLine(config, "../../src/services")}
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
+import { useLogger } from "evlog/nitro/v3";
+import { defineHandler } from "nitro";
 
-export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook(
-    "request",
-    createAuthIdentifier(${getAuthExpression(config)} as BetterAuthInstance, {
-      exclude: ["/api/auth/**"],
-      maskEmail: true,
-    }),
-  );
+const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+  exclude: ["/api/auth/**"],
+  maskEmail: true,
+});
+
+export default defineHandler(async (event) => {
+  await identifyUser(useLogger(event), event.req.headers, event.url.pathname);
 });
 `;
 }
@@ -1133,14 +1139,6 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (await fs.pathExists(oldAuthPluginPath)) {
-      const oldAuthPlugin = await fs.readFile(oldAuthPluginPath, "utf-8");
-      if (oldAuthPlugin.includes("evlog/better-auth")) {
-        await fs.remove(oldAuthPluginPath);
-      }
-    }
-
     const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
     if (!(await fs.pathExists(authMiddlewarePath))) {
       await writeFileIfChanged(authMiddlewarePath, getNuxtEvlogAuthMiddlewareFile(config));
@@ -1252,9 +1250,9 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const authPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (!(await fs.pathExists(authPluginPath))) {
-      await writeFileIfChanged(authPluginPath, getNitroEvlogAuthPluginFile(config));
+    const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
+    if (!(await fs.pathExists(authMiddlewarePath))) {
+      await writeFileIfChanged(authMiddlewarePath, getTanstackStartEvlogAuthMiddlewareFile(config));
     }
   }
 

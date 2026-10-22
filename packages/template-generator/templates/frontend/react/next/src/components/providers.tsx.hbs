@@ -1,8 +1,10 @@
 "use client";
 
 {{#if (and (eq auth "clerk") (ne api "none"))}}
-import { useEffect } from "react";
+import { useEffect{{#if (eq api "trpc")}}, useState{{/if}} } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{else if (eq api "trpc")}}
+import { useState } from "react";
 {{/if}}
 {{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
 import { useAuth } from "@clerk/nextjs";
@@ -26,10 +28,10 @@ import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{#if (eq api "orpc")}}
-import { queryClient } from "@/utils/orpc";
+import { getQueryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
-import { queryClient } from "@/utils/trpc";
+import { getQueryClient, makeTRPCClient, TRPCProvider } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 {{/if}}
@@ -67,6 +69,13 @@ export default function Providers({
   initialToken?: string | null;
 {{/if}}
 }) {
+{{#if (and (ne backend "convex") (ne api "none"))}}
+  const queryClient = getQueryClient();
+{{#if (eq api "trpc")}}
+  const [trpcClient] = useState(makeTRPCClient);
+{{/if}}
+
+{{/if}}
   return (
     <ThemeProvider
       attribute="class"
@@ -100,7 +109,9 @@ export default function Providers({
         {children}
         {{/if}}
         {{#if (eq api "trpc")}}
-        {children}
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          {children}
+        </TRPCProvider>
         {{/if}}
         <ReactQueryDevtools />
       </QueryClientProvider>
