@@ -1715,7 +1715,7 @@ export default defineNuxtPlugin((nuxt) => {
   ["api/orpc/web/react/base/src/utils/orpc.ts.hbs", `import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { {{#if (includes frontend "next")}}environmentManager, {{/if}}QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 import { createRouterClient } from "@orpc/server";
@@ -1760,9 +1760,20 @@ export function createQueryClient() {
 	});
 }
 
-{{#unless (includes frontend "tanstack-start")}}
+{{#if (includes frontend "next")}}
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return createQueryClient();
+	}
+
+	browserQueryClient ??= createQueryClient();
+	return browserQueryClient;
+}
+{{else if (not (includes frontend "tanstack-start"))}}
 export const queryClient = createQueryClient();
-{{/unless}}
+{{/if}}
 
 {{#unless (eq backend "self")}}
 {{> getServerUrl}}
@@ -1959,15 +1970,19 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/svelte-query";
+import { browser } from "$app/env";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error) => {
-			console.error(\`Error: \${error.message}\`);
-		},
-	}),
-});
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error) => {
+				console.error(\`Error: \${error.message}\`);
+			},
+		}),
+		defaultOptions: { queries: { enabled: browser } },
+	});
+}
 
 {{#unless (eq backend "self")}}
 {{> getServerUrl}}
@@ -2572,9 +2587,9 @@ export type AppRouter = typeof appRouter;
 }
 `],
   ["api/trpc/web/react/base/src/utils/trpc.ts.hbs", `{{#if (includes frontend 'next')}}
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { environmentManager, QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import { createTRPCContext } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
@@ -2585,22 +2600,38 @@ import { toast } from 'sonner';
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: () => {
-						query.invalidate();
-					},
-				},
-			});
-		},
-	}),
-});
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+	createTRPCContext<AppRouter>();
 
-const trpcClient = createTRPCClient<AppRouter>({
+function makeQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+	});
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return makeQueryClient();
+	}
+
+	browserQueryClient ??= makeQueryClient();
+	return browserQueryClient;
+}
+
+export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
 {{#if (eq backend "self")}}
@@ -2636,11 +2667,6 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{/if}}
 		}),
 	],
-})
-
-export const trpc = createTRPCOptionsProxy<AppRouter>({
-	client: trpcClient,
-	queryClient,
 });
 
 {{else if (includes frontend 'tanstack-start')}}
@@ -9898,7 +9924,7 @@ import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 {{/if}}
 
 export default function Dashboard({
@@ -9916,6 +9942,7 @@ export default function Dashboard({
 	const privateData = useQuery(orpc.privateData.queryOptions());
 	{{/if}}
 	{{#if (eq api "trpc")}}
+	const trpc = useTRPC();
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
@@ -13892,7 +13919,7 @@ import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 {{/if}}
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
@@ -13913,6 +13940,7 @@ export default function Dashboard() {
   });
   {{/if}}
   {{#if (eq api "trpc")}}
+  const trpc = useTRPC();
   const privateData = useQuery({
     ...trpc.privateData.queryOptions(),
     enabled: user.isLoaded && !!user.user,
@@ -24593,7 +24621,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
@@ -24648,6 +24676,7 @@ export default function TodosPage() {
     );
     {{/if}}
     {{#if (eq api "trpc")}}
+    const trpc = useTRPC();
     const todos = useQuery(trpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       trpc.todo.create.mutationOptions({
@@ -30795,7 +30824,7 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
@@ -30821,6 +30850,7 @@ export default function Home() {
   {{else if (eq api "orpc")}}
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
+  const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
 
@@ -30931,10 +30961,10 @@ import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{#if (eq api "orpc")}}
-import { queryClient } from "@/utils/orpc";
+import { getQueryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
-import { queryClient } from "@/utils/trpc";
+import { getQueryClient, TRPCProvider, trpcClient } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 {{/if}}
@@ -30972,6 +31002,10 @@ export default function Providers({
   initialToken?: string | null;
 {{/if}}
 }) {
+{{#if (and (ne backend "convex") (ne api "none"))}}
+  const queryClient = getQueryClient();
+
+{{/if}}
   return (
     <ThemeProvider
       attribute="class"
@@ -31005,7 +31039,9 @@ export default function Providers({
         {children}
         {{/if}}
         {{#if (eq api "trpc")}}
-        {children}
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          {children}
+        </TRPCProvider>
         {{/if}}
         <ReactQueryDevtools />
       </QueryClientProvider>
@@ -33464,10 +33500,11 @@ export {};
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
 	import '../app.css';
-    import { queryClient } from '#lib/orpc.ts';
+    import { createQueryClient } from '#lib/orpc.ts';
     import Header from '../components/Header.svelte';
 
 	const { children } = $props();
+	const queryClient = createQueryClient();
 </script>
 
 <QueryClientProvider client={queryClient}>

@@ -13,7 +13,7 @@ import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 {{/if}}
 
 export default function Dashboard({
@@ -31,6 +31,7 @@ export default function Dashboard({
 	const privateData = useQuery(orpc.privateData.queryOptions());
 	{{/if}}
 	{{#if (eq api "trpc")}}
+	const trpc = useTRPC();
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 

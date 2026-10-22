@@ -1,7 +1,7 @@
 {{#if (includes frontend 'next')}}
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { environmentManager, QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import { createTRPCContext } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
@@ -12,22 +12,38 @@ import { toast } from 'sonner';
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: () => {
-						query.invalidate();
-					},
-				},
-			});
-		},
-	}),
-});
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+	createTRPCContext<AppRouter>();
 
-const trpcClient = createTRPCClient<AppRouter>({
+function makeQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+	});
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return makeQueryClient();
+	}
+
+	browserQueryClient ??= makeQueryClient();
+	return browserQueryClient;
+}
+
+export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
 {{#if (eq backend "self")}}
@@ -63,11 +79,6 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{/if}}
 		}),
 	],
-})
-
-export const trpc = createTRPCOptionsProxy<AppRouter>({
-	client: trpcClient,
-	queryClient,
 });
 
 {{else if (includes frontend 'tanstack-start')}}

@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
@@ -34,6 +34,7 @@ export default function Home() {
   {{else if (eq api "orpc")}}
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
+  const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
 
