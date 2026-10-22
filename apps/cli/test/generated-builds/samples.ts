@@ -922,6 +922,22 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "next-expo-convex-better-auth",
+    config: {
+      ...baseConfig,
+      frontend: ["next", "native-uniwind"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
     name: "workers-clerk-hono",
     config: {
       ...baseConfig,
