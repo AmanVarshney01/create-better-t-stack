@@ -923,37 +923,37 @@ export async function identifyEvlogUser(request: Request) {
 `;
 }
 
-function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
+// evlog documents createAuthMiddleware in a server middleware: it runs before the route
+// handler, so requests that throw are still tagged with the user.
+function getTanstackStartEvlogAuthMiddlewareFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
-    return `${NITRO_V3_PLUGIN_IMPORT}${getAuthImportLine(config, "../../src/services")}
+    return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "evlog/nitro/v3";
+import { defineHandler } from "nitro";
 
-export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("response", async (_response, event) => {
-    const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
-      exclude: ["/api/auth/**"],
-      maskEmail: true,
-    });
-    await identifyUser(useLogger(event), event.req.headers, new URL(event.req.url).pathname);
+export default defineHandler(async (event) => {
+  const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+    exclude: ["/api/auth/**"],
+    maskEmail: true,
   });
+  await identifyUser(useLogger(event), event.req.headers, event.url.pathname);
 });
 `;
   }
 
-  return `${NITRO_V3_PLUGIN_IMPORT}${getAuthImportLine(config, "../../src/services")}
+  return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "evlog/nitro/v3";
+import { defineHandler } from "nitro";
 
 const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
   exclude: ["/api/auth/**"],
   maskEmail: true,
 });
 
-export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("response", async (_response, event) => {
-    await identifyUser(useLogger(event), event.req.headers, new URL(event.req.url).pathname);
-  });
+export default defineHandler(async (event) => {
+  await identifyUser(useLogger(event), event.req.headers, event.url.pathname);
 });
 `;
 }
@@ -1258,9 +1258,17 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const authPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (!(await fs.pathExists(authPluginPath))) {
-      await writeFileIfChanged(authPluginPath, getNitroEvlogAuthPluginFile(config));
+    const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
+    if (await fs.pathExists(oldAuthPluginPath)) {
+      const oldAuthPlugin = await fs.readFile(oldAuthPluginPath, "utf-8");
+      if (oldAuthPlugin.includes("evlog/better-auth")) {
+        await fs.remove(oldAuthPluginPath);
+      }
+    }
+
+    const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
+    if (!(await fs.pathExists(authMiddlewarePath))) {
+      await writeFileIfChanged(authMiddlewarePath, getTanstackStartEvlogAuthMiddlewareFile(config));
     }
   }
 
