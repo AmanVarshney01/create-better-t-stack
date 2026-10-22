@@ -695,12 +695,24 @@ async function addHandlerInternal(
     },
   });
 
+  // Remove the new package on failure so the same add can be retried
+  const cleanupReservedPackage = async () => {
+    if (!reservedPackageDir) return;
+    const dir = reservedPackageDir;
+    await Result.tryPromise({
+      try: () => fs.remove(dir),
+      catch: (cause: unknown) => new CLIError({ message: `Failed to remove ${dir}`, cause }),
+    });
+  };
+
   if (setupResult.isErr()) {
+    await cleanupReservedPackage();
     return Result.err(setupResult.error);
   }
 
   const stepFailures = getStepFailures();
   if (stepFailures.length > 0) {
+    await cleanupReservedPackage();
     // Interactive runs already printed each failure as it happened
     const message = isSilent() ? stepFailures.join("\n") : "Addon setup failed";
     return Result.err(new CLIError({ message }));
