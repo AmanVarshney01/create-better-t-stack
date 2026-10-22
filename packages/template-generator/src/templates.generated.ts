@@ -46,12 +46,9 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 				"useExhaustiveDependencies": "info"
 			},
 			"nursery": {
-				"useSortedClasses": {
+				"useTailwindSortedClasses": {
 					"level": "warn",
-					"fix": "safe",
-					"options": {
-						"functions": ["clsx", "cva", "cn"]
-					}
+					"fix": "safe"
 				}
 			},
 			"style": {
