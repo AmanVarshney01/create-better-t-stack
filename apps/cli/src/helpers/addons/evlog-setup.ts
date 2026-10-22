@@ -853,16 +853,19 @@ export const { register, onRequestError } = createInstrumentation({
 `;
 }
 
+const NITRO_V3_PLUGIN_IMPORT = 'import { definePlugin as defineNitroPlugin } from "nitro";\n';
+
 function getNitroEvlogDrainFile(axiom = false, nitroV3 = false) {
+  const pluginImport = nitroV3 ? NITRO_V3_PLUGIN_IMPORT : "";
   if (axiom)
-    return `${nitroV3 ? 'import { definePlugin as defineNitroPlugin } from "nitro";\n' : ""}import { createAxiomDrain } from "evlog/axiom";
+    return `${pluginImport}import { createAxiomDrain } from "evlog/axiom";
 
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("evlog:drain", createAxiomDrain());
 });
 `;
 
-  return `import { createFsDrain } from "evlog/fs";
+  return `${pluginImport}import { createFsDrain } from "evlog/fs";
 
 export default defineNitroPlugin((nitroApp) => {
   if (!import.meta.dev) return;
@@ -922,32 +925,35 @@ export async function identifyEvlogUser(request: Request) {
 
 function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
-    return `${getAuthImportLine(config, "../../src/services")}
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+    return `${NITRO_V3_PLUGIN_IMPORT}${getAuthImportLine(config, "../../src/services")}
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
+import { useLogger } from "evlog/nitro/v3";
 
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("request", async (event) => {
-    const identify = createAuthIdentifier(${getAuthExpression(config)} as BetterAuthInstance, {
+  nitroApp.hooks.hook("response", async (_response, event) => {
+    const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
       exclude: ["/api/auth/**"],
       maskEmail: true,
     });
-    await identify(event);
+    await identifyUser(useLogger(event), event.req.headers, new URL(event.req.url).pathname);
   });
 });
 `;
   }
 
-  return `${getAuthImportLine(config, "../../src/services")}
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+  return `${NITRO_V3_PLUGIN_IMPORT}${getAuthImportLine(config, "../../src/services")}
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
+import { useLogger } from "evlog/nitro/v3";
+
+const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+  exclude: ["/api/auth/**"],
+  maskEmail: true,
+});
 
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook(
-    "request",
-    createAuthIdentifier(${getAuthExpression(config)} as BetterAuthInstance, {
-      exclude: ["/api/auth/**"],
-      maskEmail: true,
-    }),
-  );
+  nitroApp.hooks.hook("response", async (_response, event) => {
+    await identifyUser(useLogger(event), event.req.headers, new URL(event.req.url).pathname);
+  });
 });
 `;
 }
