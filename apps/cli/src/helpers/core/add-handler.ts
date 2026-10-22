@@ -696,26 +696,36 @@ async function addHandlerInternal(
   });
 
   // Remove the new package on failure so the same add can be retried
+  // Returns a note when the directory can't be removed, so the error tells the user to delete it
   const cleanupReservedPackage = async () => {
-    if (!reservedPackageDir) return;
+    if (!reservedPackageDir) return undefined;
     const dir = reservedPackageDir;
-    await Result.tryPromise({
+    const removed = await Result.tryPromise({
       try: () => fs.remove(dir),
       catch: (cause: unknown) => new CLIError({ message: `Failed to remove ${dir}`, cause }),
     });
+    return removed.isErr() ? `Also failed to remove ${dir}; delete it before retrying.` : undefined;
   };
 
   if (setupResult.isErr()) {
-    await cleanupReservedPackage();
-    return Result.err(setupResult.error);
+    const cleanupNote = await cleanupReservedPackage();
+    if (!cleanupNote) return Result.err(setupResult.error);
+    return Result.err(
+      new CLIError({
+        message: `${setupResult.error.message}\n${cleanupNote}`,
+        cause: setupResult.error,
+      }),
+    );
   }
 
   const stepFailures = getStepFailures();
   if (stepFailures.length > 0) {
-    await cleanupReservedPackage();
+    const cleanupNote = await cleanupReservedPackage();
     // Interactive runs already printed each failure as it happened
     const message = isSilent() ? stepFailures.join("\n") : "Addon setup failed";
-    return Result.err(new CLIError({ message }));
+    return Result.err(
+      new CLIError({ message: cleanupNote ? `${message}\n${cleanupNote}` : message }),
+    );
   }
 
   // Update bts.jsonc with new addons
