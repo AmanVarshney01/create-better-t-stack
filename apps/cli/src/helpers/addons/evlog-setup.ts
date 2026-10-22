@@ -1139,14 +1139,6 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (await fs.pathExists(oldAuthPluginPath)) {
-      const oldAuthPlugin = await fs.readFile(oldAuthPluginPath, "utf-8");
-      if (oldAuthPlugin.includes("evlog/better-auth")) {
-        await fs.remove(oldAuthPluginPath);
-      }
-    }
-
     const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
     if (!(await fs.pathExists(authMiddlewarePath))) {
       await writeFileIfChanged(authMiddlewarePath, getNuxtEvlogAuthMiddlewareFile(config));
@@ -1258,14 +1250,6 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (await fs.pathExists(oldAuthPluginPath)) {
-      const oldAuthPlugin = await fs.readFile(oldAuthPluginPath, "utf-8");
-      if (oldAuthPlugin.includes("evlog/better-auth")) {
-        await fs.remove(oldAuthPluginPath);
-      }
-    }
-
     const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
     if (!(await fs.pathExists(authMiddlewarePath))) {
       await writeFileIfChanged(authMiddlewarePath, getTanstackStartEvlogAuthMiddlewareFile(config));
