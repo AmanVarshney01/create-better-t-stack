@@ -26,6 +26,10 @@ function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
     baseURL: process.env.CONVEX_SITE_URL,
+    {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    {{#unless (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    baseURL: process.env.CONVEX_SITE_URL,
+    {{/unless}}
     {{/if}}
     {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
