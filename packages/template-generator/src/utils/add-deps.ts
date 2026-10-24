@@ -31,8 +31,10 @@ export const dependencyVersionMap = {
   "@clerk/tanstack-react-start": "^1.7.1",
   "@clerk/expo": "^4.12.0",
 
-  "drizzle-orm": "1.0.0-rc.4",
-  "drizzle-kit": "1.0.0-rc.4",
+  "drizzle-orm": "1.0.0-rc.5",
+  "drizzle-kit": "1.0.0-rc.5",
+  // Intentional: drizzle-orm's planetscale-serverless driver still passes query params, which
+  // @planetscale/database 2.0 rejects (drizzle-team/drizzle-orm#6398).
   "@planetscale/database": "^1.20.1",
 
   "@libsql/client": "0.18.0",
@@ -70,7 +72,7 @@ export const dependencyVersionMap = {
   "@biomejs/biome": "^2.6.2",
 
   oxlint: "^1.87.0",
-  oxfmt: "^0.72.0",
+  oxfmt: "^0.74.0",
 
   husky: "^9.1.7",
   lefthook: "^2.2.1",
@@ -102,9 +104,9 @@ export const dependencyVersionMap = {
   "@fastify/cors": "^11.3.0",
 
   turbo: "^2.11.7",
-  nx: "^23.3.0",
-  "vite-plus": "1.1.0",
-  rolldown: "1.2.13",
+  nx: "^24.0.1",
+  "vite-plus": "1.4.0",
+  rolldown: "1.2.15",
   unwasm: "^0.6.0",
 
   ai: "^7.0.93",
@@ -154,8 +156,8 @@ export const dependencyVersionMap = {
   "@tanstack/solid-query": "6.0.0-rc.5",
   "@tanstack/query-core": "5.101.4",
 
-  wrangler: "^4.129.0",
-  "@cloudflare/vite-plugin": "1.54.4",
+  wrangler: "^4.152.0",
+  "@cloudflare/vite-plugin": "1.65.0",
   "@opennextjs/cloudflare": "^1.20.6",
   "@sveltejs/adapter-cloudflare": "^8.0.0",
   "@sveltejs/adapter-node": "^6.0.0",
@@ -178,22 +180,22 @@ export const dependencyVersionMap = {
   "@effect/platform-bun": "4.0.6",
 
   "babel-preset-expo": "~58.0.16",
-  varlock: "1.18.0",
-  "@varlock/vite-integration": "1.5.1",
-  "@varlock/nextjs-integration": "1.2.2",
-  "@varlock/nuxt-integration": "0.1.1",
-  "@varlock/astro-integration": "1.4.1",
-  "@varlock/expo-integration": "1.2.1",
-  "@varlock/cloudflare-integration": "1.5.1",
+  varlock: "1.23.0",
+  "@varlock/vite-integration": "1.5.4",
+  "@varlock/nextjs-integration": "1.2.5",
+  "@varlock/nuxt-integration": "0.1.4",
+  "@varlock/astro-integration": "1.4.4",
+  "@varlock/expo-integration": "1.2.2",
+  "@varlock/cloudflare-integration": "1.6.2",
   tsdown: "^0.23.0",
   zod: "^4.5.4",
 
-  "@polar-sh/better-auth": "^1.8.4",
+  "@polar-sh/better-auth": "^2.1.0",
   "@polar-sh/checkout": "^0.4.1",
   // Peer range required by @polar-sh/better-auth; update together.
-  "@polar-sh/sdk": "^0.47.0",
-  "@stripe/react-stripe-js": "^6.9.0",
-  "@stripe/stripe-js": "^9.15.0",
+  "@polar-sh/sdk": "^1.0.2",
+  "@stripe/react-stripe-js": "^7.0.0",
+  "@stripe/stripe-js": "^10.1.0",
 
   evlog: "^2.33.1",
 } as const;

@@ -9428,7 +9428,7 @@ import Layout from "../layouts/Layout.astro";
       try {
         const { data: customerState } = await authClient.customer.state();
         const subscriptionInfo = document.getElementById("subscription-info")!;
-        if ((customerState?.activeSubscriptions?.length ?? 0) > 0) {
+        if ((customerState?.active_subscriptions?.length ?? 0) > 0) {
           subscriptionInfo.innerHTML = \`
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
             <button
@@ -9731,7 +9731,7 @@ const handleSignOut = async () => {
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+import type { models } from "@polar-sh/sdk/2026-10";
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9747,7 +9747,7 @@ definePageMeta({
 const { data: session } = await useAuthSession()
 
 {{#if (eq payments "polar")}}
-const customerState = ref<CustomerState | null>(null)
+const customerState = ref<models.CustomerState | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9770,7 +9770,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
+  (customerState.value?.active_subscriptions?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -9928,7 +9928,7 @@ export const authClient = createAuthClient({
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+import type { models } from "@polar-sh/sdk/2026-10";
 {{/if}}
 
 {{#if (eq payments "polar")}}
@@ -9951,7 +9951,7 @@ export default function Dashboard({
 	session
 }: {
 	{{#if (eq payments "polar")}}
-	customerState: CustomerState | null | undefined;
+	customerState: models.CustomerState | null | undefined;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
@@ -9964,7 +9964,7 @@ export default function Dashboard({
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -10874,7 +10874,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 {{/if}}
 
   {{#if (eq payments "polar")}}
-  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+  const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -11305,7 +11305,7 @@ function RouteComponent() {
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -11808,7 +11808,7 @@ function RouteComponent() {
   {{/if}}
 
   {{#if (eq payments "polar") }}
-  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+  const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -12218,7 +12218,7 @@ export default function Dashboard() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
+		(customerState()?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -12641,8 +12641,8 @@ export const authClient = createAuthClient({
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {(data.customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
-		{#if (data.customerState?.activeSubscriptions?.length ?? 0) > 0}
+		<p>Plan: {(data.customerState?.active_subscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (data.customerState?.active_subscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -15429,10 +15429,10 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
-    "solid-js": "2.0.0-rc.14",
-    "@solidjs/signals": "2.0.0-rc.14",
-    "@solidjs/compiler": "2.0.0-rc.14",
-    "@solidjs/babel-plugin": "2.0.0-rc.14"
+    "solid-js": "2.0.0-rc.18",
+    "@solidjs/signals": "2.0.0-rc.18",
+    "@solidjs/compiler": "2.0.0-rc.18",
+    "@solidjs/babel-plugin": "2.0.0-rc.18"
   },
 {{/if}}
   "scripts": {}
@@ -33030,14 +33030,14 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.38",
-    "@solidjs/web": "2.0.0-rc.14",
-    "solid-js": "2.0.0-rc.14"
+    "@solidjs/router": "2.0.0-next.42",
+    "@solidjs/web": "2.0.0-rc.18",
+    "solid-js": "2.0.0-rc.18"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.49",
+    "@solidjs/vite-plugin": "3.0.0-next.51",
     "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.4.0",
+    "filesystem-routing": "0.4.1",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
     "nitro": "3.0.260903-beta"{{/unless}}
@@ -33827,7 +33827,7 @@ export default defineConfig({
     "@shadcn/react": "^0.3.1",
     "shadcn": "^4.21.0",
     "class-variance-authority": "^0.7.1",
-    "cn": "^0.2.5",
+    "cn": "^0.5.0",
     "lucide-react": "^1.41.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
@@ -35628,10 +35628,10 @@ export const syncProducts = action({
   },
 });
 `],
-  ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
+  ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { createPolarCore } from "@polar-sh/sdk/2026-10";
 
 export function createPolarClient(config: { POLAR_ACCESS_TOKEN: string }) {
-  return new Polar({ accessToken: config.POLAR_ACCESS_TOKEN, server: "sandbox" });
+  return createPolarCore({ accessToken: config.POLAR_ACCESS_TOKEN, environment: "sandbox" });
 }
 `],
   ["payments/polar/web/nuxt/app/pages/success.vue.hbs", `<script setup lang="ts">

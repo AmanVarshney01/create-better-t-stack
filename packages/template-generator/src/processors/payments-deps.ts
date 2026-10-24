@@ -3,6 +3,10 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
+// Intentional: @convex-dev/polar still imports @polar-sh/sdk 0.x subpaths (core.js, funcs/*)
+// that sdk 1.0 no longer exports, so Convex projects pin the last 0.x release.
+const CONVEX_POLAR_SDK_VERSION = "^0.47.0";
+
 export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { payments, frontend, backend } = config;
   if (!payments || payments === "none") return;
@@ -17,7 +21,8 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
         addPackageDependency({
           vfs,
           packagePath: backendPath,
-          dependencies: ["@convex-dev/polar", "@polar-sh/sdk"],
+          dependencies: ["@convex-dev/polar"],
+          customDependencies: { "@polar-sh/sdk": CONVEX_POLAR_SDK_VERSION },
         });
       }
 
