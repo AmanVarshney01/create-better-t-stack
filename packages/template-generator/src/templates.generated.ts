@@ -2793,6 +2793,10 @@ function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
     baseURL: process.env.CONVEX_SITE_URL,
+    {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    {{#unless (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    baseURL: process.env.CONVEX_SITE_URL,
+    {{/unless}}
     {{/if}}
     {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
@@ -31244,6 +31248,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 
 {{#if (eq backend "convex")}}
+import { useState } from "react";
 import { ConvexReactClient } from "convex/react";
 import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
   {{#if (eq auth "clerk")}}
@@ -31325,7 +31330,7 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
-  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
+  const [convex] = useState(() => new ConvexReactClient(ENV.VITE_CONVEX_URL));
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
