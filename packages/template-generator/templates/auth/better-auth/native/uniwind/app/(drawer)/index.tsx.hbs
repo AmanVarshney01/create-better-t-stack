@@ -10,6 +10,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -181,6 +184,12 @@ return (
     <SignUp />
   </>
   )}
+
+  {{#if (eq payments "revenuecat")}}
+  <View className="mt-6">
+    <Paywall />
+  </View>
+  {{/if}}
 </Container>
 );
 }

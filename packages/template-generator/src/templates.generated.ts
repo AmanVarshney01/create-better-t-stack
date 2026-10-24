@@ -2859,6 +2859,9 @@ import { httpAction } from "./_generated/server";
 {{#if (eq payments "polar")}}
 import { polar } from "./polar";
 {{/if}}
+{{#if (eq payments "revenuecat")}}
+import { revenuecat } from "./revenuecat";
+{{/if}}
 
 const http = httpRouter();
 
@@ -2902,6 +2905,10 @@ authComponent.registerRoutes(http, createAuth);
 {{#if (eq payments "polar")}}
 
 polar.registerRoutes(http);
+{{/if}}
+{{#if (eq payments "revenuecat")}}
+
+revenuecat.registerRoutes(http);
 {{/if}}
 
 export default http;
@@ -6215,6 +6222,9 @@ import { NAV_THEME } from "@/lib/constants";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -6402,6 +6412,10 @@ return (
         <SignUp />
       </>
       )}
+
+      {{#if (eq payments "revenuecat")}}
+      <Paywall />
+      {{/if}}
     </View>
   </ScrollView>
 </Container>
@@ -7005,6 +7019,9 @@ import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -7152,6 +7169,10 @@ export default function Home() {
               <SignUp />
             </>
           )}
+
+          {{#if (eq payments "revenuecat")}}
+          <Paywall />
+          {{/if}}
         </View>
       </ScrollView>
     </Container>
@@ -7746,6 +7767,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -7917,6 +7941,12 @@ return (
     <SignUp />
   </>
   )}
+
+  {{#if (eq payments "revenuecat")}}
+  <View className="mt-6">
+    <Paywall />
+  </View>
+  {{/if}}
 </Container>
 );
 }
@@ -14309,6 +14339,9 @@ import betterAuth from "@convex-dev/better-auth/convex.config";
 {{#if (eq payments "polar")}}
 import polar from "@convex-dev/polar/convex.config.js";
 {{/if}}
+{{#if (eq payments "revenuecat")}}
+import revenuecat from "convex-revenuecat/convex.config";
+{{/if}}
 {{#if (includes examples "ai")}}
 import agent from "@convex-dev/agent/convex.config";
 {{/if}}
@@ -14319,6 +14352,9 @@ app.use(betterAuth);
 {{/if}}
 {{#if (eq payments "polar")}}
 app.use(polar);
+{{/if}}
+{{#if (eq payments "revenuecat")}}
+app.use(revenuecat);
 {{/if}}
 {{#if (includes examples "ai")}}
 app.use(agent);
@@ -26538,6 +26574,9 @@ import { queryClient } from "@/utils/orpc";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+import { RevenueCatUserSync } from "@/lib/revenuecat";
+{{/if}}
 
 const LIGHT_THEME = {
   ...DefaultTheme,
@@ -26585,9 +26624,15 @@ export default function RootLayout() {
 
   return (
     <>
+{{#if (and (eq payments "revenuecat") (eq auth "better-auth"))}}
+      <RevenueCatUserSync />
+{{/if}}
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+            <RevenueCatUserSync />
+{{/if}}
             <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
               <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
                 <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
@@ -26629,6 +26674,9 @@ export default function RootLayout() {
       {{else}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+            <RevenueCatUserSync />
+{{/if}}
             {{#unless (eq api "none")}}
               <ClerkApiAuthBridge />
               <QueryClientProvider client={queryClient}>
@@ -26919,6 +26967,9 @@ import { ENV } from "../../src/env";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
@@ -27248,6 +27299,10 @@ return (
         <SignUp />
       </>
       )}
+      {{/if}}
+
+      {{#if (eq payments "revenuecat")}}
+      <Paywall />
       {{/if}}
     </View>
   </ScrollView>
@@ -27818,6 +27873,9 @@ import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+import { RevenueCatUserSync } from "@/lib/revenuecat";
+{{/if}}
 
 export const unstable_settings = {
   anchor: "(drawer)",
@@ -27849,12 +27907,19 @@ export default function RootLayout() {
   const { theme } = useUnistyles();
 
   return (
+{{#if (and (eq payments "revenuecat") (eq auth "better-auth"))}}
+    <>
+      <RevenueCatUserSync />
+{{/if}}
     {{#if (eq backend "convex")}}
     {{#if (eq auth "clerk")}}
     <ClerkProvider
       tokenCache={tokenCache}
       publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
+{{#if (eq payments "revenuecat")}}
+      <RevenueCatUserSync />
+{{/if}}
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <GestureHandlerRootView style=\\{{ flex: 1 }}>
           <Stack
@@ -27929,6 +27994,9 @@ export default function RootLayout() {
         tokenCache={tokenCache}
         publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
+{{#if (eq payments "revenuecat")}}
+        <RevenueCatUserSync />
+{{/if}}
         {{#unless (eq api "none")}}
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
@@ -28022,6 +28090,9 @@ export default function RootLayout() {
         {{/unless}}
       {{/if}}
     {{/if}}
+{{#if (and (eq payments "revenuecat") (eq auth "better-auth"))}}
+    </>
+{{/if}}
   );
 }
 `],
@@ -28247,6 +28318,9 @@ import { ENV } from "../../src/env";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -28535,6 +28609,10 @@ export default function Home() {
             <SignUp />
           </>
         )}
+        {{/if}}
+
+        {{#if (eq payments "revenuecat")}}
+        <Paywall />
         {{/if}}
       </ScrollView>
     </Container>
@@ -29296,6 +29374,9 @@ import { HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+import { RevenueCatUserSync } from "@/lib/revenuecat";
+{{/if}}
 
 {{#if (eq api "trpc")}}
   import { queryClient } from "@/utils/trpc";
@@ -29332,6 +29413,10 @@ function ClerkApiAuthBridge() {
 
 function StackLayout() {
   return (
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+    <>
+      <RevenueCatUserSync />
+{{/if}}
     <Stack screenOptions=\\{{}}>
       <Stack.Screen name="(drawer)" options=\\{{ headerShown: false }} />
       {{#if (eq auth "clerk")}}
@@ -29339,6 +29424,9 @@ function StackLayout() {
       {{/if}}
       <Stack.Screen name="modal" options=\\{{ title: "Modal", presentation: "modal" }} />
     </Stack>
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+    </>
+{{/if}}
   );
 }
 
@@ -29650,6 +29738,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
 import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+{{#if (eq payments "revenuecat")}}
+import { Paywall } from "@/components/paywall";
+{{/if}}
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -29905,6 +29996,12 @@ return (
     <SignUp />
   </View>
   )}
+  {{/if}}
+
+  {{#if (eq payments "revenuecat")}}
+  <View className="mt-5">
+    <Paywall />
+  </View>
   {{/if}}
 </Container>
 );
@@ -35761,7 +35858,327 @@ export default function Success() {
 		<p>Checkout ID: {checkout_id}</p>
 	{/if}
 </div>
+`],
+  ["payments/revenuecat/convex/backend/convex/revenuecat.ts.hbs", `import { RevenueCat } from "convex-revenuecat";
+
+import { components } from "./_generated/api";
+
+export const revenuecat = new RevenueCat(components.revenuecat, {
+  REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
+});
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+
+// Resolves the signed-in user from the auth token subject, which the app passes to Purchases.logIn
+export const { hasEntitlement, isSubscriber, getActiveSubscriptions } = revenuecat.api();
+{{/if}}
+`],
+  ["payments/revenuecat/convex/http/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
+
+import { revenuecat } from "./revenuecat";
+
+const http = httpRouter();
+
+revenuecat.registerRoutes(http);
+
+export default http;
+`],
+  ["payments/revenuecat/native/bare/components/paywall.tsx.hbs", `import { useEffect, useState } from "react";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { Alert, StyleSheet, View } from "react-native";
+import Purchases, { type PurchasesError, type PurchasesPackage } from "react-native-purchases";
+
+import { NAV_THEME } from "@/lib/constants";
+import { isRevenueCatConfigured, useIsPro } from "@/lib/revenuecat";
+import { useColorScheme } from "@/lib/use-color-scheme";
+
+export function Paywall() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const isPro = useIsPro();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getOfferings()
+      .then((offerings) => setPackages(offerings.current?.availablePackages ?? []))
+      .catch(console.warn);
+  }, []);
+
+  // Purchases update the customer info listener, so isPro refreshes on its own
+  const purchase = (pack: PurchasesPackage) =>
+    Purchases.purchasePackage(pack).catch((error: PurchasesError) => {
+      if (!error.userCancelled) Alert.alert("Purchase failed", error.message);
+    });
+
+  const restore = () =>
+    Purchases.restorePurchases().catch((error: PurchasesError) =>
+      Alert.alert("Restore failed", error.message),
+    );
+
+  return (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host matchContents=\\{{ vertical: true }}>
+        <Column spacing={8}>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Premium
+          </ExpoUIText>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 13 }} style=\\{{ opacity: 0.7 }}>
+            {!isRevenueCatConfigured
+              ? "Add your RevenueCat API keys to apps/native/.env. Expo Go needs a Test Store key."
+              : isPro
+                ? "You're Premium. Thanks for your support!"
+                : "Unlock all features."}
+          </ExpoUIText>
+          {isRevenueCatConfigured &&
+            !isPro &&
+            packages.map((pack) => (
+              <Button
+                key={pack.identifier}
+                label={\`\${pack.product.title} · \${pack.product.priceString}\`}
+                onPress={() => purchase(pack)}
+              />
+            ))}
+          {isRevenueCatConfigured && !isPro && (
+            <Button label="Restore purchases" variant="outlined" onPress={restore} />
+          )}
+        </Column>
+      </Host>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+});
+`],
+  ["payments/revenuecat/native/base/lib/revenuecat.ts.hbs", `import { useEffect, useState } from "react";
+import { Platform } from "react-native";
+import Purchases, { type CustomerInfo } from "react-native-purchases";
+{{#if (eq auth "clerk")}}
+import { useAuth } from "@clerk/expo";
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+import { ENV } from "../src/env";
+
+const apiKey = Platform.select({
+  ios: ENV.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+  android: ENV.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+});
+
+function configure() {
+  if (!apiKey) return false;
+  try {
+    // Expo Go only accepts Test Store keys; store keys need a development build
+    Purchases.configure({ apiKey });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const isRevenueCatConfigured = configure();
+
+export function useIsPro() {
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getCustomerInfo().then(setCustomerInfo).catch(console.warn);
+    Purchases.addCustomerInfoUpdateListener(setCustomerInfo);
+    return () => {
+      Purchases.removeCustomerInfoUpdateListener(setCustomerInfo);
+    };
+  }, []);
+
+  return customerInfo?.entitlements.active[ENV.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID] !== undefined;
+}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+
+// Uses the auth user id as the RevenueCat app user id, so webhook events match the signed-in user
+export function RevenueCatUserSync() {
+{{#if (eq auth "better-auth")}}
+  const { data: session, isPending } = authClient.useSession();
+  const userId = isPending ? undefined : (session?.user.id ?? null);
+{{else}}
+  const { isLoaded, userId: clerkUserId } = useAuth();
+  const userId = isLoaded ? (clerkUserId ?? null) : undefined;
+{{/if}}
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured || userId === undefined) return;
+    const sync = async () => {
+      if (userId) await Purchases.logIn(userId);
+      else if (!(await Purchases.isAnonymous())) await Purchases.logOut();
+    };
+    sync().catch(console.warn);
+  }, [userId]);
+
+  return null;
+}
+{{/if}}
+`],
+  ["payments/revenuecat/native/unistyles/components/paywall.tsx.hbs", `import { useEffect, useState } from "react";
+import { Alert, Pressable, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import Purchases, { type PurchasesError, type PurchasesPackage } from "react-native-purchases";
+
+import { isRevenueCatConfigured, useIsPro } from "@/lib/revenuecat";
+
+export function Paywall() {
+  const isPro = useIsPro();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getOfferings()
+      .then((offerings) => setPackages(offerings.current?.availablePackages ?? []))
+      .catch(console.warn);
+  }, []);
+
+  // Purchases update the customer info listener, so isPro refreshes on its own
+  const purchase = (pack: PurchasesPackage) =>
+    Purchases.purchasePackage(pack).catch((error: PurchasesError) => {
+      if (!error.userCancelled) Alert.alert("Purchase failed", error.message);
+    });
+
+  const restore = () =>
+    Purchases.restorePurchases().catch((error: PurchasesError) =>
+      Alert.alert("Restore failed", error.message),
+    );
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Premium</Text>
+      <Text style={styles.muted}>
+        {!isRevenueCatConfigured
+          ? "Add your RevenueCat API keys to apps/native/.env. Expo Go needs a Test Store key."
+          : isPro
+            ? "You're Premium. Thanks for your support!"
+            : "Unlock all features."}
+      </Text>
+
+      {isRevenueCatConfigured && !isPro && (
+        <>
+          {packages.map((pack) => (
+            <Pressable key={pack.identifier} style={styles.button} onPress={() => purchase(pack)}>
+              <Text style={styles.buttonText}>
+                {pack.product.title} · {pack.product.priceString}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable style={styles.secondary} onPress={restore}>
+            <Text style={styles.secondaryText}>Restore purchases</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.foreground,
+  },
+  muted: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+  button: {
+    alignItems: "center",
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.primary,
+  },
+  buttonText: {
+    fontSize: theme.fontSize.base,
+    fontWeight: "600",
+    color: theme.colors.primaryForeground,
+  },
+  secondary: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.sm,
+  },
+  secondaryText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+}));
+`],
+  ["payments/revenuecat/native/uniwind/components/paywall.tsx.hbs", `import { useEffect, useState } from "react";
+import { Alert, View } from "react-native";
+import { Button, Card } from "heroui-native";
+import Purchases, { type PurchasesError, type PurchasesPackage } from "react-native-purchases";
+
+import { isRevenueCatConfigured, useIsPro } from "@/lib/revenuecat";
+
+export function Paywall() {
+  const isPro = useIsPro();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getOfferings()
+      .then((offerings) => setPackages(offerings.current?.availablePackages ?? []))
+      .catch(console.warn);
+  }, []);
+
+  // Purchases update the customer info listener, so isPro refreshes on its own
+  const purchase = (pack: PurchasesPackage) =>
+    Purchases.purchasePackage(pack).catch((error: PurchasesError) => {
+      if (!error.userCancelled) Alert.alert("Purchase failed", error.message);
+    });
+
+  const restore = () =>
+    Purchases.restorePurchases().catch((error: PurchasesError) =>
+      Alert.alert("Restore failed", error.message),
+    );
+
+  return (
+    <Card variant="secondary" className="mb-4 p-4">
+      <Card.Title className="mb-2">Premium</Card.Title>
+      <Card.Description>
+        {!isRevenueCatConfigured
+          ? "Add your RevenueCat API keys to apps/native/.env. Expo Go needs a Test Store key."
+          : isPro
+            ? "You're Premium. Thanks for your support!"
+            : "Unlock all features."}
+      </Card.Description>
+
+      {isRevenueCatConfigured && !isPro && (
+        <View className="mt-4 gap-3">
+          {packages.map((pack) => (
+            <Button key={pack.identifier} onPress={() => purchase(pack)}>
+              <Button.Label>
+                {pack.product.title} · {pack.product.priceString}
+              </Button.Label>
+            </Button>
+          ))}
+          <Button variant="ghost" onPress={restore}>
+            <Button.Label>Restore purchases</Button.Label>
+          </Button>
+        </View>
+      )}
+    </Card>
+  );
+}
 `]
 ]);
 
-export const TEMPLATE_COUNT = 532;
+export const TEMPLATE_COUNT = 538;

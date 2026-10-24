@@ -504,6 +504,14 @@ export const TECH_OPTIONS: TechOptions = {
       default: false,
     },
     {
+      id: "revenuecat",
+      name: "RevenueCat",
+      description: "In-app subscriptions and cross-platform monetization for mobile.",
+      icon: `${ICON_BASE_URL}/revenuecat.svg`,
+      color: "from-rose-400 to-rose-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",

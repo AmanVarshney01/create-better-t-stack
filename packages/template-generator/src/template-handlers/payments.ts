@@ -17,6 +17,14 @@ export async function processPaymentsTemplates(
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
 
+  const nativeVariant = config.frontend.includes("native-bare")
+    ? "bare"
+    : config.frontend.includes("native-uniwind")
+      ? "uniwind"
+      : config.frontend.includes("native-unistyles")
+        ? "unistyles"
+        : null;
+
   if (config.backend === "convex") {
     processTemplatesFromPrefix(
       vfs,
@@ -25,7 +33,17 @@ export async function processPaymentsTemplates(
       "packages/backend",
       config,
     );
-    return;
+
+    // Better Auth's http.ts registers payment webhooks; other setups need the provider's own router
+    if (config.auth !== "better-auth") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `payments/${config.payments}/convex/http`,
+        "packages/backend",
+        config,
+      );
+    }
   } else if (config.backend !== "none") {
     processTemplatesFromPrefix(
       vfs,
@@ -35,6 +53,25 @@ export async function processPaymentsTemplates(
       config,
     );
   }
+
+  if (nativeVariant) {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `payments/${config.payments}/native/base`,
+      "apps/native",
+      config,
+    );
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `payments/${config.payments}/native/${nativeVariant}`,
+      "apps/native",
+      config,
+    );
+  }
+
+  if (config.backend === "convex") return;
 
   if (hasReactWeb) {
     const reactFramework = config.frontend.find((f) =>

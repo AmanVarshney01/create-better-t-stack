@@ -40,6 +40,9 @@ import { HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+import { RevenueCatUserSync } from "@/lib/revenuecat";
+{{/if}}
 
 {{#if (eq api "trpc")}}
   import { queryClient } from "@/utils/trpc";
@@ -76,6 +79,10 @@ function ClerkApiAuthBridge() {
 
 function StackLayout() {
   return (
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+    <>
+      <RevenueCatUserSync />
+{{/if}}
     <Stack screenOptions=\{{}}>
       <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
       {{#if (eq auth "clerk")}}
@@ -83,6 +90,9 @@ function StackLayout() {
       {{/if}}
       <Stack.Screen name="modal" options=\{{ title: "Modal", presentation: "modal" }} />
     </Stack>
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+    </>
+{{/if}}
   );
 }
 

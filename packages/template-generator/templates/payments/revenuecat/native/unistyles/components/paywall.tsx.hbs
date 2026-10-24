@@ -1,0 +1,95 @@
+import { useEffect, useState } from "react";
+import { Alert, Pressable, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import Purchases, { type PurchasesError, type PurchasesPackage } from "react-native-purchases";
+
+import { isRevenueCatConfigured, useIsPro } from "@/lib/revenuecat";
+
+export function Paywall() {
+  const isPro = useIsPro();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getOfferings()
+      .then((offerings) => setPackages(offerings.current?.availablePackages ?? []))
+      .catch(console.warn);
+  }, []);
+
+  // Purchases update the customer info listener, so isPro refreshes on its own
+  const purchase = (pack: PurchasesPackage) =>
+    Purchases.purchasePackage(pack).catch((error: PurchasesError) => {
+      if (!error.userCancelled) Alert.alert("Purchase failed", error.message);
+    });
+
+  const restore = () =>
+    Purchases.restorePurchases().catch((error: PurchasesError) =>
+      Alert.alert("Restore failed", error.message),
+    );
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Premium</Text>
+      <Text style={styles.muted}>
+        {!isRevenueCatConfigured
+          ? "Add your RevenueCat API keys to apps/native/.env. Expo Go needs a Test Store key."
+          : isPro
+            ? "You're Premium. Thanks for your support!"
+            : "Unlock all features."}
+      </Text>
+
+      {isRevenueCatConfigured && !isPro && (
+        <>
+          {packages.map((pack) => (
+            <Pressable key={pack.identifier} style={styles.button} onPress={() => purchase(pack)}>
+              <Text style={styles.buttonText}>
+                {pack.product.title} · {pack.product.priceString}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable style={styles.secondary} onPress={restore}>
+            <Text style={styles.secondaryText}>Restore purchases</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.foreground,
+  },
+  muted: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+  button: {
+    alignItems: "center",
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.primary,
+  },
+  buttonText: {
+    fontSize: theme.fontSize.base,
+    fontWeight: "600",
+    color: theme.colors.primaryForeground,
+  },
+  secondary: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.sm,
+  },
+  secondaryText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+}));

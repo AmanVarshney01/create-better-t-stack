@@ -27,8 +27,10 @@ export function verificationBlockers(config: ProjectConfig): string[] {
     reasons.push("Isolated Convex deployment and verification required");
   if (config.auth === "clerk")
     reasons.push("Clerk test-instance provisioning and verification required");
-  if (config.payments !== "none")
+  if (config.payments === "polar")
     reasons.push("Polar sandbox checkout/webhook verification required");
+  if (config.payments === "revenuecat")
+    reasons.push("RevenueCat store purchase/webhook verification required");
   if (config.examples.includes("ai"))
     reasons.push("AI provider credentials and response verification required");
   const unsupportedAddons = config.addons.filter(

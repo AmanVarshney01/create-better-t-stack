@@ -41,6 +41,9 @@ import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+import { RevenueCatUserSync } from "@/lib/revenuecat";
+{{/if}}
 
 export const unstable_settings = {
   anchor: "(drawer)",
@@ -72,12 +75,19 @@ export default function RootLayout() {
   const { theme } = useUnistyles();
 
   return (
+{{#if (and (eq payments "revenuecat") (eq auth "better-auth"))}}
+    <>
+      <RevenueCatUserSync />
+{{/if}}
     {{#if (eq backend "convex")}}
     {{#if (eq auth "clerk")}}
     <ClerkProvider
       tokenCache={tokenCache}
       publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
+{{#if (eq payments "revenuecat")}}
+      <RevenueCatUserSync />
+{{/if}}
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <GestureHandlerRootView style=\{{ flex: 1 }}>
           <Stack
@@ -152,6 +162,9 @@ export default function RootLayout() {
         tokenCache={tokenCache}
         publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
+{{#if (eq payments "revenuecat")}}
+        <RevenueCatUserSync />
+{{/if}}
         {{#unless (eq api "none")}}
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
@@ -245,5 +258,8 @@ export default function RootLayout() {
         {{/unless}}
       {{/if}}
     {{/if}}
+{{#if (and (eq payments "revenuecat") (eq auth "better-auth"))}}
+    </>
+{{/if}}
   );
 }

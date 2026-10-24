@@ -1,0 +1,68 @@
+import { useEffect, useState } from "react";
+import { Platform } from "react-native";
+import Purchases, { type CustomerInfo } from "react-native-purchases";
+{{#if (eq auth "clerk")}}
+import { useAuth } from "@clerk/expo";
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+import { ENV } from "../src/env";
+
+const apiKey = Platform.select({
+  ios: ENV.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+  android: ENV.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+});
+
+function configure() {
+  if (!apiKey) return false;
+  try {
+    // Expo Go only accepts Test Store keys; store keys need a development build
+    Purchases.configure({ apiKey });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const isRevenueCatConfigured = configure();
+
+export function useIsPro() {
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getCustomerInfo().then(setCustomerInfo).catch(console.warn);
+    Purchases.addCustomerInfoUpdateListener(setCustomerInfo);
+    return () => {
+      Purchases.removeCustomerInfoUpdateListener(setCustomerInfo);
+    };
+  }, []);
+
+  return customerInfo?.entitlements.active[ENV.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID] !== undefined;
+}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+
+// Uses the auth user id as the RevenueCat app user id, so webhook events match the signed-in user
+export function RevenueCatUserSync() {
+{{#if (eq auth "better-auth")}}
+  const { data: session, isPending } = authClient.useSession();
+  const userId = isPending ? undefined : (session?.user.id ?? null);
+{{else}}
+  const { isLoaded, userId: clerkUserId } = useAuth();
+  const userId = isLoaded ? (clerkUserId ?? null) : undefined;
+{{/if}}
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured || userId === undefined) return;
+    const sync = async () => {
+      if (userId) await Purchases.logIn(userId);
+      else if (!(await Purchases.isAnonymous())) await Purchases.logOut();
+    };
+    sync().catch(console.warn);
+  }, [userId]);
+
+  return null;
+}
+{{/if}}

@@ -236,6 +236,11 @@ Polar payments require:
 - Better-Auth authentication
 - A web frontend (or no frontend selected)
 
+RevenueCat payments require:
+
+- A native frontend (`native-bare`, `native-uniwind`, or `native-unistyles`)
+- A backend (any backend except `none`)
+
 ```bash
 # ✅ Valid - Better-Auth without database
 create-better-t-stack --auth better-auth --database none
@@ -298,6 +303,13 @@ create-better-t-stack --payments polar --auth better-auth
 
 # Or use Clerk without Polar payments
 create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
+```
+
+### "RevenueCat payments requires a native frontend"
+
+```bash
+# Fix by adding a native frontend
+create-better-t-stack --payments revenuecat --frontend tanstack-router native-uniwind
 ```
 
 ## Validation Strategy

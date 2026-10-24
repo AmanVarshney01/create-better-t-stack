@@ -2,6 +2,7 @@ import {
   supportsRuntimeBackend,
   supportsRuntimeDatabase,
   supportsPaymentsAuth,
+  supportsPaymentsFrontend,
   supportsServerDeployRuntime,
   SERVER_BACKENDS,
   CONVEX_AI_INCOMPATIBLE_FRONTENDS,
@@ -417,7 +418,7 @@ export function validatePaymentsCompatibility(
   payments: Payments | undefined,
   auth: Auth | undefined,
   _backend: Backend | undefined,
-  _frontends: Frontend[] = [],
+  frontends: Frontend[] = [],
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
 
@@ -425,6 +426,14 @@ export function validatePaymentsCompatibility(
     if (!supportsPaymentsAuth(payments, auth)) {
       return validationErr(
         "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+      );
+    }
+  }
+
+  if (payments === "revenuecat") {
+    if (!supportsPaymentsFrontend(payments, frontends)) {
+      return validationErr(
+        "RevenueCat payments requires a native frontend (native-bare, native-uniwind, or native-unistyles). Please select a native frontend or choose a different payments provider.",
       );
     }
   }
