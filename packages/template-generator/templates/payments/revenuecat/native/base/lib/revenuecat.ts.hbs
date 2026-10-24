@@ -1,0 +1,97 @@
+import { Platform } from "react-native";
+import Purchases, {
+  type CustomerInfo,
+  type CustomerInfoUpdateListener,
+  LOG_LEVEL,
+  type PurchasesError,
+  type PurchasesPackage,
+} from "react-native-purchases";
+
+import { ENV } from "../src/env";
+
+const PRO_ENTITLEMENT_ID = ENV.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID;
+
+let isRevenueCatConfigured = false;
+
+export type RevenueCatInitResult =
+  | { configured: true }
+  | { configured: false; reason: "unsupported_platform" | "missing_api_key" | "init_failed" };
+
+export function hasProEntitlement(customerInfo: CustomerInfo | null): boolean {
+  return customerInfo?.entitlements.active[PRO_ENTITLEMENT_ID] !== undefined;
+}
+
+// Configures the SDK once; later calls are no-ops.
+export function configureRevenueCat(): RevenueCatInitResult {
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
+    return { configured: false, reason: "unsupported_platform" };
+  }
+  if (isRevenueCatConfigured) return { configured: true };
+
+  const apiKey =
+    Platform.OS === "ios"
+      ? ENV.EXPO_PUBLIC_REVENUECAT_IOS_KEY
+      : ENV.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
+  if (!apiKey) return { configured: false, reason: "missing_api_key" };
+
+  Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
+  try {
+    // Expo Go only accepts Test Store keys; store keys need a development build
+    Purchases.configure({ apiKey });
+  } catch (error) {
+    console.warn("[RevenueCat] Initialization failed:", error);
+    return { configured: false, reason: "init_failed" };
+  }
+  isRevenueCatConfigured = true;
+  return { configured: true };
+}
+
+export function onCustomerInfoUpdated(listener: CustomerInfoUpdateListener): () => void {
+  Purchases.addCustomerInfoUpdateListener(listener);
+  return () => {
+    Purchases.removeCustomerInfoUpdateListener(listener);
+  };
+}
+
+export async function refreshProEntitlement(): Promise<boolean> {
+  return hasProEntitlement(await Purchases.getCustomerInfo());
+}
+
+// Ties purchases to the signed-in user so they follow the account across devices
+export async function identifyUser(userId: string): Promise<boolean> {
+  const { customerInfo } = await Purchases.logIn(userId);
+  return hasProEntitlement(customerInfo);
+}
+
+export async function logOutUser(): Promise<void> {
+  if (await Purchases.isAnonymous()) return;
+  await Purchases.logOut();
+}
+
+export async function getPackages(): Promise<PurchasesPackage[]> {
+  const offerings = await Purchases.getOfferings();
+  return offerings.current?.availablePackages ?? [];
+}
+
+export async function purchaseAndCheckPro(pack: PurchasesPackage): Promise<boolean> {
+  const { customerInfo } = await Purchases.purchasePackage(pack);
+  return hasProEntitlement(customerInfo);
+}
+
+export async function restoreAndCheckPro(): Promise<boolean> {
+  return hasProEntitlement(await Purchases.restorePurchases());
+}
+
+export function isPurchaseCancelledError(error: unknown): boolean {
+  return (error as PurchasesError | undefined)?.code === Purchases.PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR;
+}
+
+export function getRevenueCatSetupMessage(
+  reason: Extract<RevenueCatInitResult, { configured: false }>["reason"] | null,
+): string {
+  if (reason === "unsupported_platform") return "In-app purchases are only available on iOS and Android.";
+  if (reason === "init_failed") {
+    return "RevenueCat needs a development build. In Expo Go, use a RevenueCat Test Store key.";
+  }
+  return "RevenueCat is not configured yet. Add your API keys in apps/native/.env.";
+}

@@ -83,4 +83,23 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       }
     }
   }
+
+  if (payments === "revenuecat") {
+    const nativePath = "apps/native/package.json";
+    if (vfs.exists(nativePath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: nativePath,
+        dependencies: ["react-native-purchases"],
+      });
+    }
+
+    if (backend === "convex" && vfs.exists(backendPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: backendPath,
+        dependencies: ["convex-revenuecat"],
+      });
+    }
+  }
 }

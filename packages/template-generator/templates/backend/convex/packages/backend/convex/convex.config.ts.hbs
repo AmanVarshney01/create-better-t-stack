@@ -5,6 +5,9 @@ import betterAuth from "@convex-dev/better-auth/convex.config";
 {{#if (eq payments "polar")}}
 import polar from "@convex-dev/polar/convex.config.js";
 {{/if}}
+{{#if (eq payments "revenuecat")}}
+import revenuecat from "convex-revenuecat/convex.config";
+{{/if}}
 {{#if (includes examples "ai")}}
 import agent from "@convex-dev/agent/convex.config";
 {{/if}}
@@ -15,6 +18,9 @@ app.use(betterAuth);
 {{/if}}
 {{#if (eq payments "polar")}}
 app.use(polar);
+{{/if}}
+{{#if (eq payments "revenuecat")}}
+app.use(revenuecat);
 {{/if}}
 {{#if (includes examples "ai")}}
 app.use(agent);

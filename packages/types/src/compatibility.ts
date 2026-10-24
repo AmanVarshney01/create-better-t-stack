@@ -397,6 +397,10 @@ export function supportsPaymentsAuth(payments?: Payments, auth?: Auth) {
   return payments !== "polar" || auth === "better-auth";
 }
 
+export function supportsPaymentsFrontend(payments?: Payments, frontend: readonly Frontend[] = []) {
+  return payments !== "revenuecat" || frontend.some((value) => value.startsWith("native-"));
+}
+
 const BACKEND_DISABLED_OPTIONS = {
   convex: ["runtime", "database", "orm", "api", "dbSetup", "serverDeploy"],
   none: ["runtime", "database", "orm", "api", "auth", "payments", "dbSetup", "serverDeploy"],

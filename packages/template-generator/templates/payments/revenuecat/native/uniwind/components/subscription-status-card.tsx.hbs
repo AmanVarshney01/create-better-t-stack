@@ -1,0 +1,26 @@
+import { Text } from "react-native";
+import { Card } from "heroui-native";
+
+import { useRevenueCat } from "@/components/revenuecat-provider";
+import { getRevenueCatSetupMessage } from "@/lib/revenuecat";
+
+export function SubscriptionStatusCard() {
+  const { isPro, isConfigured, initError } = useRevenueCat();
+
+  return (
+    <Card variant="secondary" className="mb-4 p-4">
+      <Card.Title className="mb-2">Subscription</Card.Title>
+      {!isConfigured ? (
+        <Card.Description>
+          {getRevenueCatSetupMessage(initError)}
+        </Card.Description>
+      ) : isPro ? (
+        <Text className="text-success text-base font-medium">
+          You're a Premium member 🎉
+        </Text>
+      ) : (
+        <Card.Description>You're on the free plan.</Card.Description>
+      )}
+    </Card>
+  );
+}

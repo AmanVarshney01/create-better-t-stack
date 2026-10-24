@@ -1,0 +1,171 @@
+import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { AppState } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+{{#if (eq auth "better-auth")}}
+import { authClient } from "@/lib/auth-client";
+{{else if (eq auth "clerk")}}
+import { useAuth } from "@clerk/expo";
+{{/if}}
+import {
+  configureRevenueCat,
+  getPackages as getRevenueCatPackages,
+  hasProEntitlement,
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  identifyUser,
+{{/if}}
+  isPurchaseCancelledError,
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  logOutUser,
+{{/if}}
+  onCustomerInfoUpdated,
+  purchaseAndCheckPro,
+  type RevenueCatInitResult,
+  refreshProEntitlement,
+  restoreAndCheckPro,
+} from "@/lib/revenuecat";
+
+type RevenueCatContextValue = {
+  isPro: boolean;
+  isConfigured: boolean;
+  initError: Extract<RevenueCatInitResult, { configured: false }>["reason"] | null;
+  getPackages: () => Promise<PurchasesPackage[]>;
+  purchasePackage: (pack: PurchasesPackage) => Promise<boolean>;
+  restorePurchases: () => Promise<boolean>;
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  setAppUserId: (userId: string | null) => void;
+{{/if}}
+};
+
+const RevenueCatContext = createContext<RevenueCatContextValue | null>(null);
+
+// RevenueCat should be configured once, as early as possible in the app's lifecycle
+const initResult = configureRevenueCat();
+
+export function useRevenueCat(): RevenueCatContextValue {
+  const context = useContext(RevenueCatContext);
+  if (!context) throw new Error("useRevenueCat must be used within RevenueCatProvider");
+  return context;
+}
+
+export function RevenueCatProvider({ children }: { children: ReactNode }) {
+  const isConfigured = initResult.configured;
+  const [isPro, setIsPro] = useState(false);
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  const [appUserId, setAppUserId] = useState<string | null>(null);
+  const loggedInUserId = useRef<string | null>(null);
+{{/if}}
+
+  const refreshEntitlement = useCallback(async () => {
+    if (!isConfigured) return;
+    try {
+      setIsPro(await refreshProEntitlement());
+    } catch (error) {
+      console.warn("[RevenueCat] Failed to refresh entitlement:", error);
+    }
+  }, [isConfigured]);
+
+  useEffect(() => {
+    if (!isConfigured) return;
+    const unsubscribe = onCustomerInfoUpdated((customerInfo) => {
+      setIsPro(hasProEntitlement(customerInfo));
+    });
+    refreshEntitlement();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshEntitlement();
+    });
+    return () => {
+      unsubscribe();
+      subscription.remove();
+    };
+  }, [isConfigured, refreshEntitlement]);
+
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  useEffect(() => {
+    if (!isConfigured || appUserId === loggedInUserId.current) return;
+    loggedInUserId.current = appUserId;
+    const sync = appUserId ? identifyUser(appUserId).then(setIsPro) : logOutUser();
+    sync.catch((error) => console.warn("[RevenueCat] Failed to sync the signed-in user:", error));
+  }, [isConfigured, appUserId]);
+
+{{/if}}
+  const getPackages = useCallback(async () => {
+    if (!isConfigured) return [];
+    try {
+      return await getRevenueCatPackages();
+    } catch (error) {
+      console.warn("[RevenueCat] Failed to fetch packages:", error);
+      return [];
+    }
+  }, [isConfigured]);
+
+  const purchasePackage = useCallback(
+    async (pack: PurchasesPackage) => {
+      if (!isConfigured) return false;
+      try {
+        const nextIsPro = await purchaseAndCheckPro(pack);
+        setIsPro(nextIsPro);
+        return nextIsPro;
+      } catch (error) {
+        if (!isPurchaseCancelledError(error)) {
+          console.warn("[RevenueCat] Purchase failed:", error);
+        }
+        return false;
+      }
+    },
+    [isConfigured],
+  );
+
+  const restorePurchases = useCallback(async () => {
+    if (!isConfigured) return false;
+    try {
+      const nextIsPro = await restoreAndCheckPro();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Restore failed:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const value = useMemo(
+    () => ({
+      isPro,
+      isConfigured,
+      initError: initResult.configured ? null : initResult.reason,
+      getPackages,
+      purchasePackage,
+      restorePurchases,
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+      setAppUserId,
+{{/if}}
+    }),
+    [isPro, isConfigured, getPackages, purchasePackage, restorePurchases],
+  );
+
+  return <RevenueCatContext.Provider value={value}>{children}</RevenueCatContext.Provider>;
+}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+
+// Uses the auth user id as the RevenueCat app user id, so webhook events match the signed-in user
+export function RevenueCatUserBridge() {
+  const { setAppUserId } = useRevenueCat();
+{{#if (eq auth "better-auth")}}
+  const { data: session, isPending } = authClient.useSession();
+  const userId = session?.user.id ?? null;
+
+  useEffect(() => {
+    if (!isPending) setAppUserId(userId);
+  }, [isPending, userId, setAppUserId]);
+{{else}}
+  const { isLoaded, userId } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded) setAppUserId(userId ?? null);
+  }, [isLoaded, userId, setAppUserId]);
+{{/if}}
+
+  return null;
+}
+{{/if}}

@@ -153,6 +153,8 @@ export async function displayPostInstallInstructions(
     config.payments === "polar" && config.auth === "better-auth"
       ? getPolarInstructions(backend, packageManager)
       : "";
+  const revenueCatInstructions =
+    config.payments === "revenuecat" ? getRevenueCatInstructions(backend, packageManager) : "";
 
   const bunWebNativeWarning =
     packageManager === "bun" && hasNative && hasWeb ? getBunWebNativeWarning() : "";
@@ -281,6 +283,7 @@ export async function displayPostInstallInstructions(
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
+  if (revenueCatInstructions) output += `\n${revenueCatInstructions.trim()}\n`;
   // Deploy steps come last so env sync happens after auth/payment keys exist
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
 
@@ -700,6 +703,31 @@ function getPolarInstructions(backend: Backend, packageManager: string) {
 
   const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
   return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in ${envPath}`;
+}
+
+function getRevenueCatInstructions(backend: Backend, packageManager: string) {
+  const base =
+    `${pc.bold("RevenueCat Payments Setup:")}\n` +
+    `${pc.cyan("•")} Create a project, entitlement, and offering in ${pc.underline("https://app.revenuecat.com/")}\n` +
+    `${pc.cyan("•")} Set the public SDK keys in ${pc.white("apps/native/.env")}:\n` +
+    `${pc.white("   EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_your_ios_key")}\n` +
+    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_your_android_key")}\n` +
+    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=pro")}\n` +
+    `${pc.cyan("•")} Purchases need a development build (${pc.white("npx expo run:ios")} or ${pc.white("npx expo run:android")}); Expo Go only works with a RevenueCat Test Store key`;
+
+  if (backend === "convex") {
+    const cmd = packageManager === "npm" ? "npx" : packageManager;
+    return (
+      `${base}\n` +
+      `${pc.cyan("•")} Set the webhook secret (min 32 chars) from ${pc.white("packages/backend")}:\n` +
+      `${pc.white("   cd packages/backend")}\n` +
+      `${pc.white(`   ${cmd} convex env set REVENUECAT_WEBHOOK_AUTH=$(openssl rand -base64 32)`)}\n` +
+      `${pc.cyan("•")} Add a RevenueCat webhook for ${pc.white("https://<your-convex-site-url>/webhooks/revenuecat")} with the secret as its Authorization header:\n` +
+      `${pc.white(`   ${cmd} convex env get REVENUECAT_WEBHOOK_AUTH`)}`
+    );
+  }
+
+  return base;
 }
 
 function getAlchemyDeployInstructions(

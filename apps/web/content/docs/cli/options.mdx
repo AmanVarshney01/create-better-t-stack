@@ -314,12 +314,14 @@ Payments provider:
 
 - `none`: No payments integration
 - `polar`: Polar payments integration
+- `revenuecat`: RevenueCat in-app subscriptions for native apps
 
 ```bash
 create-better-t-stack --payments polar --auth better-auth
+create-better-t-stack --payments revenuecat --frontend native-uniwind
 ```
 
-**Note:** Polar payments requires Better-Auth authentication.
+**Note:** Polar payments requires Better-Auth authentication. RevenueCat payments requires a native frontend and works with any auth option.
 
 ## Addons
 
