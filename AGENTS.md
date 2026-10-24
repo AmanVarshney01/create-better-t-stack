@@ -19,7 +19,7 @@ This repo is a Bun + Turborepo monorepo.
 - `bun build`: build all packages/apps through Turbo.
 - `bun build:cli`: build only the CLI target.
 - `bun run check`: format + lint (`oxfmt . && oxlint .`).
-- `cd apps/cli && bun run test`: run CLI tests.
+- `cd apps/cli && bun run test`: run CLI integration tests.
 
 ## Coding Style & Naming Conventions
 
@@ -49,11 +49,20 @@ This repo is a Bun + Turborepo monorepo.
 
 ## Testing Guidelines
 
-- Framework: `bun:test`.
-- Test files use `*.test.ts` naming (see `apps/cli/test` and `packages/template-generator/test`).
-- Add or update tests with behavior changes, especially prompt flows, template output, and config validation.
-- Keep tests deterministic; reuse shared setup utilities in `apps/cli/test/setup.ts`.
-- Test generated projects through installation, typechecking, builds, and runtime behavior. Keep focused assertions for conditional generation, dependency relationships, and preservation of user edits; avoid copying static template source or dependency versions into expectations.
+A test earns its place when it can fail while a user would get hurt. Tests live in three tiers, each with one job:
+
+| Tier             | Where                                      | Runs                     | Proves                                                                                                 |
+| ---------------- | ------------------------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Contract         | `apps/cli/test/*.test.ts`, `apps/web/test` | Every PR                 | The CLI, MCP and oRPC interfaces reject bad input, write the right files and keep existing ones        |
+| Generated builds | `apps/cli/test/generated-builds.test.ts`   | Every PR and daily       | Generated projects install the latest dependencies, typecheck, build and, where a sample opts in, boot |
+| Live             | `apps/cli/live-tests`                      | Locally, before releases | Generated apps work in a browser against real databases and deployments                                |
+
+- Use `bun:test`. Reuse `apps/cli/test/setup.ts` for disposable project directories.
+- Never assert that generated output contains text copied from a template. The generated-builds tier already proves templates compile and run.
+- Do not add isolated unit tests or mocked helper tests.
+- To cover a new stack, add a sample to `apps/cli/test/generated-builds/samples.ts`. If it needs a runtime check, name it in the sample's `checks` and implement it in `probes.ts`.
+- When an upstream release breaks a generated build, fix the template so it works on the latest version. Never pin an older dependency.
+- Keep live tests out of CI. Record their results in the pull request, not in the repository.
 
 ## Commit & Pull Request Guidelines
 

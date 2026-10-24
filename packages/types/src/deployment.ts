@@ -67,3 +67,27 @@ export function getLocalD1Owner(
 
   return "none";
 }
+
+/**
+ * Local SQLite opens its database file directly, so `turso dev` is only needed when
+ * DATABASE_URL points at a local libSQL server (Turso, or Workers without a file system).
+ */
+export function usesTursoDevServer(
+  config: Pick<
+    ProjectConfig,
+    "backend" | "database" | "dbSetup" | "runtime" | "webDeploy" | "serverDeploy"
+  >,
+): boolean {
+  if (config.database !== "sqlite") return false;
+  if (config.dbSetup === "turso") return true;
+  if (config.dbSetup !== "none") return false;
+
+  const isDockerConsumed =
+    config.backend === "self" ? config.webDeploy === "docker" : config.serverDeploy === "docker";
+  return (
+    !isDockerConsumed &&
+    (config.runtime === "workers" ||
+      config.webDeploy === "cloudflare" ||
+      config.serverDeploy === "cloudflare")
+  );
+}

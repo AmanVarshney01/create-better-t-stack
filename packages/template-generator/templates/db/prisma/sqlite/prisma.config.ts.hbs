@@ -1,5 +1,5 @@
 import path from "node:path";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig{{#unless (or (eq dbSetup "turso") (eq dbSetup "d1"))}}, env{{/unless}} } from "prisma/config";
 import "varlock/auto-load";
 
 
@@ -9,7 +9,7 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
   },
   datasource: {
-    {{#if (eq dbSetup "turso")}}
+    {{#if (or (eq dbSetup "turso") (eq dbSetup "d1"))}}
     url: "file:./dev.db",
     {{else}}
     url: env("DATABASE_URL"),

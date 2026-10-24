@@ -3,7 +3,12 @@
  * Updates package names, scripts, and workspaces after template generation
  */
 
-import { getLocalD1Owner, webFrontends, type ProjectConfig } from "@better-t-stack/types";
+import {
+  getLocalD1Owner,
+  usesTursoDevServer,
+  webFrontends,
+  type ProjectConfig,
+} from "@better-t-stack/types";
 import { parse, stringify } from "yaml";
 
 import type { JsonValue } from "../core/json-types";
@@ -18,7 +23,7 @@ type PackageJson = {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   allowScripts?: Record<string, boolean>;
-  overrides?: Record<string, string>;
+  overrides?: Record<string, string | Record<string, string>> & { vite?: string };
   catalog?: Record<string, string>;
   catalogs?: Record<string, Record<string, string>>;
   workspaces?:
@@ -65,6 +70,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   }
 }
 
+/** Wire root scripts and package-manager settings for the selected stack. */
 function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const pkgJson = vfs.readJson<PackageJson>("package.json");
   if (!pkgJson) return;
@@ -168,7 +174,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     }
   }
 
-  if (database === "sqlite" && dbSetup !== "d1") {
+  if (usesTursoDevServer(config)) {
     scripts["db:local"] = pmConfig.filter(dbPackageName, "db:local");
   }
 
@@ -253,6 +259,31 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager ||= `${packageManager}@latest`;
+
+  if (packageManager === "npm") {
+    const nativeDeps = vfs.readJson<PackageJson>("apps/native/package.json")?.dependencies;
+    if (nativeDeps) {
+      // These published peer ranges lag SDK 58. Keep overrides scoped to the
+      // validated integrations; do not disable peer validation for the project.
+      if (config.auth === "clerk" && nativeDeps.expo) {
+        pkgJson.overrides = {
+          ...pkgJson.overrides,
+          "@clerk/expo": { expo: nativeDeps.expo },
+        };
+      }
+      if (
+        config.frontend.includes("native-uniwind") &&
+        nativeDeps["react-native-gesture-handler"]
+      ) {
+        pkgJson.overrides = {
+          ...pkgJson.overrides,
+          "heroui-native": {
+            "react-native-gesture-handler": nativeDeps["react-native-gesture-handler"],
+          },
+        };
+      }
+    }
+  }
 
   if (config.api === "orpc" && config.frontend.includes("nuxt")) {
     pkgJson.overrides = {
@@ -570,7 +601,7 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
   const { isD1Alchemy } = dbSupport;
 
   if (database !== "none") {
-    if (database === "sqlite" && dbSetup !== "d1") {
+    if (usesTursoDevServer(config)) {
       scripts["db:local"] = "turso dev --db-file local.db";
     }
 

@@ -2,7 +2,12 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { type ProjectConfig } from "@better-t-stack/types";
-import { chromium, expect as baseExpect, type Browser } from "@playwright/test";
+import {
+  chromium,
+  expect as baseExpect,
+  type APIRequestContext,
+  type Browser,
+} from "@playwright/test";
 import { z } from "zod";
 
 import { Blocked } from "./command";
@@ -46,6 +51,19 @@ export async function openBrowser(): Promise<Browser> {
   return chromium.launch();
 }
 
+export async function waitForDeployment(request: APIRequestContext, url: string) {
+  await expect(async () => {
+    const response = await request.get(url, { timeout: 5_000 });
+    try {
+      expect(response.status(), "Cloudflare home page becomes available after deployment").toBe(
+        200,
+      );
+    } finally {
+      await response.dispose();
+    }
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+}
+
 export async function verifyBrowser(
   browser: Browser,
   config: ProjectConfig,
@@ -55,7 +73,8 @@ export async function verifyBrowser(
   database?: DatabaseAssertions,
   previousStage?: string,
 ) {
-  if (!deployment.web) throw new Blocked("No deployed web URL available for browser verification");
+  const webUrl = deployment.web;
+  if (!webUrl) throw new Blocked("No deployed web URL available for browser verification");
   const context = await browser.newContext();
   const email = `live-${previousStage ?? stage}@example.test`;
   const persistedTask = `Survives restart ${previousStage ?? stage}`;
@@ -77,6 +96,7 @@ export async function verifyBrowser(
   const cancelledNavigations: string[] = [];
   const cancelledSessionRequests: { url: string; afterResponse: number }[] = [];
   const requests: { url: string; status: number }[] = [];
+  const activationStatuses: { url: string; status: number | undefined }[] = [];
   page.on("pageerror", (error) => errors.push(`${page.url()}: ${error.message}`));
   page.on("console", (message) => {
     if (/hydration.*(mismatch|failed)/i.test(message.text()))
@@ -109,14 +129,38 @@ export async function verifyBrowser(
       errors.push(`${response.status()} ${response.url()}`);
     if (!/^\/(api\/)?(auth|trpc|rpc)(\/|$)/.test(url.pathname)) return;
     requests.push({ url: response.url(), status: response.status() });
-    if (!response.ok() || url.origin !== new URL(deployment.server ?? deployment.web!).origin) {
+    if (!response.ok() || url.origin !== new URL(deployment.server ?? webUrl).origin) {
       errors.push(`${response.status()} ${response.url()}`);
     }
   });
   try {
     await authorizeDeployment(context.request, deployment);
-    const home = await page.goto(deployment.web);
-    expect(home?.status(), "Deployed home page").toBe(200);
+    let homeStatus: number | undefined;
+    if (stage === "alchemy") {
+      const urls = new Set([deployment.server, webUrl].flatMap((url) => (url ? [url] : [])));
+      for (const url of urls) {
+        await expect
+          .poll(
+            async () => {
+              // A failed navigation must not end the poll: the deployment may not be up yet.
+              const status = await page
+                .goto(url, { timeout: 10_000 })
+                .then((response) => response?.status())
+                .catch(() => undefined);
+              activationStatuses.push({ url, status });
+              if (url === webUrl) homeStatus = status;
+              return status;
+            },
+            { message: "Deployed endpoint becomes ready in the browser", timeout: 60_000 },
+          )
+          .toBe(200);
+      }
+    } else {
+      homeStatus = (await page.goto(webUrl))?.status();
+    }
+    expect(homeStatus, "Deployed home page").toBe(200);
+    if (config.addons.includes("pwa"))
+      await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     if (config.api !== "none")
       await expect(
         page.getByText(config.frontend.includes("nuxt") ? "Connected (OK)" : "Connected", {
@@ -124,19 +168,35 @@ export async function verifyBrowser(
         }),
       ).toBeVisible();
     if (config.auth === "better-auth") {
+      if (config.frontend.includes("svelte")) {
+        const beforeHydration = await browser.newContext({ javaScriptEnabled: false });
+        try {
+          await authorizeDeployment(beforeHydration.request, deployment);
+          const login = await beforeHydration.newPage();
+          expect((await login.goto(`${webUrl}/login`))?.status()).toBe(200);
+          await expect(login.getByLabel(/^Email\s*\*?$/)).toBeDisabled();
+          await expect(login.getByLabel(/^Password\s*\*?$/)).toBeDisabled();
+          await expect(
+            login.locator("form").getByRole("button", { name: "Sign In", exact: true }),
+          ).toBeDisabled();
+          await expect(login.locator("form")).toHaveAttribute("method", "post");
+        } finally {
+          await beforeHydration.close();
+        }
+      }
       if (serverAuthLoader) {
-        const protectedPage = await context.request.get(`${deployment.web}/dashboard`, {
+        const protectedPage = await context.request.get(`${webUrl}/dashboard`, {
           maxRedirects: 0,
         });
         expect([302, 307], "Unauthenticated dashboard redirects before hydration").toContain(
           protectedPage.status(),
         );
-        expect(new URL(protectedPage.headers().location!, deployment.web).pathname).toBe("/login");
+        expect(new URL(protectedPage.headers().location!, webUrl).pathname).toBe("/login");
       }
       const loginSession = config.frontend.includes("nuxt")
         ? undefined
         : page.waitForResponse((response) => response.url().includes("/api/auth/get-session"));
-      expect((await page.goto(`${deployment.web}/login`))?.status(), "Login page").toBe(200);
+      expect((await page.goto(`${webUrl}/login`))?.status(), "Login page").toBe(200);
       if (loginSession)
         expect((await loginSession).status(), "Login page session request").toBe(200);
       if (previousStage && !startsWithSignIn)
@@ -165,7 +225,7 @@ export async function verifyBrowser(
         });
         try {
           const serverPage = await serverRendered.newPage();
-          expect((await serverPage.goto(`${deployment.web}/dashboard`))?.status()).toBe(200);
+          expect((await serverPage.goto(`${webUrl}/dashboard`))?.status()).toBe(200);
           await expect(serverPage.getByText(/Welcome.*Live Test/)).toBeVisible();
           if (config.api !== "none" && config.frontend.includes("nuxt"))
             await expect(serverPage.getByText(/^(API: )?This is private$/)).toBeVisible();
@@ -185,7 +245,7 @@ export async function verifyBrowser(
       const todosLoaded = config.frontend.includes("nuxt")
         ? undefined
         : page.waitForResponse((response) => /todo[/.]getAll/.test(response.url()));
-      expect((await page.goto(`${deployment.web}/todos`))?.status(), "Todo page").toBe(200);
+      expect((await page.goto(`${webUrl}/todos`))?.status(), "Todo page").toBe(200);
       if (todosLoaded) expect((await todosLoaded).status(), "Todo list request").toBe(200);
       if (previousStage) {
         await expect(
@@ -252,7 +312,7 @@ export async function verifyBrowser(
       ]);
       expect(signedOut.status(), "Sign-out request").toBe(200);
       await page.waitForURL((url) => url.pathname === "/", { waitUntil: "load" });
-      await page.goto(`${deployment.web}/dashboard`);
+      await page.goto(`${webUrl}/dashboard`);
       await expect(page).toHaveURL(/\/login\/?$/);
       if (!startsWithSignIn)
         await page.getByRole("button", { name: "Already have an account? Sign In" }).click();
@@ -264,10 +324,10 @@ export async function verifyBrowser(
     if (config.api !== "none" && !config.frontend.includes("nuxt"))
       expect(requests.some((r) => r.url.includes("healthCheck") && r.status === 200)).toBe(true);
     if (config.addons.includes("pwa") && stage !== "development") {
-      await page.goto(deployment.web);
+      await page.goto(webUrl);
       const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute("href");
       expect(manifestUrl, "PWA manifest link").toBeTruthy();
-      const manifestHref = new URL(manifestUrl!, deployment.web).href;
+      const manifestHref = new URL(manifestUrl!, webUrl).href;
       const manifestResponse = await context.request.get(manifestHref);
       expect(manifestResponse.status(), "PWA manifest response").toBe(200);
       const manifest = z
@@ -282,7 +342,6 @@ export async function verifyBrowser(
         const iconUrl = new URL(icon.src, manifestResponse.url()).href;
         expect((await context.request.get(iconUrl)).status(), "PWA icon").toBe(200);
       }
-      await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
       const cachedUrls = await page.evaluate(async () => {
         const urls: string[] = [];
         for (const key of await caches.keys())
@@ -295,7 +354,7 @@ export async function verifyBrowser(
       ).toEqual([]);
       offline = true;
       await context.setOffline(true);
-      const response = await page.goto(`${deployment.web}/?live-offline=1`);
+      const response = await page.goto(`${webUrl}/?live-offline=1`);
       expect(response?.status(), "Offline navigation served by the service worker").toBe(200);
       if (config.frontend.includes("tanstack-router"))
         await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
@@ -319,7 +378,11 @@ export async function verifyBrowser(
   } finally {
     await writeFile(
       path.join(directory, `${stage}-network.json`),
-      JSON.stringify({ requests, errors, cancelledNavigations, cancelledSessionRequests }, null, 2),
+      JSON.stringify(
+        { requests, errors, cancelledNavigations, cancelledSessionRequests, activationStatuses },
+        null,
+        2,
+      ),
       { mode: 0o600 },
     );
     await context.tracing.stop({ path: path.join(directory, `${stage}-trace.zip`) });

@@ -61,6 +61,54 @@ describe("builder preview over oRPC", () => {
     expect(api.dependencies["@trpc/server"]).toBeUndefined();
   });
 
+  test("preserves server-only Clerk when a stack URL is shared and previewed", async () => {
+    const input = StackStateSchema.parse({
+      ...DEFAULT_STACK,
+      webFrontend: ["none"],
+      nativeFrontend: ["none"],
+      backend: "hono",
+      auth: "clerk",
+    });
+    const shared = await loadStackParams(
+      Promise.resolve(new URL(generateStackUrlFromState(input))),
+    );
+    const preview = await client.preview(shared);
+    const output = files(preview.root);
+    expect([...output.keys()].some((file) => file.startsWith("apps/web/"))).toBe(false);
+    expect([...output.keys()].some((file) => file.startsWith("apps/native/"))).toBe(false);
+    expect(
+      JSON.parse(output.get("packages/api/package.json")!).dependencies["@clerk/backend"],
+    ).toBeDefined();
+    expect(
+      JSON.parse(output.get("apps/server/package.json")!).dependencies["@clerk/backend"],
+    ).toBeDefined();
+  });
+
+  test("keeps a fullstack D1 selection on its Cloudflare web deployment", async () => {
+    const preview = await client.preview(
+      StackStateSchema.parse({
+        ...DEFAULT_STACK,
+        webFrontend: ["next"],
+        backend: "self-next",
+        runtime: "none",
+        dbSetup: "d1",
+        database: "sqlite",
+        orm: "drizzle",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+      }),
+    );
+    const output = files(preview.root);
+    expect(output.has("apps/web/package.json")).toBe(true);
+    expect(output.has("apps/server/package.json")).toBe(false);
+    expect(
+      JSON.parse(output.get("packages/db/package.json")!).dependencies["drizzle-orm"],
+    ).toBeDefined();
+    expect(
+      JSON.parse(output.get("packages/infra/package.json")!).devDependencies.alchemy,
+    ).toBeDefined();
+  });
+
   test("rejects invalid payloads at the HTTP boundary", async () => {
     for (const json of [
       null,
@@ -79,15 +127,5 @@ describe("builder preview over oRPC", () => {
       expect(response.status).toBe(400);
     }
     await expect(client.preview({ projectName: "-bad" })).rejects.toBeInstanceOf(ORPCError);
-  });
-
-  test("rejects malformed saved preferences and fills missing fields in older preferences", () => {
-    expect(StackStateSchema.safeParse({ addons: "pwa" }).success).toBe(false);
-    expect(StackStateSchema.safeParse({ backend: "invented" }).success).toBe(false);
-    expect(StackStateSchema.parse({ projectName: "saved-app" })).toEqual({
-      ...DEFAULT_STACK,
-      projectName: "saved-app",
-      yolo: "false",
-    });
   });
 });

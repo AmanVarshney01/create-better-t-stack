@@ -220,7 +220,7 @@ export const SkillsSourceSchema = z
     "expo/skills",
     "prisma/skills",
     "elysiajs/skills",
-    "waynesutton/convexskills",
+    "get-convex/agent-skills",
     "msmps/opentui-skill",
     "haydenbleasel/ultracite",
     "https://www.evlog.dev",

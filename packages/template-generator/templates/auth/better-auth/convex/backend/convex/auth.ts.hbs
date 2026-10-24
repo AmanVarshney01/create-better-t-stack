@@ -26,12 +26,30 @@ function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
     baseURL: process.env.CONVEX_SITE_URL,
+    {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    {{#unless (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    baseURL: process.env.CONVEX_SITE_URL,
+    {{/unless}}
     {{/if}}
     {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    baseURL: {
+      allowedHosts: [siteUrl, process.env.CONVEX_SITE_URL!],
+      fallback: siteUrl,
+    },
+    advanced: {
+      trustedProxyHeaders: true,
+    },
+    {{else}}
     baseURL: siteUrl,
     {{/if}}
+    {{/if}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+    trustedOrigins: [siteUrl, nativeAppUrl, "exp://", "http://localhost:8081"],
+    {{else}}
     trustedOrigins: [siteUrl, nativeAppUrl, "exp://"],
+    {{/if}}
     {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
     trustedOrigins: [siteUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}

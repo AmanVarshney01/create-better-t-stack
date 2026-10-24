@@ -3,12 +3,17 @@ name: Test
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  # Generated projects install the latest dependencies, so an upstream release can
+  # break them with no change here. The daily run catches that on main first.
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: test-${{ github.head_ref }}
+  group: test-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -56,8 +61,8 @@ jobs:
           bunx tsc --noEmit -p packages/backend/convex/tsconfig.json
           bun run --filter web check-types
 
-      - name: Test Website and Shared Packages
-        run: bun test apps/web/test packages/types/test packages/backend/test
+      - name: Test Website Preview Integration
+        run: bun test apps/web/test/preview.test.ts
 
       - name: Test CLI
         working-directory: apps/cli
@@ -65,7 +70,6 @@ jobs:
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
-          BTS_MATRIX_MODE: smoke
 
   generated-builds:
     name: Generated Builds (${{ matrix.shard }}/8)

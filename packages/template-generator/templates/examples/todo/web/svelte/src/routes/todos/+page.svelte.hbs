@@ -162,7 +162,7 @@
 {{else}}
 <script lang="ts">
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	{{/if}}
 	import { createQuery, createMutation } from '@tanstack/svelte-query';
 
@@ -224,7 +224,7 @@
 
 	const isAdding = $derived(addMutation.isPending);
 	const canAdd = $derived(!isAdding && newTodoText.trim().length > 0);
-	const isLoadingTodos = $derived(todosQuery.isLoading);
+	const isLoadingTodos = $derived(todosQuery.isPending);
 	const todos = $derived(todosQuery.data ?? []);
 	const hasTodos = $derived(todos.length > 0);
 

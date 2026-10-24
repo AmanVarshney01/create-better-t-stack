@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "3.45.0",
+  "version": "3.48.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "keywords": [
     "better-auth",
@@ -64,9 +64,9 @@
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "check-test-types": "tsc --noEmit -p tsconfig.tests.json",
-    "test": "bun test",
-    "test:ci": "bun run build && BTS_SKIP_EXTERNAL_COMMANDS=1 BTS_TEST_MODE=1 bun test --bail=5",
-    "test:complete": "cd ../.. && bun run build && cd apps/cli && BTS_MATRIX_MODE=smoke BTS_BUILD_SAMPLES=1 bun test --bail=5",
+    "test": "bun test ./test",
+    "test:ci": "bun run build && BTS_SKIP_EXTERNAL_COMMANDS=1 BTS_TEST_MODE=1 bun run test --bail=5",
+    "test:complete": "cd ../.. && bun run build && cd apps/cli && BTS_BUILD_SAMPLES=1 bun run test --bail=5",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -74,8 +74,8 @@
     "@better-t-stack/types": "workspace:*",
     "@clack/core": "^1.5.0",
     "@clack/prompts": "^1.8.0",
-    "@modelcontextprotocol/server": "2.0.0",
-    "@orpc/server": "^1.15.0",
+    "@modelcontextprotocol/server": "2.3.1",
+    "@orpc/server": "^1.15.6",
     "better-result": "^3.0.1",
     "consola": "^3.4.2",
     "env-paths": "^4.0.0",
@@ -94,9 +94,9 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "2.0.0",
+    "@modelcontextprotocol/client": "2.3.1",
     "@playwright/test": "1.63.0",
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.3",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.5.0",
     "@types/semver": "^7.8.0",

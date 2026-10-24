@@ -16,23 +16,25 @@ export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
 
-  "better-auth": "1.7.7",
-  "@better-auth/core": "1.7.7",
-  "@better-auth/drizzle-adapter": "1.7.7",
-  "@better-auth/expo": "1.7.7",
+  "better-auth": "1.7.12",
+  "@better-auth/core": "1.7.12",
+  "@better-auth/drizzle-adapter": "1.7.12",
+  "@better-auth/expo": "1.7.12",
 
-  "@clerk/backend": "^3.17.1",
-  "@clerk/express": "^2.1.66",
-  "@clerk/fastify": "^3.1.76",
-  "@clerk/nextjs": "^7.9.1",
-  "@clerk/react": "^6.15.1",
-  "@clerk/react-router": "^3.6.21",
+  "@clerk/backend": "^3.23.2",
+  "@clerk/express": "^2.1.78",
+  "@clerk/fastify": "^3.1.88",
+  "@clerk/nextjs": "^7.9.15",
+  "@clerk/react": "^6.17.8",
+  "@clerk/react-router": "^3.6.33",
   "@react-router/express": "^8.3.1",
-  "@clerk/tanstack-react-start": "^1.5.12",
-  "@clerk/expo": "^4.6.5",
+  "@clerk/tanstack-react-start": "^1.7.1",
+  "@clerk/expo": "^4.12.0",
 
-  "drizzle-orm": "1.0.0-rc.4",
-  "drizzle-kit": "1.0.0-rc.4",
+  "drizzle-orm": "1.0.0-rc.5",
+  "drizzle-kit": "1.0.0-rc.5",
+  // Intentional: drizzle-orm's planetscale-serverless driver still passes query params, which
+  // @planetscale/database 2.0 rejects (drizzle-team/drizzle-orm#6398).
   "@planetscale/database": "^1.20.1",
 
   "@libsql/client": "0.18.0",
@@ -63,13 +65,14 @@ export const dependencyVersionMap = {
 
   "vite-plugin-pwa": "^2.0.0",
   "@vite-pwa/assets-generator": "^2.0.0",
+  "workbox-window": "^7.4.1",
 
   "@tauri-apps/cli": "^2.12.1",
 
-  "@biomejs/biome": "^2.5.15",
+  "@biomejs/biome": "^2.6.2",
 
   oxlint: "^1.87.0",
-  oxfmt: "^0.72.0",
+  oxfmt: "^0.74.0",
 
   husky: "^9.1.7",
   lefthook: "^2.2.1",
@@ -78,7 +81,7 @@ export const dependencyVersionMap = {
   tsx: "^4.23.13",
   "@types/node": "^26.4.1",
 
-  "@types/bun": "^1.4.2",
+  "@types/bun": "^1.4.3",
 
   "@elysiajs/node": "^1.4.5",
 
@@ -101,9 +104,9 @@ export const dependencyVersionMap = {
   "@fastify/cors": "^11.3.0",
 
   turbo: "^2.11.7",
-  nx: "^23.3.0",
-  "vite-plus": "1.1.0",
-  rolldown: "1.2.13",
+  nx: "^24.0.1",
+  "vite-plus": "1.4.0",
+  rolldown: "1.2.15",
   unwasm: "^0.6.0",
 
   ai: "^7.0.93",
@@ -115,25 +118,25 @@ export const dependencyVersionMap = {
   streamdown: "^2.6.0",
   shiki: "^4.4.3",
 
-  "@orpc/server": "^1.15.0",
-  "@orpc/client": "^1.15.0",
-  "@orpc/openapi": "^1.15.0",
-  "@orpc/zod": "^1.15.0",
-  "@orpc/tanstack-query": "^1.15.0",
+  "@orpc/server": "^1.15.6",
+  "@orpc/client": "^1.15.6",
+  "@orpc/openapi": "^1.15.6",
+  "@orpc/zod": "^1.15.6",
+  "@orpc/tanstack-query": "^1.15.6",
 
-  "@trpc/tanstack-react-query": "^11.18.0",
-  "@trpc/server": "^11.18.0",
-  "@trpc/client": "^11.18.0",
+  "@trpc/tanstack-react-query": "^11.19.0",
+  "@trpc/server": "^11.19.0",
+  "@trpc/client": "^11.19.0",
 
   next: "^16.3.4",
   nitro: "3.0.260903-beta",
 
-  convex: "^1.45.0",
+  convex: "^1.48.0",
   "@convex-dev/react-query": "^0.1.0",
-  "@convex-dev/agent": "^0.7.1",
+  "@convex-dev/agent": "^0.7.8",
   "@convex-dev/polar": "^0.9.2",
   "convex-revenuecat": "^0.3.2",
-  "convex-svelte": "^0.14.0",
+  "convex-svelte": "^0.15.1",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
   "@convex-dev/better-auth": "^0.12.5",
@@ -144,55 +147,62 @@ export const dependencyVersionMap = {
   "@tanstack/vue-query-devtools": "^6.1.48",
   "@tanstack/vue-query": "^5.102.8",
 
-  "@tanstack/react-query-devtools": "^5.102.8",
-  "@tanstack/react-query": "^5.102.8",
+  "@tanstack/react-query-devtools": "^5.104.2",
+  "@tanstack/react-query": "^5.104.2",
   "@tanstack/react-form": "^1.33.5",
-  "@tanstack/react-router-ssr-query": "^1.167.2",
+  "@tanstack/react-router-ssr-query": "^1.167.3",
   "@tanstack/svelte-form": "^1.33.5",
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).
   "@tanstack/solid-query": "6.0.0-rc.5",
   "@tanstack/query-core": "5.101.4",
 
-  wrangler: "^4.129.0",
-  "@cloudflare/vite-plugin": "1.54.4",
+  wrangler: "^4.152.0",
+  "@cloudflare/vite-plugin": "1.65.0",
   "@opennextjs/cloudflare": "^1.20.6",
-  "@sveltejs/adapter-cloudflare": "^7.2.9",
-  "@sveltejs/adapter-node": "^5.5.7",
-  "@sveltejs/adapter-vercel": "^6.3.4",
+  "@sveltejs/adapter-cloudflare": "^8.0.0",
+  "@sveltejs/adapter-node": "^6.0.0",
+  "@sveltejs/adapter-vercel": "^7.0.0",
   "@cloudflare/workers-types": "^5.20260906.1",
-  "@alchemy.run/frontend-frameworks": "2.0.0-beta.81",
+  "@alchemy.run/frontend-frameworks": "2.0.0-beta.84",
   "@astrojs/node": "^11.1.5",
   "@astrojs/vercel": "^11.0.10",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
   "@vercel/nft": "^1.11.0",
-  alchemy: "2.0.0-beta.81",
-  effect: "4.0.3",
-  "@effect/platform-node": "4.0.3",
-  "@effect/platform-bun": "4.0.3",
+  alchemy: "2.0.0-beta.84",
+  "@alchemy.run/axiom": "2.0.0-beta.84",
+  "@alchemy.run/cloudflare": "2.0.0-beta.84",
+  "@alchemy.run/neon": "2.0.0-beta.84",
+  "@alchemy.run/planetscale": "2.0.0-beta.84",
+  "@alchemy.run/prisma": "2.0.0-beta.84",
+  effect: "4.0.6",
+  "@effect/platform-node": "4.0.6",
+  "@effect/platform-bun": "4.0.6",
 
-  "babel-preset-expo": "~57.0.10",
-  varlock: "1.18.0",
-  "@varlock/vite-integration": "1.5.1",
-  "@varlock/nextjs-integration": "1.2.2",
-  "@varlock/nuxt-integration": "0.1.1",
-  "@varlock/astro-integration": "1.4.1",
-  "@varlock/expo-integration": "1.2.1",
-  "@varlock/cloudflare-integration": "1.5.1",
+  "babel-preset-expo": "~58.0.16",
+  varlock: "1.23.0",
+  "@varlock/vite-integration": "1.5.4",
+  "@varlock/nextjs-integration": "1.2.5",
+  "@varlock/nuxt-integration": "0.1.4",
+  "@varlock/astro-integration": "1.4.4",
+  "@varlock/expo-integration": "1.2.2",
+  "@varlock/cloudflare-integration": "1.6.2",
   tsdown: "^0.23.0",
   zod: "^4.5.4",
 
+  // Intentional: @polar-sh/better-auth 2.x does not export PolarBetterAuthPlugin, so packages that
+  // emit declarations for createAuth() fail with TS4058; 2.x also requires @polar-sh/sdk 1.0.
   "@polar-sh/better-auth": "^1.8.4",
   "@polar-sh/checkout": "^0.4.1",
   // Peer range required by @polar-sh/better-auth; update together.
   "@polar-sh/sdk": "^0.47.0",
-  "@stripe/react-stripe-js": "^6.9.0",
-  "@stripe/stripe-js": "^9.15.0",
+  "@stripe/react-stripe-js": "^7.0.0",
+  "@stripe/stripe-js": "^10.1.0",
 
-  "react-native-purchases": "^10.9.0",
+  "react-native-purchases": "^10.15.1",
 
-  evlog: "^2.30.1",
+  evlog: "^2.33.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

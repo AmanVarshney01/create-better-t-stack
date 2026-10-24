@@ -1,4 +1,4 @@
-import { authClient } from '$lib/auth-client';
+import { authClient } from '#lib/auth-client.ts';
 import type { BetterFetchOption } from 'better-auth/client';
 import { redirect } from '@sveltejs/kit';
 {{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}

@@ -24,7 +24,7 @@ export default function TabLayout() {
         name="index"
         options=\{{
           title: "Home",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color ?? theme.colors.foreground} />,
         }}
       />
       <Tabs.Screen
@@ -32,7 +32,7 @@ export default function TabLayout() {
         options=\{{
           title: "Explore",
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="compass" color={color} />
+            <TabBarIcon name="compass" color={color ?? theme.colors.foreground} />
           ),
         }}
       />

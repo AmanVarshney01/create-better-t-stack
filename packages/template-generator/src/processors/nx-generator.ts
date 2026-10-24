@@ -3,7 +3,12 @@
  * Generates a minimal nx.json for workspace orchestration when the Nx addon is selected.
  */
 
-import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
+import {
+  getLocalD1Owner,
+  isAlchemyDeployTarget,
+  usesTursoDevServer,
+  type ProjectConfig,
+} from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -32,12 +37,12 @@ export function processNxConfig(vfs: VirtualFileSystem, config: ProjectConfig): 
 }
 
 export function generateNxConfig(config: ProjectConfig): NxConfig {
-  const { backend, database, dbSetup, webDeploy, serverDeploy } = config;
+  const { backend, dbSetup, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const dbSupport = getDbScriptSupport(config);
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
-  const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
+  const isSqliteLocal = usesTursoDevServer(config) && hasDatabase;
   const hasAlchemy =
     isAlchemyDeployTarget(webDeploy) ||
     isAlchemyDeployTarget(serverDeploy) ||
@@ -54,6 +59,11 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
       inputs: ["default", "^default"],
     },
     dev: {
+      cache: false,
+      continuous: true,
+    },
+    start: {
+      dependsOn: ["build"],
       cache: false,
       continuous: true,
     },

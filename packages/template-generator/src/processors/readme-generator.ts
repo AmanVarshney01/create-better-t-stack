@@ -2,6 +2,7 @@ import {
   getLocalD1Owner,
   isAlchemyDeployTarget,
   usesAlchemyManagedDatabase,
+  usesTursoDevServer,
   type ProjectConfig,
 } from "@better-t-stack/types";
 
@@ -336,6 +337,7 @@ function generateStackDescription(
   return parts.length > 0 ? `${parts.join(", ")}, and more` : "";
 }
 
+/** Describe the selected app servers and native development-build workflow. */
 function generateRunningInstructions(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],
@@ -355,7 +357,9 @@ function generateRunningInstructions(
   }
 
   if (hasNative) {
-    instructions.push("Use the Expo Go app to run the mobile application.");
+    instructions.push(
+      "From `apps/native`, run the `ios` script for iOS or the `android` script for Android to build and launch the app. See [Expo development builds](https://docs.expo.dev/develop/development-builds/introduction/) for device setup.",
+    );
   }
 
   if (isConvex) {
@@ -692,19 +696,27 @@ ${steps.join("\n\n")}
 `;
   }
 
+  const sqliteEnvStep = `Update your \`.env\` file in the \`${isBackendSelf ? "apps/web" : "apps/server"}\` directory with the appropriate connection details if needed.`;
+  const sqliteSetup =
+    dbSetup === "d1"
+      ? `1. D1 local development and migrations are handled automatically by Alchemy during dev and deploy.
+
+2. ${sqliteEnvStep}`
+      : usesTursoDevServer(config)
+        ? `1. Start the local SQLite database${dbSetup === "turso" ? " (optional)" : ""}:
+\`\`\`bash
+${packageManagerRunCmd} db:local
+\`\`\`
+
+2. ${sqliteEnvStep}`
+        : `1. SQLite stores data in a local file, so no database server is needed. Applying the schema creates the file \`DATABASE_URL\` points to.
+
+2. ${sqliteEnvStep}`;
+
   const dbDescriptions = {
     sqlite: `This project uses SQLite${ormDesc}.
 
-1. Start the local SQLite database (optional):
-${
-  dbSetup === "d1"
-    ? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
-    : `\`\`\`bash
-${packageManagerRunCmd} db:local
-\`\`\``
-}
-
-2. Update your \`.env\` file in the \`${isBackendSelf ? "apps/web" : "apps/server"}\` directory with the appropriate connection details if needed.`,
+${sqliteSetup}`,
 
     postgres: `This project uses PostgreSQL${ormDesc}.
 
@@ -742,7 +754,7 @@ function generateScriptsList(
   config: ProjectConfig,
   hasNative: boolean,
 ): string {
-  const { database, addons, backend, dbSetup, frontend, webDeploy, serverDeploy } = config;
+  const { addons, backend, frontend, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
   const hasWeb = frontend.some((f) =>
@@ -799,7 +811,7 @@ function generateScriptsList(
     }
   }
 
-  if (database === "sqlite" && dbSetup !== "d1" && dbSupport.hasDbScripts) {
+  if (usesTursoDevServer(config) && dbSupport.hasDbScripts) {
     scripts += `\n- \`${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
   }
 

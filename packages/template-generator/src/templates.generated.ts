@@ -46,12 +46,9 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 				"useExhaustiveDependencies": "info"
 			},
 			"nursery": {
-				"useSortedClasses": {
+				"useTailwindSortedClasses": {
 					"level": "warn",
-					"fix": "safe",
-					"options": {
-						"functions": ["clsx", "cva", "cn"]
-					}
+					"fix": "safe"
 				}
 			},
 			"style": {
@@ -148,7 +145,7 @@ export default {
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.3",
     "concurrently": "^10.0.6",
     "electrobun": "^2.0.2",
     "typescript": "^6.0.3"
@@ -402,6 +399,14 @@ export default function PwaRegistration() {
     </main>
   </body>
 </html>
+`],
+  ["addons/pwa/apps/web/vite-ssr/src/pwa-registration.ts", `/// <reference types="vite-plugin-pwa/client" />
+
+if (!import.meta.env.SSR) {
+  import("virtual:pwa-register").then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
 `],
   ["addons/pwa/apps/web/vite/public/logo.png", `[Binary file]`],
   ["addons/pwa/apps/web/vite/pwa-assets.config.ts.hbs", `import {
@@ -995,11 +1000,16 @@ export default defineNuxtPlugin(() => {
   };
 });
 `],
-  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
+  ["api/orpc/fullstack/nuxt/app/plugins/orpc.server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "../../src/env.server";
+{{/if}}
 
+// During server rendering, call the router directly instead of over HTTP.
+// The context comes from the incoming request, so the user's session applies.
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent();
 
@@ -1007,14 +1017,18 @@ export default defineNuxtPlugin(() => {
     throw new Error("Missing Nuxt request event");
   }
 
-  const rpcLink = new RPCLink({
-    url: new URL("/rpc", useRequestURL()).href,
-    fetch(request, init) {
-      return event.fetch(request, init);
-    },
-  });
+  // Composables must run during plugin setup, so read the request headers here.
+  const headers = useRequestHeaders();
 
-  const client: AppRouterClient = createORPCClient(rpcLink);
+  const client = createRouterClient(appRouter, {
+    context: () =>
+      createContext({
+        headers: new Headers(headers),
+        {{#if (eq webDeploy "cloudflare")}}
+        env: (event.context.cloudflare as { env: CloudflareEnv }).env,
+        {{/if}}
+      }),
+  });
   const orpc = createTanstackQueryUtils(client);
 
   return {
@@ -1180,20 +1194,16 @@ if (typeof window !== "undefined") {
 const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
-{{#if (eq webDeploy "cloudflare")}}
-		const env = event.platform?.env ?? ENV;
-
-{{/if}}
 		return createContext({
 			headers: event.request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-			env,
+			env: ENV,
 {{/if}}
 		});
 	},
 });
 
-// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so #lib/orpc.ts can
 // reuse the in-process server client during SSR and fall back to HTTP in the browser.
 globalThis.$client = serverClient;
 `],
@@ -1230,15 +1240,11 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
-{{#if (eq webDeploy "cloudflare")}}
-	const env = platform?.env ?? ENV;
-
-{{/if}}
+const handle: RequestHandler = async ({ request }) => {
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env,
+		env: ENV,
 {{/if}}
 	});
 
@@ -1706,7 +1712,7 @@ export default defineNuxtPlugin((nuxt) => {
   ["api/orpc/web/react/base/src/utils/orpc.ts.hbs", `import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { {{#if (includes frontend "next")}}environmentManager, {{/if}}QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 import { createRouterClient } from "@orpc/server";
@@ -1751,9 +1757,20 @@ export function createQueryClient() {
 	});
 }
 
-{{#unless (includes frontend "tanstack-start")}}
+{{#if (includes frontend "next")}}
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return createQueryClient();
+	}
+
+	browserQueryClient ??= createQueryClient();
+	return browserQueryClient;
+}
+{{else if (not (includes frontend "tanstack-start"))}}
 export const queryClient = createQueryClient();
-{{/unless}}
+{{/if}}
 
 {{#unless (eq backend "self")}}
 {{> getServerUrl}}
@@ -1950,15 +1967,19 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/svelte-query";
+import { browser } from "$app/env";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error) => {
-			console.error(\`Error: \${error.message}\`);
-		},
-	}),
-});
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error) => {
+				console.error(\`Error: \${error.message}\`);
+			},
+		}),
+		defaultOptions: { queries: { enabled: browser } },
+	});
+}
 
 {{#unless (eq backend "self")}}
 {{> getServerUrl}}
@@ -2563,9 +2584,9 @@ export type AppRouter = typeof appRouter;
 }
 `],
   ["api/trpc/web/react/base/src/utils/trpc.ts.hbs", `{{#if (includes frontend 'next')}}
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { environmentManager, QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import { createTRPCContext } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
@@ -2576,63 +2597,76 @@ import { toast } from 'sonner';
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: () => {
-						query.invalidate();
-					},
-				},
-			});
-		},
-	}),
-});
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+	createTRPCContext<AppRouter>();
 
-const trpcClient = createTRPCClient<AppRouter>({
-	links: [
-		httpBatchLink({
+function makeQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+	});
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+	if (environmentManager.isServer()) {
+		return makeQueryClient();
+	}
+
+	browserQueryClient ??= makeQueryClient();
+	return browserQueryClient;
+}
+
+export function makeTRPCClient() {
+	return createTRPCClient<AppRouter>({
+		links: [
+			httpBatchLink({
 {{#if (eq backend "self")}}
-			url: "/api/trpc",
+				url: "/api/trpc",
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-			url: \`\${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc\`,
+				url: \`\${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc\`,
 {{else}}
-			url: \`\${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\\/$/, "")}/trpc\`,
+				url: \`\${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\\/$/, "")}/trpc\`,
 {{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
-			headers: async () => {
-				if (typeof window !== "undefined") {
-					const token = await getClerkAuthToken();
+				headers: async () => {
+					if (typeof window !== "undefined") {
+						const token = await getClerkAuthToken();
+						return token ? { Authorization: \`Bearer \${token}\` } : {};
+					}
+
+					const { auth } = await import("@clerk/nextjs/server");
+					const clerkAuth = await auth();
+					const token = await clerkAuth.getToken();
+
 					return token ? { Authorization: \`Bearer \${token}\` } : {};
-				}
-
-				const { auth } = await import("@clerk/nextjs/server");
-				const clerkAuth = await auth();
-				const token = await clerkAuth.getToken();
-
-				return token ? { Authorization: \`Bearer \${token}\` } : {};
-			},
+				},
 {{/if}}
 {{#if (eq auth "better-auth")}}
-			fetch(url, options) {
-				return fetch(url, {
-					...options,
-					credentials: "include",
-				});
-			},
+				fetch(url, options) {
+					return fetch(url, {
+						...options,
+						credentials: "include",
+					});
+				},
 {{/if}}
-		}),
-	],
-})
-
-export const trpc = createTRPCOptionsProxy<AppRouter>({
-	client: trpcClient,
-	queryClient,
-});
+			}),
+		],
+	});
+}
 
 {{else if (includes frontend 'tanstack-start')}}
 import { createTRPCContext } from "@trpc/tanstack-react-query";
@@ -2759,12 +2793,30 @@ function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
     baseURL: process.env.CONVEX_SITE_URL,
+    {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    {{#unless (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    baseURL: process.env.CONVEX_SITE_URL,
+    {{/unless}}
     {{/if}}
     {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    baseURL: {
+      allowedHosts: [siteUrl, process.env.CONVEX_SITE_URL!],
+      fallback: siteUrl,
+    },
+    advanced: {
+      trustedProxyHeaders: true,
+    },
+    {{else}}
     baseURL: siteUrl,
     {{/if}}
+    {{/if}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+    trustedOrigins: [siteUrl, nativeAppUrl, "exp://", "http://localhost:8081"],
+    {{else}}
     trustedOrigins: [siteUrl, nativeAppUrl, "exp://"],
+    {{/if}}
     {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
     trustedOrigins: [siteUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
@@ -3822,8 +3874,8 @@ const styles = StyleSheet.create((theme) => ({
   ["auth/better-auth/convex/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
-import { Text, TextInput, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Text, View } from "react-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signInSchema = z.object({
@@ -3866,7 +3918,7 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 export function SignIn() {
-  const passwordInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -3980,8 +4032,8 @@ export function SignIn() {
   ["auth/better-auth/convex/native/uniwind/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
-import { Text, TextInput, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Text, View } from "react-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signUpSchema = z.object({
@@ -4029,8 +4081,8 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 export function SignUp() {
-  const emailInputRef = useRef<TextInput>(null);
-  const passwordInputRef = useRef<TextInput>(null);
+  const emailInputRef = useRef<InputRef>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -6062,7 +6114,7 @@ export const POST = handle;
   ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
 import "./lib/orpc.server";
 {{/if}}
-import { building } from "$app/environment";
+import { building } from "$app/env";
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -6072,7 +6124,7 @@ import { ENV } from "./env.server";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 import { svelteKitHandler } from "better-auth/svelte-kit";
-import type { Handle } from "@sveltejs/kit";
+import type { Handle } from "@sveltejs/kit/hooks";
 
 export const handle: Handle = async ({ event, resolve }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -6081,8 +6133,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const authEnv = event.platform?.env ?? ENV;
-	const authInstance = await createAuth(authEnv);
+	const authInstance = await createAuth(ENV);
 {{else}}
 	const authInstance = await createAuth();
 {{/if}}
@@ -6124,7 +6175,7 @@ export const Route = createFileRoute('/api/auth/$')({
   },
 })
 `],
-  ["auth/better-auth/loaders/svelte/dashboard.ts.hbs", `import { authClient } from '$lib/auth-client';
+  ["auth/better-auth/loaders/svelte/dashboard.ts.hbs", `import { authClient } from '#lib/auth-client.ts';
 import type { BetterFetchOption } from 'better-auth/client';
 import { redirect } from '@sveltejs/kit';
 {{#if (or (eq backend "self") (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker"))))}}
@@ -7915,8 +7966,8 @@ import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
-import { Text, TextInput, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Text, View } from "react-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signInSchema = z.object({
@@ -7959,7 +8010,7 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 function SignIn() {
-  const passwordInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -8087,8 +8138,8 @@ import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
-import { Text, TextInput, View } from "react-native";
-import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import { Text, View } from "react-native";
+import { Button, FieldError, Input, type InputRef, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
 import z from "zod";
 
 const signUpSchema = z.object({
@@ -8136,8 +8187,8 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 export function SignUp() {
-  const emailInputRef = useRef<TextInput>(null);
-  const passwordInputRef = useRef<TextInput>(null);
+  const emailInputRef = useRef<InputRef>(null);
+  const passwordInputRef = useRef<InputRef>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -9871,6 +9922,8 @@ export default defineNuxtPlugin(() => {
     },
     {{#if (ne backend "self")}}
     baseURL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}\`\${serverOrigin}/auth\`{{else}}new URL("/api/auth", serverOrigin).toString(){{/if}},
+    {{else}}
+    baseURL: useRequestURL().origin,
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -9924,7 +9977,7 @@ import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 {{/if}}
 
 export default function Dashboard({
@@ -9942,6 +9995,7 @@ export default function Dashboard({
 	const privateData = useQuery(orpc.privateData.queryOptions());
 	{{/if}}
 	{{#if (eq api "trpc")}}
+	const trpc = useTRPC();
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
@@ -12258,13 +12312,18 @@ export default function Login() {
 `],
   ["auth/better-auth/web/svelte/src/components/SignInForm.svelte.hbs", `<script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
+	import { onMount } from 'svelte';
 	import { z } from 'zod';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 
 	const session = authClient.useSession();
+	let mounted = $state(false);
+	onMount(() => {
+		mounted = true;
+	});
 
-	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
+	let { switchToSignUp }: { switchToSignUp: () => void } = $props();
 
 	const validationSchema = z.object({
 		email: z.email('Invalid email address'),
@@ -12300,6 +12359,7 @@ export default function Login() {
 	<h1 class="mb-6 text-center font-bold text-3xl">Welcome Back</h1>
 
 	<form
+		method="post"
 		class="space-y-4"
 		onsubmit={(e) => {
 			e.preventDefault();
@@ -12307,67 +12367,63 @@ export default function Login() {
 			form.handleSubmit();
 		}}
 	>
-		<form.Field name="email">
-			{#snippet children(field)}
-				<div class="space-y-1">
-					<label for={field.name}>Email</label>
-					<input
-						id={field.name}
-						name={field.name}
-						type="email"
-						class="w-full border"
-						onblur={field.handleBlur}
-						value={field.state.value}
-						oninput={(e: Event) => {
-							const target = e.target as HTMLInputElement;
-							field.handleChange(target.value);
-						}}
-					/>
-					{#if field.state.meta.isTouched}
-						{#each field.state.meta.errors as error}
-							<p class="text-sm text-red-500" role="alert">{error}</p>
-						{/each}
-					{/if}
-				</div>
-			{/snippet}
-		</form.Field>
+		<fieldset class="space-y-4" disabled={!mounted}>
+			<form.Field name="email">
+				{#snippet children(field)}
+					<div class="space-y-1">
+						<label for={field.name}>Email</label>
+						<input
+							id={field.name}
+							name={field.name}
+							type="email"
+							class="w-full border"
+							onblur={field.handleBlur}
+							value={field.state.value}
+							oninput={(e) => field.handleChange(e.currentTarget.value)}
+						/>
+						{#if field.state.meta.isTouched}
+							{#each field.state.meta.errors as error}
+								<p class="text-sm text-red-500" role="alert">{error?.message}</p>
+							{/each}
+						{/if}
+					</div>
+				{/snippet}
+			</form.Field>
 
-		<form.Field name="password">
-			{#snippet children(field)}
-				<div class="space-y-1">
-					<label for={field.name}>Password</label>
-					<input
-						id={field.name}
-						name={field.name}
-						type="password"
-						class="w-full border"
-						onblur={field.handleBlur}
-						value={field.state.value}
-						oninput={(e: Event) => {
-							const target = e.target as HTMLInputElement;
-							field.handleChange(target.value);
-						}}
-					/>
-					{#if field.state.meta.isTouched}
-						{#each field.state.meta.errors as error}
-							<p class="text-sm text-red-500" role="alert">{error}</p>
-						{/each}
-					{/if}
-				</div>
-			{/snippet}
-		</form.Field>
+			<form.Field name="password">
+				{#snippet children(field)}
+					<div class="space-y-1">
+						<label for={field.name}>Password</label>
+						<input
+							id={field.name}
+							name={field.name}
+							type="password"
+							class="w-full border"
+							onblur={field.handleBlur}
+							value={field.state.value}
+							oninput={(e) => field.handleChange(e.currentTarget.value)}
+						/>
+						{#if field.state.meta.isTouched}
+							{#each field.state.meta.errors as error}
+								<p class="text-sm text-red-500" role="alert">{error?.message}</p>
+							{/each}
+						{/if}
+					</div>
+				{/snippet}
+			</form.Field>
 
-		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state: SubmitState)}
-				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
-					{state.isSubmitting ? 'Submitting...' : 'Sign In'}
-				</button>
-			{/snippet}
-		</form.Subscribe>
+			<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+				{#snippet children(state: SubmitState)}
+					<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
+						{state.isSubmitting ? 'Submitting...' : 'Sign In'}
+					</button>
+				{/snippet}
+			</form.Subscribe>
+		</fieldset>
 	</form>
 
 	<div class="mt-4 text-center">
-		<button type="button" class="text-indigo-600 hover:text-indigo-800" onclick={switchToSignUp}>
+		<button type="button" class="text-indigo-600 hover:text-indigo-800" disabled={!mounted} onclick={switchToSignUp}>
 			Need an account? Sign Up
 		</button>
 	</div>
@@ -12375,13 +12431,18 @@ export default function Login() {
 `],
   ["auth/better-auth/web/svelte/src/components/SignUpForm.svelte.hbs", `<script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
+	import { onMount } from 'svelte';
 	import { z } from 'zod';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 
 	const session = authClient.useSession();
+	let mounted = $state(false);
+	onMount(() => {
+		mounted = true;
+	});
 
-	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
+	let { switchToSignIn }: { switchToSignIn: () => void } = $props();
 
 	const validationSchema = z.object({
 		name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -12423,6 +12484,7 @@ export default function Login() {
 	<h1 class="mb-6 text-center font-bold text-3xl">Create Account</h1>
 
 	<form
+		method="post"
 		id="form"
 		class="space-y-4"
 		onsubmit={(e) => {
@@ -12431,98 +12493,91 @@ export default function Login() {
 			form.handleSubmit();
 		}}
 	>
-		<form.Field name="name">
-			{#snippet children(field)}
-				<div class="space-y-1">
-					<label for={field.name}>Name</label>
-					<input
-						id={field.name}
-						name={field.name}
-						class="w-full border"
-						onblur={field.handleBlur}
-						value={field.state.value}
-						oninput={(e: Event) => {
-							const target = e.target as HTMLInputElement;
-							field.handleChange(target.value);
-						}}
-					/>
-					{#if field.state.meta.isTouched}
-						{#each field.state.meta.errors as error}
-							<p class="text-sm text-red-500" role="alert">{error}</p>
-						{/each}
-					{/if}
-				</div>
-			{/snippet}
-		</form.Field>
+		<fieldset class="space-y-4" disabled={!mounted}>
+			<form.Field name="name">
+				{#snippet children(field)}
+					<div class="space-y-1">
+						<label for={field.name}>Name</label>
+						<input
+							id={field.name}
+							name={field.name}
+							class="w-full border"
+							onblur={field.handleBlur}
+							value={field.state.value}
+							oninput={(e) => field.handleChange(e.currentTarget.value)}
+						/>
+						{#if field.state.meta.isTouched}
+							{#each field.state.meta.errors as error}
+								<p class="text-sm text-red-500" role="alert">{error?.message}</p>
+							{/each}
+						{/if}
+					</div>
+				{/snippet}
+			</form.Field>
 
-		<form.Field name="email">
-			{#snippet children(field)}
-				<div class="space-y-1">
-					<label for={field.name}>Email</label>
-					<input
-						id={field.name}
-						name={field.name}
-						type="email"
-						class="w-full border"
-						onblur={field.handleBlur}
-						value={field.state.value}
-						oninput={(e: Event) => {
-							const target = e.target as HTMLInputElement;
-							field.handleChange(target.value);
-						}}
-					/>
-					{#if field.state.meta.isTouched}
-						{#each field.state.meta.errors as error}
-							<p class="text-sm text-red-500" role="alert">{error}</p>
-						{/each}
-					{/if}
-				</div>
-			{/snippet}
-		</form.Field>
+			<form.Field name="email">
+				{#snippet children(field)}
+					<div class="space-y-1">
+						<label for={field.name}>Email</label>
+						<input
+							id={field.name}
+							name={field.name}
+							type="email"
+							class="w-full border"
+							onblur={field.handleBlur}
+							value={field.state.value}
+							oninput={(e) => field.handleChange(e.currentTarget.value)}
+						/>
+						{#if field.state.meta.isTouched}
+							{#each field.state.meta.errors as error}
+								<p class="text-sm text-red-500" role="alert">{error?.message}</p>
+							{/each}
+						{/if}
+					</div>
+				{/snippet}
+			</form.Field>
 
-		<form.Field name="password">
-			{#snippet children(field)}
-				<div class="space-y-1">
-					<label for={field.name}>Password</label>
-					<input
-						id={field.name}
-						name={field.name}
-						type="password"
-						class="w-full border"
-						onblur={field.handleBlur}
-						value={field.state.value}
-						oninput={(e: Event) => {
-							const target = e.target as HTMLInputElement;
-							field.handleChange(target.value);
-						}}
-					/>
-					{#if field.state.meta.isTouched}
-						{#each field.state.meta.errors as error}
-							<p class="text-sm text-red-500" role="alert">{error}</p>
-						{/each}
-					{/if}
-				</div>
-			{/snippet}
-		</form.Field>
+			<form.Field name="password">
+				{#snippet children(field)}
+					<div class="space-y-1">
+						<label for={field.name}>Password</label>
+						<input
+							id={field.name}
+							name={field.name}
+							type="password"
+							class="w-full border"
+							onblur={field.handleBlur}
+							value={field.state.value}
+							oninput={(e) => field.handleChange(e.currentTarget.value)}
+						/>
+						{#if field.state.meta.isTouched}
+							{#each field.state.meta.errors as error}
+								<p class="text-sm text-red-500" role="alert">{error?.message}</p>
+							{/each}
+						{/if}
+					</div>
+				{/snippet}
+			</form.Field>
 
-		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state: SubmitState)}
-				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
-					{state.isSubmitting ? 'Submitting...' : 'Sign Up'}
-				</button>
-			{/snippet}
-		</form.Subscribe>
+			<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+				{#snippet children(state: SubmitState)}
+					<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
+						{state.isSubmitting ? 'Submitting...' : 'Sign Up'}
+					</button>
+				{/snippet}
+			</form.Subscribe>
+		</fieldset>
 	</form>
 
 	<div class="mt-4 text-center">
-		<button type="button" class="text-indigo-600 hover:text-indigo-800" onclick={switchToSignIn}>
+		<button type="button" class="text-indigo-600 hover:text-indigo-800" disabled={!mounted} onclick={switchToSignIn}>
 			Already have an account? Sign In
 		</button>
 	</div>
 </div>
 `],
   ["auth/better-auth/web/svelte/src/components/UserMenu.svelte.hbs", `<script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 
 	const sessionQuery = authClient.useSession();
@@ -12602,10 +12657,10 @@ export const authClient = createAuthClient({
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
 	import type { PageProps } from './$types';
 	{{#if (eq payments "polar")}}
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	{{/if}}
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
 	let { data }: PageProps = $props();
@@ -13364,13 +13419,18 @@ function AuthLayout() {
 }
 `],
   ["auth/clerk/convex/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
-import { createStart } from '@tanstack/react-start'
+import { createCsrfMiddleware, createStart } from '@tanstack/react-start'
+
+const csrfMiddleware = createCsrfMiddleware({
+	filter: (ctx) => ctx.handlerType === 'serverFn',
+})
 
 export const startInstance = createStart(() => {
 	return {
-		requestMiddleware: [clerkMiddleware()],
+		requestMiddleware: [csrfMiddleware, clerkMiddleware()],
 	}
-})`],
+})
+`],
   ["auth/clerk/native/base/app/(auth)/_layout.tsx.hbs", `import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
@@ -13912,7 +13972,7 @@ import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 {{/if}}
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
@@ -13933,6 +13993,7 @@ export default function Dashboard() {
   });
   {{/if}}
   {{#if (eq api "trpc")}}
+  const trpc = useTRPC();
   const privateData = useQuery({
     ...trpc.privateData.queryOptions(),
     enabled: user.isLoaded && !!user.user,
@@ -14186,11 +14247,15 @@ function AuthLayout() {
 }
 `],
   ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
-import { createStart } from '@tanstack/react-start'
+import { createCsrfMiddleware, createStart } from '@tanstack/react-start'
+
+const csrfMiddleware = createCsrfMiddleware({
+	filter: (ctx) => ctx.handlerType === 'serverFn',
+})
 
 export const startInstance = createStart(() => {
 	return {
-		requestMiddleware: [clerkMiddleware()],
+		requestMiddleware: [csrfMiddleware, clerkMiddleware()],
 	}
 })
 `],
@@ -15406,10 +15471,10 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
-    "solid-js": "2.0.0-rc.14",
-    "@solidjs/signals": "2.0.0-rc.14",
-    "@solidjs/compiler": "2.0.0-rc.14",
-    "@solidjs/babel-plugin": "2.0.0-rc.14"
+    "solid-js": "2.0.0-rc.18",
+    "@solidjs/signals": "2.0.0-rc.18",
+    "@solidjs/compiler": "2.0.0-rc.18",
+    "@solidjs/babel-plugin": "2.0.0-rc.18"
   },
 {{/if}}
   "scripts": {}
@@ -16272,7 +16337,7 @@ export function createPrismaClient(env: DatabaseConfig) {
 export type Database = ReturnType<typeof createPrismaClient>;
 `],
   ["db/prisma/sqlite/prisma.config.ts.hbs", `import path from "node:path";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig{{#unless (or (eq dbSetup "turso") (eq dbSetup "d1"))}}, env{{/unless}} } from "prisma/config";
 import "varlock/auto-load";
 
 
@@ -16282,13 +16347,14 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
   },
   datasource: {
-    {{#if (eq dbSetup "turso")}}
+    {{#if (or (eq dbSetup "turso") (eq dbSetup "d1"))}}
     url: "file:./dev.db",
     {{else}}
     url: env("DATABASE_URL"),
     {{/if}}
   },
-});`],
+});
+`],
   ["db/prisma/sqlite/prisma/migrations/.gitkeep", ``],
   ["db/prisma/sqlite/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
@@ -16387,8 +16453,11 @@ services:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
         - server_env
 {{/if}}
-{{#if (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))}}
+{{#if (or (includes frontend "svelte") (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))}}
       args:
+{{#if (includes frontend "svelte")}}
+        ORIGIN: \${ORIGIN:-http://localhost:3001}
+{{/if}}
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
 {{/if}}
@@ -16418,8 +16487,13 @@ services:
       AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
 {{/if}}
 {{#if (eq auth "better-auth")}}
+{{#if (includes frontend "svelte")}}
+      BETTER_AUTH_URL: \${ORIGIN:-http://localhost:3001}
+      CORS_ORIGIN: \${ORIGIN:-http://localhost:3001}
+{{else}}
       BETTER_AUTH_URL: http://localhost:3001
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
 {{/if}}
 {{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
       DATABASE_URL: file:/data/local.db
@@ -16521,7 +16595,11 @@ services:
       AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
 {{/if}}
 {{#if (eq webDeploy "docker")}}
+{{#if (includes frontend "svelte")}}
+      CORS_ORIGIN: \${ORIGIN:-http://localhost:3001}
+{{else}}
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
 {{/if}}
 {{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
       DATABASE_URL: file:/data/local.db
@@ -16913,7 +16991,7 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (not (includes addons "vite-plus")))}}
+  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (eq runtime "bun") (not (includes addons "vite-plus")))}}
 FROM oven/bun:1 AS builder
 {{else}}
 FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
@@ -17056,7 +17134,14 @@ ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
 ARG PUBLIC_CONVEX_URL
 ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
 {{/if}}
+# SvelteKit 3 reads ORIGIN when the app is built (vite.config.ts \`paths.origin\`), not at
+# runtime. Pass it as a build argument; setting it with \`docker run -e\` has no effect.
+ARG ORIGIN=http://localhost:3001
+ENV ORIGIN=\${ORIGIN}
 ENV NODE_ENV=production
+{{#if (and (eq backend "self") (eq database "sqlite") (eq dbSetup "none"))}}
+RUN mkdir -p /app/.data
+{{/if}}
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 {{#if (eq orm "prisma")}}
 ENV DATABASE_URL=
@@ -17345,6 +17430,10 @@ export async function getEnvAsync() {
 }
 
 export const ENV = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../cloudflare-env.d.ts" />
+export type { CloudflareEnv } from "../cloudflare-env.d.ts";
+export { env as ENV } from "cloudflare:workers";
 {{else if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "../cloudflare-env.d.ts";
 export type { CloudflareEnv } from "../cloudflare-env.d.ts";
@@ -17610,7 +17699,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -17668,7 +17757,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -18117,7 +18206,7 @@ const styles = StyleSheet.create({
   },
 });
 {{else}}
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   View,
@@ -18173,7 +18262,7 @@ export default function AIScreen() {
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const isBusy = status === "submitted" || status === "streaming";
   const hasMessages = messages.length > 0;
   const canSend = Boolean(input.trim()) && !isBusy;
@@ -18700,7 +18789,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -18755,7 +18844,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -19213,7 +19302,7 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 {{else}}
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -19267,7 +19356,7 @@ export default function AIScreen() {
     onError: (error) => console.error(error, "AI Chat Error"),
   });
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const isBusy = status === "submitted" || status === "streaming";
   const hasMessages = messages.length > 0;
   const canSend = Boolean(input.trim()) && !isBusy;
@@ -19787,7 +19876,7 @@ import {
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Button, Separator, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -19836,7 +19925,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const mutedColor = useThemeColor("muted");
   const foregroundColor = useThemeColor("foreground");
 
@@ -20056,7 +20145,7 @@ export default function AIScreen() {
   );
 }
 {{else}}
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentRef } from "react";
 import {
   View,
   Text,
@@ -20106,7 +20195,7 @@ export default function AIScreen() {
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
   const isBusy = status === "submitted" || status === "streaming";
@@ -24591,7 +24680,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
@@ -24646,6 +24735,7 @@ export default function TodosPage() {
     );
     {{/if}}
     {{#if (eq api "trpc")}}
+    const trpc = useTRPC();
     const todos = useQuery(trpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       trpc.todo.create.mutationOptions({
@@ -25890,7 +25980,7 @@ export default function Todos() {
 {{else}}
 <script lang="ts">
 	{{#if (eq api "orpc")}}
-	import { orpc } from '$lib/orpc';
+	import { orpc } from '#lib/orpc.ts';
 	{{/if}}
 	import { createQuery, createMutation } from '@tanstack/svelte-query';
 
@@ -25952,7 +26042,7 @@ export default function Todos() {
 
 	const isAdding = $derived(addMutation.isPending);
 	const canAdd = $derived(!isAdding && newTodoText.trim().length > 0);
-	const isLoadingTodos = $derived(todosQuery.isLoading);
+	const isLoadingTodos = $derived(todosQuery.isPending);
 	const todos = $derived(todosQuery.data ?? []);
 	const hasTodos = $derived(todos.length > 0);
 
@@ -26104,7 +26194,7 @@ import { defineConfig } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
-{{else if (or (eq webDeploy "cloudflare") (and (eq webDeploy "prisma") (eq backend "none")))}}
+{{else if (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -26119,7 +26209,7 @@ export default defineConfig({
 {{else if (eq webDeploy "vercel")}}
   output: "server",
   adapter: vercel(),
-{{else if (or (eq webDeploy "cloudflare") (and (eq webDeploy "prisma") (eq backend "none")))}}
+{{else if (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
   output: "server",
 {{else}}
   output: "server",
@@ -26137,12 +26227,12 @@ export default defineConfig({
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro build",
 
 {{/unless}}
 		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro check",
-{{#unless (eq webDeploy "cloudflare")}}
+{{#unless (or (eq webDeploy "cloudflare") (eq webDeploy "prisma"))}}
     "preview": "astro preview",
 {{/unless}}
     "astro": "astro"
@@ -26504,7 +26594,7 @@ const DARK_THEME = {
 };
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  anchor: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
@@ -26684,7 +26774,7 @@ const DrawerLayout = () => {
           headerTitle: "Home",
           drawerLabel: "Home",
           drawerIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home-outline" size={size} style=\\{{ color: color ?? theme.text }} />
           ),
         }}
       />
@@ -26694,7 +26784,7 @@ const DrawerLayout = () => {
           headerTitle: "Tabs",
           drawerLabel: "Tabs",
           drawerIcon: ({ size, color }) => (
-            <MaterialIcons name="border-bottom" size={size} color={color} />
+            <MaterialIcons name="border-bottom" size={size} style=\\{{ color: color ?? theme.text }} />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
@@ -26710,7 +26800,7 @@ const DrawerLayout = () => {
           headerTitle: "Todos",
           drawerLabel: "Todos",
           drawerIcon: ({ size, color }) => (
-            <Ionicons name="checkbox-outline" size={size} color={color} />
+            <Ionicons name="checkbox-outline" size={size} style=\\{{ color: color ?? theme.text }} />
           ),
         }}
       />
@@ -26725,7 +26815,7 @@ const DrawerLayout = () => {
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={size}
-              color={color}
+              style=\\{{ color: color ?? theme.text }}
             />
           ),
         }}
@@ -26763,7 +26853,7 @@ export default function TabLayout() {
         name="index"
         options=\\{{
           title: "Home",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color ?? theme.text} />,
         }}
       />
       <Tabs.Screen
@@ -26771,7 +26861,7 @@ export default function TabLayout() {
         options=\\{{
           title: "Explore",
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="compass" color={color} />
+            <TabBarIcon name="compass" color={color ?? theme.text} />
           ),
         }}
       />
@@ -27394,7 +27484,10 @@ const styles = StyleSheet.create({
 `],
   ["frontend/native/bare/babel.config.js.hbs", `module.exports = {
   presets: ["babel-preset-expo"],
-  plugins: [require("@varlock/expo-integration/babel-plugin")],
+  plugins: [
+    require("@varlock/expo-integration/babel-plugin"),
+    require("./babel-plugins/hermes-async-arrow-rest-params"),
+  ],
 };
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `import React from "react";
@@ -27426,13 +27519,13 @@ const styles = StyleSheet.create({
 });
 `],
   ["frontend/native/bare/components/header-button.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { forwardRef } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { forwardRef, type ComponentRef } from "react";
+import { Pressable, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
 export const HeaderButton = forwardRef<
-  View,
+  ComponentRef<typeof Pressable>,
   { onPress?: () => void }
 >(({ onPress }, ref) => {
   const { colorScheme } = useColorScheme();
@@ -27474,14 +27567,16 @@ const styles = StyleSheet.create({
 
 `],
   ["frontend/native/bare/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
+import type { TextStyle } from "react-native";
 
 type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
 
 export const TabBarIcon = (props: {
   name: FontAwesomeProps["name"];
-  color: FontAwesomeProps["color"];
+  color: TextStyle["color"];
 }) => {
-  return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
+  const { color, ...iconProps } = props;
+  return <FontAwesome size={24} style={[{ marginBottom: -3, color }]} {...iconProps} />;
 };
 `],
   ["frontend/native/bare/lib/constants.ts.hbs", `export const NAV_THEME = {
@@ -27556,37 +27651,38 @@ module.exports = withVarlockMetroConfig(config);
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
-    "@expo/ui": "~57.0.16",
+    "@expo/ui": "~58.0.19",
     "@expo/vector-icons": "^15.0.2",
     "@tanstack/react-query": "^5.102.8",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~57.0.20",
-    "expo-constants": "~57.0.17",
-    "expo-crypto": "~57.0.2",
-    "expo-font": "~57.0.3",
-    "expo-linking": "~57.0.9",
-    "expo-network": "~57.0.1",
-    "expo-router": "~57.0.19",
-    "expo-secure-store": "~57.0.3",
-    "expo-splash-screen": "~57.0.8",
-    "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.3",
-    "expo-web-browser": "~57.0.2",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-native": "0.86.3",
-    "react-native-gesture-handler": "~2.32.0",
-    "react-native-reanimated": "4.5.1",
-    "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0",
-    "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "expo": "~58.0.12",
+    "expo-constants": "~58.0.12",
+    "expo-dev-client": "~58.0.13",
+    "expo-crypto": "~58.0.6",
+    "expo-font": "~58.0.8",
+    "expo-linking": "~58.0.13",
+    "expo-network": "~58.0.3",
+    "expo-router": "~58.0.21",
+    "expo-secure-store": "~58.0.2",
+    "expo-splash-screen": "~58.0.9",
+    "expo-status-bar": "~58.0.3",
+    "expo-system-ui": "~58.0.6",
+    "expo-web-browser": "~58.0.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-gesture-handler": "~3.3.0",
+    "react-native-reanimated": "4.7.1",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
+    "react-native-web": "~0.21.4",
+    "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
-    "@types/react": "~19.2.18",
+    "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   },
   "private": true
@@ -27617,6 +27713,37 @@ module.exports = withVarlockMetroConfig(config);
   ["frontend/native/base/assets/images/react-logo@2x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/react-logo@3x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/splash-icon.png", `[Binary file]`],
+  ["frontend/native/base/babel-plugins/hermes-async-arrow-rest-params.js", `// Hermes 260318099.0.4 (react-native 0.88) cannot compile async arrow functions
+// with a rest parameter, such as \`async (...[input, options = {}]) => {}\` in
+// @orpc/client. babel-preset-expo 58.0.18 dropped the transform that rewrote them.
+// Remove this plugin once Hermes compiles the syntax again:
+// https://github.com/expo/expo/issues/51842
+module.exports = function hermesAsyncArrowRestParams({ types: t }) {
+  return {
+    name: "hermes-async-arrow-rest-params",
+    visitor: {
+      ArrowFunctionExpression(path) {
+        const { node } = path;
+        if (!node.async || !node.params.some((param) => t.isRestElement(param))) {
+          return;
+        }
+
+        // \`async (a, ...[b]) => body\` becomes
+        // \`(...args) => (async ([a, ...[b]]) => body)(args)\`.
+        // The sync wrapper only collects arguments. The async arrow keeps them in
+        // a parameter, so defaults still resolve in the parameter scope and a
+        // failure while binding them rejects the returned promise.
+        const args = path.scope.generateUidIdentifier("args");
+        const inner = t.arrowFunctionExpression([t.arrayPattern(node.params)], node.body, true);
+
+        node.async = false;
+        node.params = [t.restElement(t.cloneNode(args))];
+        node.body = t.callExpression(inner, [t.cloneNode(args)]);
+      },
+    },
+  };
+};
+`],
   ["frontend/native/unistyles/_gitignore", `# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -27756,7 +27883,7 @@ import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  anchor: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
@@ -28004,7 +28131,7 @@ const DrawerLayout = () => {
           headerTitle: "Home",
           drawerLabel: "Home",
           drawerIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home-outline" size={size} style=\\{{ color: color ?? theme.colors.foreground }} />
           ),
         }}
       />
@@ -28014,7 +28141,7 @@ const DrawerLayout = () => {
           headerTitle: "Tabs",
           drawerLabel: "Tabs",
           drawerIcon: ({ size, color }) => (
-            <MaterialIcons name="border-bottom" size={size} color={color} />
+            <MaterialIcons name="border-bottom" size={size} style=\\{{ color: color ?? theme.colors.foreground }} />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
@@ -28030,7 +28157,7 @@ const DrawerLayout = () => {
           headerTitle: "Todos",
           drawerLabel: "Todos",
           drawerIcon: ({ size, color }) => (
-            <Ionicons name="checkbox-outline" size={size} color={color} />
+            <Ionicons name="checkbox-outline" size={size} style=\\{{ color: color ?? theme.colors.foreground }} />
           ),
         }}
       />
@@ -28045,7 +28172,7 @@ const DrawerLayout = () => {
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={size}
-              color={color}
+              style=\\{{ color: color ?? theme.colors.foreground }}
             />
           ),
         }}
@@ -28083,7 +28210,7 @@ export default function TabLayout() {
         name="index"
         options=\\{{
           title: "Home",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color ?? theme.colors.foreground} />,
         }}
       />
       <Tabs.Screen
@@ -28091,7 +28218,7 @@ export default function TabLayout() {
         options=\\{{
           title: "Explore",
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="compass" color={color} />
+            <TabBarIcon name="compass" color={color ?? theme.colors.foreground} />
           ),
         }}
       />
@@ -28657,7 +28784,7 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/+html.tsx.hbs", `import { ScrollViewStyleReset } from "expo-router/html";
+  ["frontend/native/unistyles/app/+html.tsx.hbs", `import { ScrollViewStyleReset, useServerDocumentContext } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
 import "../unistyles";
@@ -28667,9 +28794,12 @@ import "../unistyles";
 // The contents of this function only run in Node.js environments and
 // do not have access to the DOM or browser APIs.
 export default function Root({ children }: PropsWithChildren) {
+  const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } = useServerDocumentContext();
+
   return (
-    <html lang="en">
+    <html lang="en" {...htmlAttributes}>
       <head>
+        {headNodes}
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
@@ -28685,7 +28815,7 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Add any additional <head> elements that you want globally available on web... */}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>{children}{bodyNodes}</body>
     </html>
   );
 }
@@ -28801,6 +28931,7 @@ const styles = StyleSheet.create((theme) => ({
 		presets: ["babel-preset-expo"],
 		plugins: [
       require("@varlock/expo-integration/babel-plugin"),
+			require("./babel-plugins/hermes-async-arrow-rest-params"),
 			[
 				"react-native-unistyles/plugin",
 				{
@@ -28843,16 +28974,16 @@ const styles = StyleSheet.create((theme, rt) => ({
   ["frontend/native/unistyles/components/header-button.tsx.hbs", `import "@/unistyles";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { forwardRef } from "react";
+import { forwardRef, type ComponentRef } from "react";
 import { Pressable } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
 export const HeaderButton = forwardRef<
-  typeof Pressable,
+  ComponentRef<typeof Pressable>,
   { onPress?: () => void }
 >(({ onPress }, ref) => {
   return (
-    <Pressable onPress={onPress} style={styles.button}>
+    <Pressable ref={ref} onPress={onPress} style={styles.button}>
       {({ pressed }) => (
         <FontAwesome
           name="info-circle"
@@ -28880,14 +29011,16 @@ const styles = StyleSheet.create((theme) => ({
 }));
 `],
   ["frontend/native/unistyles/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
+import type { TextStyle } from "react-native";
 
 type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
 
 export const TabBarIcon = (props: {
   name: FontAwesomeProps["name"];
-  color: FontAwesomeProps["color"];
+  color: TextStyle["color"];
 }) => {
-  return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
+  const { color, ...iconProps } = props;
+  return <FontAwesome size={24} style={[{ marginBottom: -3, color }]} {...iconProps} />;
 };
 `],
   ["frontend/native/unistyles/index.js.hbs", `import './unistyles';
@@ -28928,36 +29061,35 @@ module.exports = withVarlockMetroConfig(config);
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "babel-preset-expo": "~57.0.10",
-    "expo": "~57.0.20",
-    "expo-constants": "~57.0.17",
-    "expo-crypto": "~57.0.2",
-    "expo-dev-client": "~57.0.18",
-    "expo-font": "~57.0.3",
-    "expo-linking": "~57.0.9",
-    "expo-network": "~57.0.1",
-    "expo-router": "~57.0.19",
-    "expo-secure-store": "~57.0.3",
-    "expo-splash-screen": "~57.0.8",
-    "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.3",
-    "expo-web-browser": "~57.0.2",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-native": "0.86.3",
-    "react-native-gesture-handler": "~2.32.0",
+    "expo": "~58.0.12",
+    "expo-constants": "~58.0.12",
+    "expo-crypto": "~58.0.6",
+    "expo-dev-client": "~58.0.13",
+    "expo-font": "~58.0.8",
+    "expo-linking": "~58.0.13",
+    "expo-network": "~58.0.3",
+    "expo-router": "~58.0.21",
+    "expo-secure-store": "~58.0.2",
+    "expo-splash-screen": "~58.0.9",
+    "expo-status-bar": "~58.0.3",
+    "expo-system-ui": "~58.0.6",
+    "expo-web-browser": "~58.0.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-gesture-handler": "~3.3.0",
     "react-native-nitro-modules": "0.37.1",
-    "react-native-reanimated": "4.5.1",
-    "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0",
+    "react-native-reanimated": "4.7.1",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
     "react-native-unistyles": "^3.3.0",
-    "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "react-native-web": "~0.21.4",
+    "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
     "@babel/core": "^7.29.7",
-    "@types/react": "~19.2.18",
+    "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   }
 }
@@ -29254,7 +29386,7 @@ import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  anchor: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
@@ -29431,7 +29563,7 @@ function DrawerLayout() {
             <Text style=\\{{ color: focused ? color : themeColorForeground }}>Home</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons name="home-outline" size={size} color={focused ? color : themeColorForeground} />
+            <Ionicons name="home-outline" size={size} style=\\{{ color: focused ? color : themeColorForeground }} />
           ),
         }}
       />
@@ -29443,12 +29575,12 @@ function DrawerLayout() {
             <Text style=\\{{ color: focused ? color : themeColorForeground }}>Tabs</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <MaterialIcons name="border-bottom" size={size} color={focused ? color : themeColorForeground} />
+            <MaterialIcons name="border-bottom" size={size} style=\\{{ color: focused ? color : themeColorForeground }} />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable className="mr-4">
-                <Ionicons name="add-outline" size={24} color={themeColorForeground} />
+                <Ionicons name="add-outline" size={24} style=\\{{ color: themeColorForeground }} />
               </Pressable>
             </Link>
           ),
@@ -29463,7 +29595,7 @@ function DrawerLayout() {
             <Text style=\\{{ color: focused ? color : themeColorForeground }}>Todos</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons name="checkbox-outline" size={size} color={focused ? color : themeColorForeground} />
+            <Ionicons name="checkbox-outline" size={size} style=\\{{ color: focused ? color : themeColorForeground }} />
           ),
         }}
       />
@@ -29477,7 +29609,7 @@ function DrawerLayout() {
             <Text style=\\{{ color: focused ? color : themeColorForeground }}>AI</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons name="chatbubble-ellipses-outline" size={size} color={focused ? color : themeColorForeground} />
+            <Ionicons name="chatbubble-ellipses-outline" size={size} style=\\{{ color: focused ? color : themeColorForeground }} />
           ),
         }}
       />
@@ -29517,7 +29649,7 @@ export default function TabLayout() {
 				options=\\{{
 					title: "Home",
 					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="home" size={size} color={color} />
+						<Ionicons name="home" size={size} style=\\{{ color: color ?? themeColorForeground }} />
 					),
 				}}
 			/>
@@ -29526,7 +29658,7 @@ export default function TabLayout() {
 				options=\\{{
 					title: "Explore",
 					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="compass" size={size} color={color} />
+						<Ionicons name="compass" size={size} style=\\{{ color: color ?? themeColorForeground }} />
 					),
 				}}
 			/>
@@ -29944,7 +30076,10 @@ export default Modal;
 `],
   ["frontend/native/uniwind/babel.config.js.hbs", `module.exports = {
   presets: ["babel-preset-expo"],
-  plugins: [require("@varlock/expo-integration/babel-plugin")],
+  plugins: [
+    require("@varlock/expo-integration/babel-plugin"),
+    require("./babel-plugins/hermes-async-arrow-rest-params"),
+  ],
 };
 `],
   ["frontend/native/uniwind/components/container.tsx.hbs", `import { cn } from "heroui-native";
@@ -30137,45 +30272,46 @@ module.exports = withVarlockMetroConfig(uniwindConfig);
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.15",
+    "@expo/metro-runtime": "~58.0.14",
     "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~57.0.20",
-    "expo-constants": "~57.0.17",
-    "expo-font": "~57.0.3",
-    "expo-haptics": "~57.0.2",
-    "expo-linking": "~57.0.9",
-    "expo-network": "~57.0.1",
-    "expo-router": "~57.0.19",
-    "expo-secure-store": "~57.0.3",
-    "expo-splash-screen": "~57.0.8",
-    "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.3",
-    "expo-web-browser": "~57.0.2",
-    "heroui-native": "^1.0.9",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-native": "0.86.3",
-    "react-native-gesture-handler": "~2.32.0",
-    "react-native-keyboard-controller": "1.21.9",
-    "react-native-reanimated": "4.5.1",
-    "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0",
-    "react-native-svg": "15.15.4",
-    "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1",
+    "expo": "~58.0.12",
+    "expo-constants": "~58.0.12",
+    "expo-dev-client": "~58.0.13",
+    "expo-font": "~58.0.8",
+    "expo-haptics": "~58.0.6",
+    "expo-linking": "~58.0.13",
+    "expo-network": "~58.0.3",
+    "expo-router": "~58.0.21",
+    "expo-secure-store": "~58.0.2",
+    "expo-splash-screen": "~58.0.9",
+    "expo-status-bar": "~58.0.3",
+    "expo-system-ui": "~58.0.6",
+    "expo-web-browser": "~58.0.6",
+    "heroui-native": "^1.0.10",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-gesture-handler": "~3.3.0",
+    "react-native-keyboard-controller": "1.22.7",
+    "react-native-reanimated": "4.7.1",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
+    "react-native-svg": "15.16.0",
+    "react-native-web": "~0.21.4",
+    "react-native-worklets": "0.13.0",
     "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.3.1",
     "tailwindcss": "^4.3.3",
-    "uniwind": "^1.12.0"
+    "uniwind": "^1.12.2"
   },
   "devDependencies": {
     "@types/node": "^26.4.1",
-    "@types/react": "~19.2.18",
+    "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   }
 }
@@ -30187,6 +30323,7 @@ module.exports = withVarlockMetroConfig(uniwindConfig);
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "customConditions": ["react-native", "react-native-legacy-deep-imports"],
     "paths": {
       "@/*": ["./*"]
     }
@@ -30197,7 +30334,8 @@ module.exports = withVarlockMetroConfig(uniwindConfig);
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]
-}`],
+}
+`],
   ["frontend/native/uniwind/uniwind-env.d.ts", `/// <reference types="uniwind/types" />
 
 declare module "*.css";
@@ -30498,21 +30636,39 @@ export default defineNuxtConfig({
     localApiEndpoint: "/_nuxt_icon",
   },
   {{/if}}
-{{#if (or (and (eq auth "better-auth") (ne backend "convex")) (and (eq api "orpc") (ne backend "convex") (ne backend "none")))}}
   vite: {
     optimizeDeps: {
       include: [
+{{#if (eq packageManager "npm")}}
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+{{else}}
+        "nuxt > @nuxt/devtools > @vue/devtools-core",
+        "nuxt > @nuxt/devtools > @vue/devtools-kit",
+{{/if}}
 {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
         "better-auth/vue",
+        "zod",
 {{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
         "@orpc/client",
         "@orpc/client/fetch",
         "@orpc/tanstack-query",
         "@tanstack/vue-query",
+        "@tanstack/vue-query > @vue/devtools-api",
         "@tanstack/vue-query-devtools",
 {{/if}}
       ],
+    },
+  },
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  hooks: {
+    "vite:extendConfig"(config, { isClient }) {
+      if (!isClient || !config.optimizeDeps) return;
+      // Vue Query uses devtools-api 6, whose CommonJS entry needs optimization.
+      config.optimizeDeps.exclude = config.optimizeDeps.exclude?.filter(
+        (dependency) => dependency !== "@vue/devtools-api",
+      );
     },
   },
 {{/if}}
@@ -30574,24 +30730,23 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.11.0",
-    "nuxt": "^4.5.2",
-    "vue": "^3.5.42",
+    "nuxt": "^4.6.2",
+    "vue": "^3.5.44",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "tailwindcss": "^4.3.3",
     "@iconify-json/lucide": "^1.2.129",
     "vue-tsc": "^3.3.11"
+  },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   }
 }
 `],
   ["frontend/nuxt/public/favicon.ico", `[Binary file]`],
   ["frontend/nuxt/public/robots.txt", `User-Agent: *
 Disallow:
-`],
-  ["frontend/nuxt/server/tsconfig.json", `{
-  "extends": "../.nuxt/tsconfig.server.json"
-}
 `],
   ["frontend/nuxt/tsconfig.json.hbs", `{
   // https://nuxt.com/docs/guide/concepts/typescript
@@ -30784,7 +30939,7 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
@@ -30810,6 +30965,7 @@ export default function Home() {
   {{else if (eq api "orpc")}}
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
+  const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
 
@@ -30895,8 +31051,10 @@ export function ModeToggle() {
   ["frontend/react/next/src/components/providers.tsx.hbs", `"use client";
 
 {{#if (and (eq auth "clerk") (ne api "none"))}}
-import { useEffect } from "react";
+import { useEffect{{#if (eq api "trpc")}}, useState{{/if}} } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{else if (eq api "trpc")}}
+import { useState } from "react";
 {{/if}}
 {{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
 import { useAuth } from "@clerk/nextjs";
@@ -30920,10 +31078,10 @@ import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{#if (eq api "orpc")}}
-import { queryClient } from "@/utils/orpc";
+import { getQueryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
-import { queryClient } from "@/utils/trpc";
+import { getQueryClient, makeTRPCClient, TRPCProvider } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 {{/if}}
@@ -30961,6 +31119,13 @@ export default function Providers({
   initialToken?: string | null;
 {{/if}}
 }) {
+{{#if (and (ne backend "convex") (ne api "none"))}}
+  const queryClient = getQueryClient();
+{{#if (eq api "trpc")}}
+  const [trpcClient] = useState(makeTRPCClient);
+{{/if}}
+
+{{/if}}
   return (
     <ThemeProvider
       attribute="class"
@@ -30994,7 +31159,9 @@ export default function Providers({
         {children}
         {{/if}}
         {{#if (eq api "trpc")}}
-        {children}
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          {children}
+        </TRPCProvider>
         {{/if}}
         <ReactQueryDevtools />
       </QueryClientProvider>
@@ -31179,6 +31346,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 
 {{#if (eq backend "convex")}}
+import { useState } from "react";
 import { ConvexReactClient } from "convex/react";
 import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
   {{#if (eq auth "clerk")}}
@@ -31260,7 +31428,7 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
-  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
+  const [convex] = useState(() => new ConvexReactClient(ENV.VITE_CONVEX_URL));
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
@@ -31664,23 +31832,23 @@ export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy
 	"dependencies": {
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
 		"@tailwindcss/vite": "^4.3.3",
-		"@tanstack/react-router": "^1.170.32",
-		"lucide-react": "^1.41.0",
+		"@tanstack/react-router": "^1.170.44",
+		"lucide-react": "^1.56.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.8",
-		"react-dom": "^19.2.8",
+		"react": "^19.3.0",
+		"react-dom": "^19.3.0",
         "sonner": "^2.0.8"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.167.1",
-		"@tanstack/router-plugin": "^1.168.35",
-		"@types/node": "^26.4.1",
-		"@types/react": "^19.2.18",
-		"@types/react-dom": "^19.2.7",
-		"@vitejs/plugin-react": "^6.1.1",
-		"postcss": "^8.5.28",
+		"@tanstack/react-router-devtools": "^1.167.2",
+		"@tanstack/router-plugin": "^1.168.45",
+		"@types/node": "^26.6.5",
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"@vitejs/plugin-react": "^6.1.2",
+		"postcss": "^8.5.30",
 		"tailwindcss": "^4.3.3",
-		"vite": "^8.2.2"
+		"vite": "^8.3.4"
 	}
 }
 `],
@@ -32117,26 +32285,26 @@ export default defineConfig({
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/react-query": "^5.102.8",
-    "@tanstack/react-router": "^1.170.32",
-    "@tanstack/react-start": "^1.168.49",
-    "lucide-react": "^1.41.0",
+    "@tanstack/react-query": "^5.104.2",
+    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-start": "^1.169.1",
+    "lucide-react": "^1.56.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "sonner": "^2.0.8",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.167.1",
-    "@testing-library/dom": "^10.4.1",
+    "@tanstack/react-router-devtools": "^1.167.2",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
-    "jsdom": "^30.0.1",
-    "vite": "^8.2.2",
-    "web-vitals": "^6.2.1"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "jsdom": "^30.1.2",
+    "vite": "^8.3.4",
+    "web-vitals": "^6.2.3"
   }
 }
 `],
@@ -32741,8 +32909,8 @@ export default defineConfig({
 {{/if}}
     viteReact(),
   ],
-{{#if (eq webDeploy "vercel")}}
-  // Bundle all SSR deps: Vercel functions have no node_modules at runtime
+{{#if (or (eq webDeploy "vercel") (and (eq webDeploy "prisma") (ne backend "none")))}}
+  // These deployments run the standalone build artifact.
   ssr: {
     noExternal: true,
   },
@@ -32960,14 +33128,14 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.38",
-    "@solidjs/web": "2.0.0-rc.14",
-    "solid-js": "2.0.0-rc.14"
+    "@solidjs/router": "2.0.0-next.42",
+    "@solidjs/web": "2.0.0-rc.18",
+    "solid-js": "2.0.0-rc.18"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.49",
+    "@solidjs/vite-plugin": "3.0.0-next.51",
     "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.4.0",
+    "filesystem-routing": "0.4.1",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
     "nitro": "3.0.260903-beta"{{/unless}}
@@ -33322,6 +33490,11 @@ vite.config.ts.timestamp-*
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"engines": { "node": ">=22.17.0" },
+	"imports": {
+		"#lib": "./src/lib/index.ts",
+		"#lib/*": "./src/lib/*"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
@@ -33333,16 +33506,16 @@ vite.config.ts.timestamp-*
 	},
 	"devDependencies": {
 		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/adapter-static": "^4.0.0",
 		{{else if (eq webDeploy "prisma")}}
-		"@sveltejs/adapter-node": "^5.5.7",
+		"@sveltejs/adapter-node": "^6.0.0",
 		{{else}}
-		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/adapter-auto": "^8.0.0",
 		{{/if}}
-		"@sveltejs/kit": "^2.70.3",
-		"@sveltejs/vite-plugin-svelte": "^7.3.0",
+		"@sveltejs/kit": "^3.1.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tailwindcss/vite": "^4.3.3",
-		"svelte": "^5.57.0",
+		"svelte": "^5.57.1",
 		"svelte-check": "^4.7.6",
 		"tailwindcss": "^4.3.3",
 		"vite": "^8.2.2"
@@ -33356,10 +33529,7 @@ body {
   @apply bg-neutral-950 text-neutral-100;
 }
 `],
-  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (eq webDeploy "cloudflare")}}
-/// <reference path="../../../packages/env/env.d.ts" />
-{{/if}}
-{{#if (and (eq backend "self") (eq api "orpc"))}}
+  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (and (eq backend "self") (eq api "orpc"))}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
 {{/if}}
@@ -33375,16 +33545,7 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
-{{#if (eq webDeploy "cloudflare")}}
-		interface Platform {
-			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf: IncomingRequestCfProperties;
-		}
-{{else}}
 		// interface Platform {}
-{{/if}}
 	}
 }
 
@@ -33434,14 +33595,14 @@ export {};
 	<hr class="border-neutral-800" />
 </div>
 `],
-  ["frontend/svelte/src/lib/index.ts", `// place files you want to import through the \`$lib\` alias in this folder.
+  ["frontend/svelte/src/lib/index.ts", `// place files you want to import through the \`#lib\` alias in this folder.
 export {};
 `],
   ["frontend/svelte/src/routes/+layout.svelte.hbs", `{{#if (eq backend "convex")}}
 <script lang="ts">
 	import '../app.css';
     import Header from '../components/Header.svelte';
-    import { PUBLIC_CONVEX_URL } from '$env/static/public';
+    import { PUBLIC_CONVEX_URL } from '$app/env/public';
 	import { setupConvex } from 'convex-svelte';
 
 	const { children } = $props();
@@ -33460,10 +33621,11 @@ export {};
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
 	import '../app.css';
-    import { queryClient } from '$lib/orpc';
+    import { createQueryClient } from '#lib/orpc.ts';
     import Header from '../components/Header.svelte';
 
 	const { children } = $props();
+	const queryClient = createQueryClient();
 </script>
 
 <QueryClientProvider client={queryClient}>
@@ -33539,7 +33701,7 @@ const TITLE_TEXT = \`
 {{else}}
 <script lang="ts">
 {{#if (eq api "orpc")}}
-import { orpc } from "$lib/orpc";
+import { orpc } from "#lib/orpc.ts";
 import { createQuery } from "@tanstack/svelte-query";
 const healthCheck = createQuery(() => orpc.healthCheck.queryOptions());
 {{/if}}
@@ -33572,7 +33734,7 @@ const TITLE_TEXT = \`
 					class={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
 				></div>
 				<span class="text-muted-foreground text-sm">
-					{healthCheck.isLoading
+					{healthCheck.isPending
 						? "Checking..."
 						: healthCheck.data
 							? "Connected"
@@ -33586,56 +33748,13 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-import adapter from '@sveltejs/adapter-static';
-{{else if (eq webDeploy "cloudflare")}}
-import adapter from '@sveltejs/adapter-cloudflare';
-{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
-import adapter from '@sveltejs/adapter-node';
-{{else if (eq webDeploy "vercel")}}
-import adapter from '@sveltejs/adapter-vercel';
-{{else}}
-import adapter from '@sveltejs/adapter-auto';
-{{/if}}
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
-
-	kit: {
-{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		// adapter-static emits files Electrobun and Tauri can bundle directly.
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: 'index.html'
-		})
-{{else if (eq webDeploy "cloudflare")}}
-		adapter: adapter()
-{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
-		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
-		adapter: adapter()
-{{else if (eq webDeploy "vercel")}}
-		adapter: adapter({ runtime: 'nodejs24.x' })
-{{else}}
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
-{{/if}}
-	}
-};
-
-export default config;
-`],
   ["frontend/svelte/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   "references": [{ "path": "../../packages/api" }],
   {{/if}}
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "$app/tsconfig",
+	"include": ["src", "test", "*"],
+	"exclude": ["src/service-worker"],
 	"compilerOptions": {
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     "disableSourceOfProjectReferenceRedirect": true,
@@ -33649,13 +33768,8 @@ export default config;
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"{{#if (eq webDeploy "cloudflare")}},
-			"types": ["@cloudflare/workers-types"]{{/if}}
+			"types": ["$app/types", "@cloudflare/workers-types"]{{/if}}
 	}
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
-	// from the referenced tsconfig.json - TypeScript does not merge them in
 }
 `],
   ["frontend/svelte/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
@@ -33663,6 +33777,18 @@ import { varlockVitePlugin } from "@varlock/vite-integration";
 {{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from "@sveltejs/adapter-static";
+{{else if (eq webDeploy "cloudflare")}}
+import adapter from "@sveltejs/adapter-cloudflare";
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
+import adapter from "@sveltejs/adapter-node";
+{{else if (eq webDeploy "vercel")}}
+import adapter from "@sveltejs/adapter-vercel";
+{{else}}
+import adapter from "@sveltejs/adapter-auto";
+{{/if}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { unwasm } from "unwasm/plugin";
@@ -33677,13 +33803,26 @@ export default defineConfig({
     unwasm({ esmImport: true }),
 {{/if}}
     tailwindcss(),
-    sveltekit(),
+    sveltekit({
+      preprocess: vitePreprocess(),
+{{#if (eq webDeploy "docker")}}
+      paths: { origin: process.env.ORIGIN },
+{{/if}}
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+      adapter: adapter({ pages: "build", assets: "build", fallback: "index.html" }),
+{{else if (eq webDeploy "vercel")}}
+      adapter: adapter({ runtime: "nodejs24.x" }),
+{{else}}
+      adapter: adapter(),
+{{/if}}
+    }),
   ],
 {{#if (eq webDeploy "prisma")}}
   // Prisma Compute uploads only the build artifact, so keep the official
-  // adapter-node output self-contained instead of requiring node_modules.
+  // adapter-node output self-contained. The adapter respects noExternal rules
+  // when deciding which production dependencies to externalize.
   ssr: {
-    noExternal: true,
+    noExternal: [/.*/],
   },
 {{/if}}
 });
@@ -33786,7 +33925,7 @@ export default defineConfig({
     "@shadcn/react": "^0.3.1",
     "shadcn": "^4.21.0",
     "class-variance-authority": "^0.7.1",
-    "cn": "^0.2.5",
+    "cn": "^0.5.0",
     "lucide-react": "^1.41.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",

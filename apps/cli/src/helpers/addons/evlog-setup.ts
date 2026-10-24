@@ -418,13 +418,32 @@ function addNuxtEvlogSetup(content: string, serviceName: string) {
 }
 
 function addSvelteViteEvlogSetup(content: string, serviceName: string) {
-  let nextContent = prependMissingImports(content, ['import evlog from "evlog/vite";']);
+  const nextContent = prependMissingImports(content, ['import evlog from "evlog/vite";']);
   if (nextContent.includes("evlog({")) return nextContent;
 
-  return nextContent.replace(
-    "sveltekit(),",
-    `sveltekit(),\n    evlog({ service: "${serviceName}" }),`,
-  );
+  const source = ts.createSourceFile("vite.config.ts", nextContent, ts.ScriptTarget.Latest);
+  let insertion: number | undefined;
+  function visit(node: ts.Node) {
+    if (insertion !== undefined) return;
+    if (
+      ts.isPropertyAssignment(node) &&
+      node.name.getText(source) === "plugins" &&
+      ts.isArrayLiteralExpression(node.initializer)
+    ) {
+      const kitPlugin = node.initializer.elements.find(
+        (element) =>
+          ts.isCallExpression(element) && element.expression.getText(source) === "sveltekit",
+      );
+      if (kitPlugin) {
+        insertion = kitPlugin.getEnd();
+        return;
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  if (insertion === undefined) return nextContent;
+  return `${nextContent.slice(0, insertion)},\n    evlog({ service: ${JSON.stringify(serviceName)} })${nextContent.slice(insertion)}`;
 }
 
 function getSvelteEvlogHooksCall(fsDrain: boolean, axiom = false) {
@@ -441,7 +460,7 @@ function addSvelteHooksEvlogSetup(content: string, fsDrain: boolean, axiom: bool
     ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
   ]);
   if (fsDrain) {
-    nextContent = addNamedImport(nextContent, "$app/environment", ["dev"]);
+    nextContent = addNamedImport(nextContent, "$app/env", ["dev"]);
   }
   const hooksCall = getSvelteEvlogHooksCall(fsDrain, axiom);
   if (fsDrain || axiom) {
@@ -471,7 +490,7 @@ function addSvelteHooksEvlogSetup(content: string, fsDrain: boolean, axiom: bool
   );
 
   if (!nextContent.includes("sequence(evlogHandle, authHandle)")) {
-    nextContent = `${nextContent.trimEnd()}\n\nexport const handle = sequence(evlogHandle as Handle, authHandle);\nexport { handleError };\n`;
+    nextContent = `${nextContent.trimEnd()}\n\nexport const handle = sequence(evlogHandle, authHandle);\nexport { handleError };\n`;
   }
 
   return nextContent;
@@ -722,10 +741,7 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     return content;
   }
 
-  let nextContent = addNamedImport(content, "evlog/better-auth", [
-    "createAuthMiddleware",
-    "type BetterAuthInstance",
-  ]);
+  let nextContent = addNamedImport(content, "evlog/better-auth", ["createAuthMiddleware"]);
   if (!nextContent.includes('from "./services"')) {
     nextContent = prependMissingImports(nextContent, [getAuthImportLine(config, "./services")]);
   }
@@ -759,8 +775,8 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
   const authHandleSnippet =
     usesCreateAuthFactory(config) && config.webDeploy === "cloudflare"
-      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? ${environmentBinding};\n\tconst identifyUser = createAuthMiddleware((await createAuth(authEnv)) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
-      : `const identifyUser = createAuthMiddleware(${authExpression} as BetterAuthInstance, ${authOptions});\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
+      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = ${environmentBinding};\n\tconst identifyUser = createAuthMiddleware(await createAuth(authEnv), ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
+      : `const identifyUser = createAuthMiddleware(${authExpression}, ${authOptions});\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
 
   const evlogHandleDeclaration = nextContent.match(
     /const \{ handle: evlogHandle, handleError \} = createEvlogHooks\([\s\S]*?\);\n\n/,
@@ -777,11 +793,11 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
   return nextContent
     .replace(
       "sequence(evlogHandle as Handle, authHandle)",
-      "sequence(evlogHandle as Handle, evlogAuthHandle, authHandle)",
+      "sequence(evlogHandle, evlogAuthHandle, authHandle)",
     )
     .replace(
       "sequence(evlogHandle, authHandle)",
-      "sequence(evlogHandle as Handle, evlogAuthHandle, authHandle)",
+      "sequence(evlogHandle, evlogAuthHandle, authHandle)",
     );
 }
 
@@ -837,16 +853,19 @@ export const { register, onRequestError } = createInstrumentation({
 `;
 }
 
+const NITRO_V3_PLUGIN_IMPORT = 'import { definePlugin as defineNitroPlugin } from "nitro";\n';
+
 function getNitroEvlogDrainFile(axiom = false, nitroV3 = false) {
+  const pluginImport = nitroV3 ? NITRO_V3_PLUGIN_IMPORT : "";
   if (axiom)
-    return `${nitroV3 ? 'import { definePlugin as defineNitroPlugin } from "nitro";\n' : ""}import { createAxiomDrain } from "evlog/axiom";
+    return `${pluginImport}import { createAxiomDrain } from "evlog/axiom";
 
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("evlog:drain", createAxiomDrain());
 });
 `;
 
-  return `import { createFsDrain } from "evlog/fs";
+  return `${pluginImport}import { createFsDrain } from "evlog/fs";
 
 export default defineNitroPlugin((nitroApp) => {
   if (!import.meta.dev) return;
@@ -904,34 +923,37 @@ export async function identifyEvlogUser(request: Request) {
 `;
 }
 
-function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
+// evlog documents createAuthMiddleware in a server middleware: it runs before the route
+// handler, so requests that throw are still tagged with the user.
+function getTanstackStartEvlogAuthMiddlewareFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
     return `${getAuthImportLine(config, "../../src/services")}
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
+import { useLogger } from "evlog/nitro/v3";
+import { defineHandler } from "nitro";
 
-export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("request", async (event) => {
-    const identify = createAuthIdentifier(${getAuthExpression(config)} as BetterAuthInstance, {
-      exclude: ["/api/auth/**"],
-      maskEmail: true,
-    });
-    await identify(event);
+export default defineHandler(async (event) => {
+  const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+    exclude: ["/api/auth/**"],
+    maskEmail: true,
   });
+  await identifyUser(useLogger(event), event.req.headers, event.url.pathname);
 });
 `;
   }
 
   return `${getAuthImportLine(config, "../../src/services")}
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
+import { useLogger } from "evlog/nitro/v3";
+import { defineHandler } from "nitro";
 
-export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook(
-    "request",
-    createAuthIdentifier(${getAuthExpression(config)} as BetterAuthInstance, {
-      exclude: ["/api/auth/**"],
-      maskEmail: true,
-    }),
-  );
+const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+  exclude: ["/api/auth/**"],
+  maskEmail: true,
+});
+
+export default defineHandler(async (event) => {
+  await identifyUser(useLogger(event), event.req.headers, event.url.pathname);
 });
 `;
 }
@@ -1117,14 +1139,6 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (await fs.pathExists(oldAuthPluginPath)) {
-      const oldAuthPlugin = await fs.readFile(oldAuthPluginPath, "utf-8");
-      if (oldAuthPlugin.includes("evlog/better-auth")) {
-        await fs.remove(oldAuthPluginPath);
-      }
-    }
-
     const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
     if (!(await fs.pathExists(authMiddlewarePath))) {
       await writeFileIfChanged(authMiddlewarePath, getNuxtEvlogAuthMiddlewareFile(config));
@@ -1155,7 +1169,7 @@ async function setupSvelteEvlog(config: ProjectConfig, serviceName: string) {
       `import { createEvlogHooks } from "evlog/sveltekit";
 ${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
 ${axiom ? 'import { createAxiomDrain } from "evlog/axiom";\n' : ""}
-${fsDrain ? 'import { dev } from "$app/environment";\n' : ""}
+${fsDrain ? 'import { dev } from "$app/env";\n' : ""}
 
 export const { handle, handleError } = ${getSvelteEvlogHooksCall(fsDrain, axiom)};
 `,
@@ -1236,9 +1250,9 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
   }
 
   if (shouldIdentifyWebAuth(config)) {
-    const authPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (!(await fs.pathExists(authPluginPath))) {
-      await writeFileIfChanged(authPluginPath, getNitroEvlogAuthPluginFile(config));
+    const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
+    if (!(await fs.pathExists(authMiddlewarePath))) {
+      await writeFileIfChanged(authMiddlewarePath, getTanstackStartEvlogAuthMiddlewareFile(config));
     }
   }
 

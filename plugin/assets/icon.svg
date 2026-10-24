@@ -1,15 +1,9 @@
 <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="8" width="80" height="80" rx="16" fill="#F5EEFF" stroke="#B79AFF" stroke-width="3"/>
-  <text
-    x="48"
-    y="50"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace"
-    font-size="34"
-    font-weight="700"
-    fill="#8839EF"
-  >
-    $_
-  </text>
+  <rect width="96" height="96" rx="10" fill="#191919"/>
+  <g transform="translate(22 20)">
+    <path d="M3 10V15H18M48 5H51V15H33V55H21V50" fill="none" stroke="#737373" stroke-width="2.6"/>
+    <path d="M3 10V15H18M48 5H51V15H33V55H21V50" fill="none" stroke="#191919" stroke-width="0.9"/>
+    <rect width="48" height="10" fill="#CBA6F7"/>
+    <rect x="18" y="10" width="12" height="40" fill="#CBA6F7"/>
+  </g>
 </svg>

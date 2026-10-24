@@ -90,6 +90,14 @@ function writeNuxt(writer: AlchemyWriter, declaration: string, entries: readonly
     `${declaration} Cloudflare.Website.Nuxt("web", {`,
     () => {
       writer.writeLine('rootDir: "../../apps/web",');
+      writeObject(
+        writer,
+        "compatibility: {",
+        () => {
+          writer.writeLine('flags: ["nodejs_compat", "global_fetch_strictly_public"],');
+        },
+        "},",
+      );
       writeEnv(writer, entries);
       writeObject(writer, "dev: {", () => writer.writeLine(`port: ${webDevPort("nuxt")},`), "},");
     },
@@ -126,7 +134,11 @@ function writeVite(
           writer,
           "compatibility: {",
           () => {
-            writer.writeLine('flags: ["nodejs_compat"],');
+            writer.writeLine(
+              framework === "react-router"
+                ? 'flags: ["nodejs_compat"],'
+                : 'flags: ["nodejs_compat", "global_fetch_strictly_public"],',
+            );
           },
           "},",
         );
@@ -257,7 +269,9 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
       : 'export const web = Prisma.Compute("web", Effect.gen(function* () {',
   );
   writer.indent(() => {
-    writer.writeLine("const project = yield* prismaProject;");
+    writer.writeLine(
+      websiteFramework ? "const project = prismaProject;" : "const project = yield* prismaProject;",
+    );
     if (topology === "self") {
       writer.writeLine("const resolvedDatabaseEnv = yield* databaseEnv;");
     } else if (plan.server.target !== "none") {

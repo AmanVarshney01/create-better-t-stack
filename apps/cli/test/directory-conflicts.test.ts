@@ -3,7 +3,7 @@ import path from "node:path";
 
 import fs from "fs-extra";
 
-import { create } from "../src/index";
+import { create, DirectoryConflictError } from "../src/index";
 import { SMOKE_DIR } from "./setup";
 
 const TEST_ROOT = path.join(SMOKE_DIR, "directory-conflicts");
@@ -183,7 +183,27 @@ describe("Directory conflicts", () => {
     });
 
     if (result.isOk()) throw new Error("Expected project creation to fail");
+    expect(DirectoryConflictError.is(result.error)).toBe(true);
     expect(result.error?.message).toContain("already exists and is not empty");
+    expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
+    expect(await fs.pathExists(path.join(projectPath, "package.json"))).toBe(false);
+  });
+
+  it("does not clear an overwrite target during a dry run", async () => {
+    const projectPath = path.join(TEST_ROOT, "dry-run-overwrite");
+    const sentinelPath = path.join(projectPath, "keep-me.txt");
+    await fs.ensureDir(projectPath);
+    await fs.writeFile(sentinelPath, "keep-me");
+
+    const result = await create(projectPath, {
+      yes: true,
+      install: false,
+      git: false,
+      dryRun: true,
+      directoryConflict: "overwrite",
+    });
+
+    if (result.isErr()) throw result.error;
     expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
     expect(await fs.pathExists(path.join(projectPath, "package.json"))).toBe(false);
   });

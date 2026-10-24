@@ -3,7 +3,12 @@
  * Replaces the previous Handlebars template with type-safe TypeScript generation
  */
 
-import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
+import {
+  getLocalD1Owner,
+  isAlchemyDeployTarget,
+  usesTursoDevServer,
+  type ProjectConfig,
+} from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -14,6 +19,7 @@ interface TurboTask {
   outputs?: string[];
   cache?: boolean;
   persistent?: boolean;
+  passThroughEnv?: string[];
   interactive?: boolean;
 }
 
@@ -33,13 +39,13 @@ export function processTurboConfig(vfs: VirtualFileSystem, config: ProjectConfig
 }
 
 export function generateTurboConfig(config: ProjectConfig): TurboConfig {
-  const { backend, database, dbSetup, webDeploy, serverDeploy, frontend } = config;
+  const { backend, dbSetup, webDeploy, serverDeploy, frontend } = config;
 
   const isConvex = backend === "convex";
   const dbSupport = getDbScriptSupport(config);
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
-  const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
+  const isSqliteLocal = usesTursoDevServer(config) && hasDatabase;
   const hasAlchemy =
     isAlchemyDeployTarget(webDeploy) ||
     isAlchemyDeployTarget(serverDeploy) ||
@@ -114,6 +120,13 @@ function getBaseTasks(frontend: string[], addons: string[]): TurboTasks {
     dev: {
       cache: false,
       persistent: true,
+    },
+    start: {
+      dependsOn: ["build"],
+      cache: false,
+      persistent: true,
+      // Runtime configuration comes from the host, so pass it all through; it never affects the build hash
+      passThroughEnv: ["*"],
     },
   };
 }

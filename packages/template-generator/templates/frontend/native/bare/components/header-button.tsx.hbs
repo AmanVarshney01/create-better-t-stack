@@ -1,11 +1,11 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { forwardRef } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { forwardRef, type ComponentRef } from "react";
+import { Pressable, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
 export const HeaderButton = forwardRef<
-  View,
+  ComponentRef<typeof Pressable>,
   { onPress?: () => void }
 >(({ onPress }, ref) => {
   const { colorScheme } = useColorScheme();

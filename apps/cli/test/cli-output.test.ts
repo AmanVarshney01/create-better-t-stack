@@ -16,9 +16,16 @@ function runCli(args: string[]) {
   });
 }
 
-test("schema stdout is valid JSON for command-line consumers", async () => {
-  const { stdout } = await runCli(["schema", "--name", "createInput"]);
-  expect(JSON.parse(stdout)).toMatchObject({ type: "object" });
+test("schema stdout exposes usable CLI and input contracts as JSON", async () => {
+  const { stdout } = await runCli(["schema", "--name", "all"]);
+  const schema = JSON.parse(stdout);
+  expect(schema.schemas.createInput).toMatchObject({ type: "object" });
+  expect(schema.schemas.addInput).toMatchObject({ type: "object" });
+  expect(schema.cli.commands).toEqual(
+    expect.arrayContaining(
+      ["create-json", "add-json", "schema"].map((name) => expect.objectContaining({ name })),
+    ),
+  );
 });
 
 test("create-json preserves dry-run behavior and emits a JSON result", async () => {

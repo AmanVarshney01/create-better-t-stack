@@ -87,7 +87,12 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
       );
       continue;
     }
-    const isPublic = /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key);
+    const isAuthOrigin =
+      config.frontend.includes("nuxt") && (key === "BETTER_AUTH_URL" || key === "CORS_ORIGIN");
+    const isPublic =
+      /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key) ||
+      key === "CLERK_PUBLISHABLE_KEY" ||
+      isAuthOrigin;
     let type = "string(minLength=1)";
     if (key === "BETTER_AUTH_SECRET") type = "string(minLength=32)";
     else if ((key.endsWith("URL") && key !== "DATABASE_URL") || key === "CORS_ORIGIN") type = "url";
@@ -115,8 +120,9 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
     const isRevenueCatPlatformKey =
       app === "apps/native" &&
       ["EXPO_PUBLIC_REVENUECAT_IOS_KEY", "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY"].includes(key);
+    // Auth origins are visible in browser requests and must still resolve at runtime.
     lines.push(
-      `# ${isPublic ? "@public " : ""}${isRevenueCatPlatformKey ? "@required=false " : ""}@type=${type}`,
+      `# ${isPublic ? "@public " : ""}${isAuthOrigin ? "@dynamic " : ""}${isRevenueCatPlatformKey ? "@required=false " : ""}@type=${type}`,
       `${key}=${value}`,
       "",
     );
@@ -178,7 +184,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
     "// Alchemy validates deployment inputs with Varlock; Workers use native env bindings.",
     `import type { PublicCoercedEnvSchema } from "./env${svelte ? ".generated" : ""}";`,
   ];
-  if (svelte && keys.length) lines.push(`import { ${keys.join(", ")} } from "$env/static/public";`);
+  if (svelte && keys.length) lines.push(`import { ${keys.join(", ")} } from "$app/env/public";`);
   if (nuxt && keys.length) lines.push('import { useRuntimeConfig } from "#imports";');
   lines.push("", "export const ENV = {");
   for (const key of keys) {
@@ -221,6 +227,20 @@ export function processVarlock(
   for (const app of ["apps/web", "apps/server", "apps/native"]) {
     if (!vfs.exists(`${app}/package.json`)) continue;
     const keys = schemaKeys(vfs, app, config);
+    if (app === "apps/web" && config.frontend.includes("svelte")) {
+      const publicKeys = [...keys].filter((key) => key.startsWith("PUBLIC_"));
+      vfs.writeFile(
+        `${app}/src/env.ts`,
+        [
+          'import { defineEnvVars } from "@sveltejs/kit/env";',
+          "",
+          "export const variables = defineEnvVars({",
+          ...publicKeys.map((key) => `  ${key}: { public: true, static: true },`),
+          "});",
+          "",
+        ].join("\n"),
+      );
+    }
     for (const key of keys) allKeys.add(key);
     const envFile =
       app === "apps/web" && config.frontend.includes("svelte") ? "env.generated.ts" : "env.ts";
