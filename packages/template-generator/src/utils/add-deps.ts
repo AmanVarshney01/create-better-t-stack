@@ -190,10 +190,12 @@ export const dependencyVersionMap = {
   tsdown: "^0.23.0",
   zod: "^4.5.4",
 
-  "@polar-sh/better-auth": "^2.1.0",
+  // Intentional: @polar-sh/better-auth 2.x does not export PolarBetterAuthPlugin, so packages that
+  // emit declarations for createAuth() fail with TS4058; 2.x also requires @polar-sh/sdk 1.0.
+  "@polar-sh/better-auth": "^1.8.4",
   "@polar-sh/checkout": "^0.4.1",
   // Peer range required by @polar-sh/better-auth; update together.
-  "@polar-sh/sdk": "^1.0.2",
+  "@polar-sh/sdk": "^0.47.0",
   "@stripe/react-stripe-js": "^7.0.0",
   "@stripe/stripe-js": "^10.1.0",
 

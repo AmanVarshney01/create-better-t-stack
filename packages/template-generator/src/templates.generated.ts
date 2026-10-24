@@ -9428,7 +9428,7 @@ import Layout from "../layouts/Layout.astro";
       try {
         const { data: customerState } = await authClient.customer.state();
         const subscriptionInfo = document.getElementById("subscription-info")!;
-        if ((customerState?.active_subscriptions?.length ?? 0) > 0) {
+        if ((customerState?.activeSubscriptions?.length ?? 0) > 0) {
           subscriptionInfo.innerHTML = \`
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
             <button
@@ -9731,7 +9731,7 @@ const handleSignOut = async () => {
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
 {{#if (eq payments "polar")}}
-import type { models } from "@polar-sh/sdk/2026-10";
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9747,7 +9747,7 @@ definePageMeta({
 const { data: session } = await useAuthSession()
 
 {{#if (eq payments "polar")}}
-const customerState = ref<models.CustomerState | null>(null)
+const customerState = ref<CustomerState | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9770,7 +9770,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  (customerState.value?.active_subscriptions?.length ?? 0) > 0
+  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -9928,7 +9928,7 @@ export const authClient = createAuthClient({
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
 {{#if (eq payments "polar")}}
-import type { models } from "@polar-sh/sdk/2026-10";
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
 {{/if}}
 
 {{#if (eq payments "polar")}}
@@ -9951,7 +9951,7 @@ export default function Dashboard({
 	session
 }: {
 	{{#if (eq payments "polar")}}
-	customerState: models.CustomerState | null | undefined;
+	customerState: CustomerState | null | undefined;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
@@ -9964,7 +9964,7 @@ export default function Dashboard({
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -10874,7 +10874,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 {{/if}}
 
   {{#if (eq payments "polar")}}
-  const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
+  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -11305,7 +11305,7 @@ function RouteComponent() {
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -11808,7 +11808,7 @@ function RouteComponent() {
   {{/if}}
 
   {{#if (eq payments "polar") }}
-  const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
+  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -12218,7 +12218,7 @@ export default function Dashboard() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		(customerState()?.active_subscriptions?.length ?? 0) > 0;
+		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -12641,8 +12641,8 @@ export const authClient = createAuthClient({
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {(data.customerState?.active_subscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
-		{#if (data.customerState?.active_subscriptions?.length ?? 0) > 0}
+		<p>Plan: {(data.customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (data.customerState?.activeSubscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -35628,10 +35628,10 @@ export const syncProducts = action({
   },
 });
 `],
-  ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { createPolarCore } from "@polar-sh/sdk/2026-10";
+  ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
 
 export function createPolarClient(config: { POLAR_ACCESS_TOKEN: string }) {
-  return createPolarCore({ accessToken: config.POLAR_ACCESS_TOKEN, environment: "sandbox" });
+  return new Polar({ accessToken: config.POLAR_ACCESS_TOKEN, server: "sandbox" });
 }
 `],
   ["payments/polar/web/nuxt/app/pages/success.vue.hbs", `<script setup lang="ts">
