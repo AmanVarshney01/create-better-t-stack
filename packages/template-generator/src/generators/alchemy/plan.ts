@@ -155,6 +155,30 @@ export function createAlchemyDeploymentPlan(config: ProjectConfig): AlchemyDeplo
   };
 }
 
+// Alchemy ships each provider in its own @alchemy.run package
+export const ALCHEMY_PROVIDER_PACKAGES = {
+  Axiom: "@alchemy.run/axiom",
+  Neon: "@alchemy.run/neon",
+  Planetscale: "@alchemy.run/planetscale",
+  Prisma: "@alchemy.run/prisma",
+  Cloudflare: "@alchemy.run/cloudflare",
+} as const;
+
+export type AlchemyProvider = keyof typeof ALCHEMY_PROVIDER_PACKAGES;
+
+export function getAlchemyProviders(plan: AlchemyDeploymentPlan): AlchemyProvider[] {
+  const { kind } = plan.managedDatabase;
+  const providers: AlchemyProvider[] = [];
+  if (plan.hasAxiom) providers.push("Axiom");
+  if (kind === "neon") providers.push("Neon");
+  if (kind === "planetscale-postgres" || kind === "planetscale-mysql") {
+    providers.push("Planetscale");
+  }
+  if (plan.hasPrismaDeploy || kind === "prisma-postgres") providers.push("Prisma");
+  if (plan.hasCloudflare) providers.push("Cloudflare");
+  return providers;
+}
+
 export function assertNever(value: never): never {
   throw new Error(`Unhandled Alchemy plan variant: ${JSON.stringify(value)}`);
 }

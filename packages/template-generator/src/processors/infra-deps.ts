@@ -1,7 +1,12 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-import { getPrismaWebsiteFramework } from "../generators/alchemy/plan";
+import {
+  ALCHEMY_PROVIDER_PACKAGES,
+  createAlchemyDeploymentPlan,
+  getAlchemyProviders,
+  getPrismaWebsiteFramework,
+} from "../generators/alchemy/plan";
 import { addPackageDependency } from "../utils/add-deps";
 
 export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
@@ -30,6 +35,9 @@ export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         "@effect/platform-node",
         "@effect/platform-bun",
         "varlock",
+        ...getAlchemyProviders(createAlchemyDeploymentPlan(config)).map(
+          (provider) => ALCHEMY_PROVIDER_PACKAGES[provider],
+        ),
       ],
     });
   }

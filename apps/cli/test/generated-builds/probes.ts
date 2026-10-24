@@ -452,7 +452,7 @@ import path from "node:path";
 import * as Effect from "effect/Effect";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { make } from "@alchemy.run/frontend-frameworks/astro";
-import { stageWebsiteArtifact } from "alchemy/Prisma/Website/Artifact";
+import { stageWebsiteArtifact } from "@alchemy.run/prisma/Website/Artifact";
 
 async function check(origin: string) {
   let root: Response | undefined;
