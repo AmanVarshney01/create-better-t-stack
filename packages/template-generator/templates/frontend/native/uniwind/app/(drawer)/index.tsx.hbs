@@ -38,8 +38,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
 import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 {{#if (eq payments "revenuecat")}}
-import { SubscriptionStatusCard } from "@/components/subscription-status-card";
-import { PaywallExample } from "@/components/paywall-example";
+import { Paywall } from "@/components/paywall";
 {{/if}}
 
 export default function Home() {
@@ -300,8 +299,7 @@ return (
 
   {{#if (eq payments "revenuecat")}}
   <View className="mt-5">
-    <SubscriptionStatusCard />
-    <PaywallExample />
+    <Paywall />
   </View>
   {{/if}}
 </Container>

@@ -12,8 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
 {{#if (eq payments "revenuecat")}}
-import { SubscriptionStatusCard } from "@/components/subscription-status-card";
-import { PaywallExample } from "@/components/paywall-example";
+import { Paywall } from "@/components/paywall";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -204,8 +203,7 @@ return (
       )}
 
       {{#if (eq payments "revenuecat")}}
-      <SubscriptionStatusCard />
-      <PaywallExample />
+      <Paywall />
       {{/if}}
     </View>
   </ScrollView>

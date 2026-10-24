@@ -9,8 +9,7 @@ import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 {{#if (eq payments "revenuecat")}}
-import { SubscriptionStatusCard } from "@/components/subscription-status-card";
-import { PaywallExample } from "@/components/paywall-example";
+import { Paywall } from "@/components/paywall";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -344,8 +343,7 @@ return (
       {{/if}}
 
       {{#if (eq payments "revenuecat")}}
-      <SubscriptionStatusCard />
-      <PaywallExample />
+      <Paywall />
       {{/if}}
     </View>
   </ScrollView>

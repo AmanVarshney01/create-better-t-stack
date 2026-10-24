@@ -263,10 +263,10 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "native-bare-convex-better-auth-revenuecat",
+    name: "native-unistyles-convex-better-auth-revenuecat",
     config: {
       ...baseConfig,
-      frontend: ["native-bare"],
+      frontend: ["native-unistyles"],
       backend: "convex",
       runtime: "none",
       database: "none",

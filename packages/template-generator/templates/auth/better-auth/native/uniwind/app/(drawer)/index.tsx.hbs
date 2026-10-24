@@ -11,8 +11,7 @@ import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
 {{#if (eq payments "revenuecat")}}
-import { SubscriptionStatusCard } from "@/components/subscription-status-card";
-import { PaywallExample } from "@/components/paywall-example";
+import { Paywall } from "@/components/paywall";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -188,8 +187,7 @@ return (
 
   {{#if (eq payments "revenuecat")}}
   <View className="mt-6">
-    <SubscriptionStatusCard />
-    <PaywallExample />
+    <Paywall />
   </View>
   {{/if}}
 </Container>

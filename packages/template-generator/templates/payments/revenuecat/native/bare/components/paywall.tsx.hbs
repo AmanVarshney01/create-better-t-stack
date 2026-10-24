@@ -1,0 +1,73 @@
+import { useEffect, useState } from "react";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { Alert, StyleSheet, View } from "react-native";
+import Purchases, { type PurchasesError, type PurchasesPackage } from "react-native-purchases";
+
+import { NAV_THEME } from "@/lib/constants";
+import { isRevenueCatConfigured, useIsPro } from "@/lib/revenuecat";
+import { useColorScheme } from "@/lib/use-color-scheme";
+
+export function Paywall() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const isPro = useIsPro();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+
+  useEffect(() => {
+    if (!isRevenueCatConfigured) return;
+    Purchases.getOfferings()
+      .then((offerings) => setPackages(offerings.current?.availablePackages ?? []))
+      .catch(console.warn);
+  }, []);
+
+  // Purchases update the customer info listener, so isPro refreshes on its own
+  const purchase = (pack: PurchasesPackage) =>
+    Purchases.purchasePackage(pack).catch((error: PurchasesError) => {
+      if (!error.userCancelled) Alert.alert("Purchase failed", error.message);
+    });
+
+  const restore = () =>
+    Purchases.restorePurchases().catch((error: PurchasesError) =>
+      Alert.alert("Restore failed", error.message),
+    );
+
+  return (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host matchContents=\{{ vertical: true }}>
+        <Column spacing={8}>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Premium
+          </ExpoUIText>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+            {!isRevenueCatConfigured
+              ? "Add your RevenueCat API keys to apps/native/.env. Expo Go needs a Test Store key."
+              : isPro
+                ? "You're Premium. Thanks for your support!"
+                : "Unlock all features."}
+          </ExpoUIText>
+          {isRevenueCatConfigured &&
+            !isPro &&
+            packages.map((pack) => (
+              <Button
+                key={pack.identifier}
+                label={`${pack.product.title} · ${pack.product.priceString}`}
+                onPress={() => purchase(pack)}
+              />
+            ))}
+          {isRevenueCatConfigured && !isPro && (
+            <Button label="Restore purchases" variant="outlined" onPress={restore} />
+          )}
+        </Column>
+      </Host>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+});

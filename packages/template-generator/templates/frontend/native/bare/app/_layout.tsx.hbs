@@ -45,8 +45,8 @@ import { queryClient } from "@/utils/orpc";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
-{{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, RevenueCatUserBridge{{/if}} } from "@/components/revenuecat-provider";
+{{#if (and (eq payments "revenuecat") (or (eq auth "better-auth") (eq auth "clerk")))}}
+import { RevenueCatUserSync } from "@/lib/revenuecat";
 {{/if}}
 
 const LIGHT_THEME = {
@@ -95,17 +95,14 @@ export default function RootLayout() {
 
   return (
     <>
-{{#if (eq payments "revenuecat")}}
-      <RevenueCatProvider>
-{{#if (eq auth "better-auth")}}
-        <RevenueCatUserBridge />
-{{/if}}
+{{#if (and (eq payments "revenuecat") (eq auth "better-auth"))}}
+      <RevenueCatUserSync />
 {{/if}}
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
 {{#if (eq payments "revenuecat")}}
-            <RevenueCatUserBridge />
+            <RevenueCatUserSync />
 {{/if}}
             <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
               <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
@@ -149,7 +146,7 @@ export default function RootLayout() {
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
 {{#if (eq payments "revenuecat")}}
-            <RevenueCatUserBridge />
+            <RevenueCatUserSync />
 {{/if}}
             {{#unless (eq api "none")}}
               <ClerkApiAuthBridge />
@@ -204,9 +201,6 @@ export default function RootLayout() {
           {{/unless}}
         {{/if}}
       {{/if}}
-{{#if (eq payments "revenuecat")}}
-      </RevenueCatProvider>
-{{/if}}
     </>
   );
 }
