@@ -25,6 +25,7 @@ import {
   supportsDatabaseSetupRuntime,
   supportsServerDeployRuntime,
   supportsPaymentsAuth,
+  supportsPaymentsFrontend,
   allowedApisForFrontends,
   validateAddonCompatibility,
   type ProjectConfig,
@@ -119,6 +120,7 @@ export function* configurations(filter: Selection = {}): Generator<ProjectConfig
                   if (!allowedApisForFrontends(frontend).includes(api)) continue;
                   for (const payments of choices(filter.payments, PAYMENTS_VALUES)) {
                     if (!supportsPaymentsAuth(payments, auth)) continue;
+                    if (!supportsPaymentsFrontend(payments, frontend)) continue;
                     for (const webDeploy of choices(filter.webDeploy, WEB_DEPLOY_VALUES)) {
                       if (webDeploy !== "none" && !frontend.some((f) => web.includes(f))) continue;
                       for (const serverDeploy of choices(

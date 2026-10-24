@@ -72,6 +72,11 @@ const invalidStacks = [
     error: /Polar payments requires Better Auth/,
   },
   {
+    name: "revenuecat-web-only",
+    options: { payments: "revenuecat" },
+    error: /RevenueCat payments requires a native frontend/,
+  },
+  {
     name: "clerk-mixed-nuxt",
     options: { frontend: ["nuxt", "native-bare"], api: "orpc", auth: "clerk" },
     error: /Clerk authentication is not compatible.*nuxt/,

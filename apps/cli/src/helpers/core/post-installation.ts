@@ -712,7 +712,8 @@ function getRevenueCatInstructions(backend: Backend, packageManager: string) {
     `${pc.cyan("•")} Set the public SDK keys in ${pc.white("apps/native/.env")}:\n` +
     `${pc.white("   EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_your_ios_key")}\n` +
     `${pc.white("   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_your_android_key")}\n` +
-    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=pro")}`;
+    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=pro")}\n` +
+    `${pc.cyan("•")} Purchases need a development build (${pc.white("npx expo run:ios")} or ${pc.white("npx expo run:android")}); Expo Go only works with a RevenueCat Test Store key`;
 
   if (backend === "convex") {
     const cmd = packageManager === "npm" ? "npx" : packageManager;
@@ -720,8 +721,9 @@ function getRevenueCatInstructions(backend: Backend, packageManager: string) {
       `${base}\n` +
       `${pc.cyan("•")} Set the webhook secret (min 32 chars) from ${pc.white("packages/backend")}:\n` +
       `${pc.white("   cd packages/backend")}\n` +
-      `${pc.white(`   ${cmd} convex env set REVENUECAT_WEBHOOK_AUTH your_webhook_secret`)}\n` +
-      `${pc.cyan("•")} Configure a RevenueCat webhook to ${pc.white("https://<your-convex-site-url>/webhooks/revenuecat")} using the same value as the Authorization header`
+      `${pc.white(`   ${cmd} convex env set REVENUECAT_WEBHOOK_AUTH=$(openssl rand -base64 32)`)}\n` +
+      `${pc.cyan("•")} Add a RevenueCat webhook for ${pc.white("https://<your-convex-site-url>/webhooks/revenuecat")} with the secret as its Authorization header:\n` +
+      `${pc.white(`   ${cmd} convex env get REVENUECAT_WEBHOOK_AUTH`)}`
     );
   }
 

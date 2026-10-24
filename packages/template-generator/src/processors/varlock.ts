@@ -87,6 +87,15 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
       );
       continue;
     }
+    if (key === "EXPO_PUBLIC_REVENUECAT_IOS_KEY" || key === "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY") {
+      lines.push(
+        "# Only the key for the platform you build is needed.",
+        "# @public @required=false @type=string(minLength=1)",
+        `${key}=`,
+        "",
+      );
+      continue;
+    }
     const isAuthOrigin =
       config.frontend.includes("nuxt") && (key === "BETTER_AUTH_URL" || key === "CORS_ORIGIN");
     const isPublic =
@@ -117,12 +126,9 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
     }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
-    const isRevenueCatPlatformKey =
-      app === "apps/native" &&
-      ["EXPO_PUBLIC_REVENUECAT_IOS_KEY", "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY"].includes(key);
     // Auth origins are visible in browser requests and must still resolve at runtime.
     lines.push(
-      `# ${isPublic ? "@public " : ""}${isAuthOrigin ? "@dynamic " : ""}${isRevenueCatPlatformKey ? "@required=false " : ""}@type=${type}`,
+      `# ${isPublic ? "@public " : ""}${isAuthOrigin ? "@dynamic " : ""}@type=${type}`,
       `${key}=${value}`,
       "",
     );

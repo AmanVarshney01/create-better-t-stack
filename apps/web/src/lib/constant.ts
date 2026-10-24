@@ -508,7 +508,7 @@ export const TECH_OPTIONS: TechOptions = {
       name: "RevenueCat",
       description: "In-app subscriptions and cross-platform monetization for mobile.",
       icon: `${ICON_BASE_URL}/revenuecat.svg`,
-      color: "from-red-400 to-red-600",
+      color: "from-rose-400 to-rose-600",
       default: false,
     },
     {

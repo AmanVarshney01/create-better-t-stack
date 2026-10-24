@@ -5,5 +5,8 @@ import { components } from "./_generated/api";
 export const revenuecat = new RevenueCat(components.revenuecat, {
   REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
 });
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 
+// Resolves the signed-in user from the auth token subject, which the app passes to Purchases.logIn
 export const { hasEntitlement, isSubscriber, getActiveSubscriptions } = revenuecat.api();
+{{/if}}

@@ -41,7 +41,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+import { RevenueCatProvider{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, RevenueCatUserBridge{{/if}} } from "@/components/revenuecat-provider";
 {{/if}}
 
 {{#if (eq api "trpc")}}
@@ -93,10 +93,16 @@ export default function Layout() {
   return (
 {{#if (eq payments "revenuecat")}}
     <RevenueCatProvider>
+{{#if (eq auth "better-auth")}}
+      <RevenueCatUserBridge />
+{{/if}}
 {{/if}}
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+          <RevenueCatUserBridge />
+{{/if}}
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <GestureHandlerRootView style=\{{ flex: 1 }}>
               <KeyboardProvider>
@@ -137,6 +143,9 @@ export default function Layout() {
     {{else}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+          <RevenueCatUserBridge />
+{{/if}}
           {{#unless (eq api "none")}}
             <ClerkApiAuthBridge />
             <QueryClientProvider client={queryClient}>

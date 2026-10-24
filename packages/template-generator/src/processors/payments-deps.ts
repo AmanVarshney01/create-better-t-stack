@@ -86,11 +86,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
 
   if (payments === "revenuecat") {
     const nativePath = "apps/native/package.json";
-    const hasNativeFrontend = frontend.some((f) =>
-      ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-    );
-
-    if (hasNativeFrontend && vfs.exists(nativePath)) {
+    if (vfs.exists(nativePath)) {
       addPackageDependency({
         vfs,
         packagePath: nativePath,

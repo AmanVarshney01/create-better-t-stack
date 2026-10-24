@@ -3,7 +3,7 @@ import { Alert, View } from "react-native";
 import { Button, Card, Spinner } from "heroui-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();

@@ -1,17 +1,18 @@
 import { Text } from "react-native";
 import { Card } from "heroui-native";
 
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
+import { getRevenueCatSetupMessage } from "@/lib/revenuecat";
 
 export function SubscriptionStatusCard() {
-  const { isPro, isConfigured } = useRevenueCat();
+  const { isPro, isConfigured, initError } = useRevenueCat();
 
   return (
     <Card variant="secondary" className="mb-4 p-4">
       <Card.Title className="mb-2">Subscription</Card.Title>
       {!isConfigured ? (
         <Card.Description>
-          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+          {getRevenueCatSetupMessage(initError)}
         </Card.Description>
       ) : isPro ? (
         <Text className="text-success text-base font-medium">

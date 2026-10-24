@@ -34,11 +34,12 @@ export async function processPaymentsTemplates(
       config,
     );
 
-    if (config.payments === "revenuecat" && config.auth !== "better-auth") {
+    // Better Auth's http.ts registers payment webhooks; other setups need the provider's own router
+    if (config.auth !== "better-auth") {
       processTemplatesFromPrefix(
         vfs,
         templates,
-        "payments/revenuecat/convex/no-better-auth",
+        `payments/${config.payments}/convex/http`,
         "packages/backend",
         config,
       );

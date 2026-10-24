@@ -26581,7 +26581,7 @@ import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+import { RevenueCatProvider{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, RevenueCatUserBridge{{/if}} } from "@/components/revenuecat-provider";
 {{/if}}
 
 const LIGHT_THEME = {
@@ -26632,10 +26632,16 @@ export default function RootLayout() {
     <>
 {{#if (eq payments "revenuecat")}}
       <RevenueCatProvider>
+{{#if (eq auth "better-auth")}}
+        <RevenueCatUserBridge />
+{{/if}}
 {{/if}}
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+            <RevenueCatUserBridge />
+{{/if}}
             <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
               <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
                 <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
@@ -26677,6 +26683,9 @@ export default function RootLayout() {
       {{else}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+            <RevenueCatUserBridge />
+{{/if}}
             {{#unless (eq api "none")}}
               <ClerkApiAuthBridge />
               <QueryClientProvider client={queryClient}>
@@ -27879,7 +27888,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+import { RevenueCatProvider{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, RevenueCatUserBridge{{/if}} } from "@/components/revenuecat-provider";
 {{/if}}
 
 export const unstable_settings = {
@@ -27914,6 +27923,9 @@ export default function RootLayout() {
   return (
 {{#if (eq payments "revenuecat")}}
     <RevenueCatProvider>
+{{#if (eq auth "better-auth")}}
+      <RevenueCatUserBridge />
+{{/if}}
 {{/if}}
     {{#if (eq backend "convex")}}
     {{#if (eq auth "clerk")}}
@@ -27921,6 +27933,9 @@ export default function RootLayout() {
       tokenCache={tokenCache}
       publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
+{{#if (eq payments "revenuecat")}}
+      <RevenueCatUserBridge />
+{{/if}}
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <GestureHandlerRootView style=\\{{ flex: 1 }}>
           <Stack
@@ -27995,6 +28010,9 @@ export default function RootLayout() {
         tokenCache={tokenCache}
         publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
+{{#if (eq payments "revenuecat")}}
+        <RevenueCatUserBridge />
+{{/if}}
         {{#unless (eq api "none")}}
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
@@ -29375,7 +29393,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+import { RevenueCatProvider{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, RevenueCatUserBridge{{/if}} } from "@/components/revenuecat-provider";
 {{/if}}
 
 {{#if (eq api "trpc")}}
@@ -29427,10 +29445,16 @@ export default function Layout() {
   return (
 {{#if (eq payments "revenuecat")}}
     <RevenueCatProvider>
+{{#if (eq auth "better-auth")}}
+      <RevenueCatUserBridge />
+{{/if}}
 {{/if}}
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+          <RevenueCatUserBridge />
+{{/if}}
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <GestureHandlerRootView style=\\{{ flex: 1 }}>
               <KeyboardProvider>
@@ -29471,6 +29495,9 @@ export default function Layout() {
     {{else}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+{{#if (eq payments "revenuecat")}}
+          <RevenueCatUserBridge />
+{{/if}}
           {{#unless (eq api "none")}}
             <ClerkApiAuthBridge />
             <QueryClientProvider client={queryClient}>
@@ -35867,10 +35894,13 @@ import { components } from "./_generated/api";
 export const revenuecat = new RevenueCat(components.revenuecat, {
   REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
 });
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 
+// Resolves the signed-in user from the auth token subject, which the app passes to Purchases.logIn
 export const { hasEntitlement, isSubscriber, getActiveSubscriptions } = revenuecat.api();
+{{/if}}
 `],
-  ["payments/revenuecat/convex/no-better-auth/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
+  ["payments/revenuecat/convex/http/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
 
 import { revenuecat } from "./revenuecat";
 
@@ -35887,7 +35917,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
 
 export function PaywallExample() {
   const { colorScheme } = useColorScheme();
@@ -36015,12 +36045,13 @@ import { StyleSheet, View } from "react-native";
 
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
+import { getRevenueCatSetupMessage } from "@/lib/revenuecat";
 
 export function SubscriptionStatusCard() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
-  const { isPro, isConfigured } = useRevenueCat();
+  const { isPro, isConfigured, initError } = useRevenueCat();
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -36031,7 +36062,7 @@ export function SubscriptionStatusCard() {
           </ExpoUIText>
           {!isConfigured ? (
             <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 13 }} style=\\{{ opacity: 0.7 }}>
-              RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+              {getRevenueCatSetupMessage(initError)}
             </ExpoUIText>
           ) : isPro ? (
             <ExpoUIText textStyle=\\{{ color: "#16a34a", fontSize: 14, fontWeight: "500" }}>
@@ -36057,103 +36088,100 @@ const styles = StyleSheet.create({
   },
 });
 `],
-  ["payments/revenuecat/native/base/contexts/revenuecat-context.tsx.hbs", `import type { ReactNode } from "react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+  ["payments/revenuecat/native/base/components/revenuecat-provider.tsx.hbs", `import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
+{{#if (eq auth "better-auth")}}
+import { authClient } from "@/lib/auth-client";
+{{else if (eq auth "clerk")}}
+import { useAuth } from "@clerk/expo";
+{{/if}}
 import {
   configureRevenueCat,
   getPackages as getRevenueCatPackages,
   hasProEntitlement,
-  identifyUser as identifyRevenueCatUser,
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  identifyUser,
+{{/if}}
   isPurchaseCancelledError,
-  logOutUser as logOutRevenueCatUser,
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  logOutUser,
+{{/if}}
   onCustomerInfoUpdated,
   purchaseAndCheckPro,
-  type RevenueCatInitFailureReason,
+  type RevenueCatInitResult,
   refreshProEntitlement,
   restoreAndCheckPro,
-  setUserAttributes as setRevenueCatUserAttributes,
-  syncAndCheckPro,
 } from "@/lib/revenuecat";
 
-type UserAttributes = {
-  email?: string;
-  displayName?: string;
-};
-
-export type RevenueCatContextValue = {
+type RevenueCatContextValue = {
   isPro: boolean;
   isConfigured: boolean;
-  refreshEntitlement: () => Promise<boolean>;
+  initError: Extract<RevenueCatInitResult, { configured: false }>["reason"] | null;
   getPackages: () => Promise<PurchasesPackage[]>;
   purchasePackage: (pack: PurchasesPackage) => Promise<boolean>;
   restorePurchases: () => Promise<boolean>;
-  syncPurchases: () => Promise<boolean>;
-  identifyUser: (userId: string) => Promise<boolean>;
-  logOutUser: () => Promise<void>;
-  setUserAttributes: (attributes: UserAttributes) => Promise<void>;
-};
-
-type RevenueCatProviderProps = {
-  children: ReactNode;
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  setAppUserId: (userId: string | null) => void;
+{{/if}}
 };
 
 const RevenueCatContext = createContext<RevenueCatContextValue | null>(null);
 
+// RevenueCat should be configured once, as early as possible in the app's lifecycle
+const initResult = configureRevenueCat();
+
 export function useRevenueCat(): RevenueCatContextValue {
   const context = useContext(RevenueCatContext);
-
-  if (!context) {
-    throw new Error("useRevenueCat must be used within RevenueCatProvider");
-  }
-
+  if (!context) throw new Error("useRevenueCat must be used within RevenueCatProvider");
   return context;
 }
 
-export function useIsPro(): boolean {
-  const context = useContext(RevenueCatContext);
-  return context?.isPro ?? false;
-}
-
-function logInitSkip(reason: RevenueCatInitFailureReason): void {
-  if (reason === "unsupported_platform") {
-    console.warn("[RevenueCat] Initialization skipped: unsupported platform");
-    return;
-  }
-
-  console.warn(
-    "[RevenueCat] Missing API key. Add EXPO_PUBLIC_REVENUECAT_IOS_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_KEY in apps/native/.env",
-  );
-}
-
-export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
-  const [isConfigured, setIsConfigured] = useState(false);
+export function RevenueCatProvider({ children }: { children: ReactNode }) {
+  const isConfigured = initResult.configured;
   const [isPro, setIsPro] = useState(false);
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  const [appUserId, setAppUserId] = useState<string | null>(null);
+  const loggedInUserId = useRef<string | null>(null);
+{{/if}}
 
-  const refreshEntitlement = useCallback(async (): Promise<boolean> => {
-    if (!isConfigured) return false;
+  const refreshEntitlement = useCallback(async () => {
+    if (!isConfigured) return;
     try {
-      const nextIsPro = await refreshProEntitlement();
-      setIsPro(nextIsPro);
-      return nextIsPro;
+      setIsPro(await refreshProEntitlement());
     } catch (error) {
       console.warn("[RevenueCat] Failed to refresh entitlement:", error);
-      return false;
     }
   }, [isConfigured]);
 
-  const getPackages = useCallback(async (): Promise<PurchasesPackage[]> => {
-    if (!isConfigured) return [];
+  useEffect(() => {
+    if (!isConfigured) return;
+    const unsubscribe = onCustomerInfoUpdated((customerInfo) => {
+      setIsPro(hasProEntitlement(customerInfo));
+    });
+    refreshEntitlement();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshEntitlement();
+    });
+    return () => {
+      unsubscribe();
+      subscription.remove();
+    };
+  }, [isConfigured, refreshEntitlement]);
 
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  useEffect(() => {
+    if (!isConfigured || appUserId === loggedInUserId.current) return;
+    loggedInUserId.current = appUserId;
+    const sync = appUserId ? identifyUser(appUserId).then(setIsPro) : logOutUser();
+    sync.catch((error) => console.warn("[RevenueCat] Failed to sync the signed-in user:", error));
+  }, [isConfigured, appUserId]);
+
+{{/if}}
+  const getPackages = useCallback(async () => {
+    if (!isConfigured) return [];
     try {
       return await getRevenueCatPackages();
     } catch (error) {
@@ -36163,38 +36191,24 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
   }, [isConfigured]);
 
   const purchasePackage = useCallback(
-    async (pack: PurchasesPackage): Promise<boolean> => {
+    async (pack: PurchasesPackage) => {
       if (!isConfigured) return false;
-
       try {
         const nextIsPro = await purchaseAndCheckPro(pack);
         setIsPro(nextIsPro);
         return nextIsPro;
       } catch (error) {
-        if (isPurchaseCancelledError(error)) {
-          try {
-            const nextIsPro = await refreshProEntitlement();
-            setIsPro(nextIsPro);
-            return nextIsPro;
-          } catch (refreshError) {
-            console.warn(
-              "[RevenueCat] Failed to refresh entitlement after cancellation:",
-              refreshError,
-            );
-            return false;
-          }
+        if (!isPurchaseCancelledError(error)) {
+          console.warn("[RevenueCat] Purchase failed:", error);
         }
-
-        console.warn("[RevenueCat] Purchase failed:", error);
         return false;
       }
     },
     [isConfigured],
   );
 
-  const restorePurchases = useCallback(async (): Promise<boolean> => {
+  const restorePurchases = useCallback(async () => {
     if (!isConfigured) return false;
-
     try {
       const nextIsPro = await restoreAndCheckPro();
       setIsPro(nextIsPro);
@@ -36205,336 +36219,143 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
     }
   }, [isConfigured]);
 
-  const syncPurchases = useCallback(async (): Promise<boolean> => {
-    if (!isConfigured) return false;
-
-    try {
-      const nextIsPro = await syncAndCheckPro();
-      setIsPro(nextIsPro);
-      return nextIsPro;
-    } catch (error) {
-      console.warn("[RevenueCat] Sync purchases failed:", error);
-      return false;
-    }
-  }, [isConfigured]);
-
-  const identifyUser = useCallback(
-    async (userId: string): Promise<boolean> => {
-      if (!isConfigured) return false;
-
-      try {
-        const nextIsPro = await identifyRevenueCatUser(userId);
-        setIsPro(nextIsPro);
-        return nextIsPro;
-      } catch (error) {
-        console.warn("[RevenueCat] Identify user failed:", error);
-        return false;
-      }
-    },
-    [isConfigured],
-  );
-
-  const logOutUser = useCallback(async (): Promise<void> => {
-    if (!isConfigured) return;
-
-    try {
-      await logOutRevenueCatUser();
-      setIsPro(false);
-    } catch (error) {
-      console.warn("[RevenueCat] Log out failed:", error);
-    }
-  }, [isConfigured]);
-
-  const setUserAttributes = useCallback(
-    async (attributes: UserAttributes): Promise<void> => {
-      if (!isConfigured) return;
-
-      try {
-        await setRevenueCatUserAttributes(attributes);
-      } catch (error) {
-        console.warn("[RevenueCat] Set attributes failed:", error);
-      }
-    },
-    [isConfigured],
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-    let unsubscribe = () => {};
-
-    const initialize = async () => {
-      try {
-        const result = await configureRevenueCat();
-
-        if (!isMounted) return;
-
-        if (!result.configured) {
-          setIsConfigured(false);
-          logInitSkip(result.reason);
-          return;
-        }
-
-        setIsConfigured(true);
-
-        unsubscribe = onCustomerInfoUpdated((customerInfo) => {
-          if (!isMounted) return;
-          setIsPro(hasProEntitlement(customerInfo));
-        });
-
-        const nextIsPro = await refreshProEntitlement();
-        if (isMounted) {
-          setIsPro(nextIsPro);
-        }
-      } catch (error) {
-        console.warn("[RevenueCat] Initialization failed:", error);
-      }
-    };
-
-    initialize();
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isConfigured) return;
-
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state !== "active") return;
-
-      refreshEntitlement().catch((error) => {
-        console.warn("[RevenueCat] Foreground entitlement refresh failed:", error);
-      });
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [isConfigured, refreshEntitlement]);
-
-  const value = useMemo<RevenueCatContextValue>(
+  const value = useMemo(
     () => ({
       isPro,
       isConfigured,
-      refreshEntitlement,
+      initError: initResult.configured ? null : initResult.reason,
       getPackages,
       purchasePackage,
       restorePurchases,
-      syncPurchases,
-      identifyUser,
-      logOutUser,
-      setUserAttributes,
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+      setAppUserId,
+{{/if}}
     }),
-    [
-      isPro,
-      isConfigured,
-      refreshEntitlement,
-      getPackages,
-      purchasePackage,
-      restorePurchases,
-      syncPurchases,
-      identifyUser,
-      logOutUser,
-      setUserAttributes,
-    ],
+    [isPro, isConfigured, getPackages, purchasePackage, restorePurchases],
   );
 
   return <RevenueCatContext.Provider value={value}>{children}</RevenueCatContext.Provider>;
 }
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+
+// Uses the auth user id as the RevenueCat app user id, so webhook events match the signed-in user
+export function RevenueCatUserBridge() {
+  const { setAppUserId } = useRevenueCat();
+{{#if (eq auth "better-auth")}}
+  const { data: session, isPending } = authClient.useSession();
+  const userId = session?.user.id ?? null;
+
+  useEffect(() => {
+    if (!isPending) setAppUserId(userId);
+  }, [isPending, userId, setAppUserId]);
+{{else}}
+  const { isLoaded, userId } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded) setAppUserId(userId ?? null);
+  }, [isLoaded, userId, setAppUserId]);
+{{/if}}
+
+  return null;
+}
+{{/if}}
 `],
   ["payments/revenuecat/native/base/lib/revenuecat.ts.hbs", `import { Platform } from "react-native";
 import Purchases, {
   type CustomerInfo,
   type CustomerInfoUpdateListener,
   LOG_LEVEL,
-  type PurchasesOffering,
+  type PurchasesError,
   type PurchasesPackage,
 } from "react-native-purchases";
 
-// RevenueCat SDK utility layer. Thin wrappers around \`react-native-purchases\`.
-// These are pure functions with no React state — they talk to the SDK directly.
-// In components, prefer the \`useRevenueCat()\` / \`useIsPro()\` hooks from
-// \`@/contexts/revenuecat-context\` instead of importing from this file.
+import { ENV } from "../src/env";
 
-function normalizeEnvValue(value: string | undefined): string | undefined {
-  const normalized = value?.trim();
-  return normalized ? normalized : undefined;
-}
+const PRO_ENTITLEMENT_ID = ENV.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID;
 
-const iosApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY);
-const androidApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY);
-
-const proEntitlementId =
-  normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID) ?? "pro";
-const preferredOfferingId = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_OFFERING_ID);
-
-export const PRO_ENTITLEMENT_IDS: readonly string[] = [proEntitlementId];
-
-let hasConfiguredRevenueCat = false;
-
-export type RevenueCatInitFailureReason = "unsupported_platform" | "missing_api_key";
+let isRevenueCatConfigured = false;
 
 export type RevenueCatInitResult =
   | { configured: true }
-  | { configured: false; reason: RevenueCatInitFailureReason };
-
-type RevenueCatPurchaseError = {
-  userCancelled?: boolean;
-};
+  | { configured: false; reason: "unsupported_platform" | "missing_api_key" | "init_failed" };
 
 export function hasProEntitlement(customerInfo: CustomerInfo | null): boolean {
-  if (!customerInfo) return false;
-
-  return PRO_ENTITLEMENT_IDS.some((id) => customerInfo.entitlements.active[id] !== undefined);
+  return customerInfo?.entitlements.active[PRO_ENTITLEMENT_ID] !== undefined;
 }
 
-function hasPackages(offering: PurchasesOffering | null | undefined): offering is PurchasesOffering {
-  return !!offering && offering.availablePackages.length > 0;
-}
-
-function pickFirstOfferingWithPackages(
-  offeringsById: Record<string, PurchasesOffering>,
-): PurchasesOffering | null {
-  for (const offering of Object.values(offeringsById)) {
-    if (hasPackages(offering)) {
-      return offering;
-    }
-  }
-  return null;
-}
-
-/**
- * One-time SDK initialization. Safe to call multiple times (no-ops after first).
- * Only \`RevenueCatProvider\` should call this — it owns the SDK lifecycle.
- */
-export async function configureRevenueCat(): Promise<RevenueCatInitResult> {
+// Configures the SDK once; later calls are no-ops.
+export function configureRevenueCat(): RevenueCatInitResult {
   if (Platform.OS !== "ios" && Platform.OS !== "android") {
     return { configured: false, reason: "unsupported_platform" };
   }
+  if (isRevenueCatConfigured) return { configured: true };
 
-  if (hasConfiguredRevenueCat) {
-    return { configured: true };
-  }
-
-  const apiKey = Platform.OS === "ios" ? iosApiKey : androidApiKey;
-
-  if (!apiKey) {
-    return { configured: false, reason: "missing_api_key" };
-  }
+  const apiKey =
+    Platform.OS === "ios"
+      ? ENV.EXPO_PUBLIC_REVENUECAT_IOS_KEY
+      : ENV.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
+  if (!apiKey) return { configured: false, reason: "missing_api_key" };
 
   Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
-
-  Purchases.configure({ apiKey });
-
-  hasConfiguredRevenueCat = true;
-
+  try {
+    // Expo Go only accepts Test Store keys; store keys need a development build
+    Purchases.configure({ apiKey });
+  } catch (error) {
+    console.warn("[RevenueCat] Initialization failed:", error);
+    return { configured: false, reason: "init_failed" };
+  }
+  isRevenueCatConfigured = true;
   return { configured: true };
 }
 
-/**
- * Subscribe to real-time entitlement changes. Returns an unsubscribe function.
- * Only \`RevenueCatProvider\` should use this directly.
- */
 export function onCustomerInfoUpdated(listener: CustomerInfoUpdateListener): () => void {
   Purchases.addCustomerInfoUpdateListener(listener);
-
   return () => {
     Purchases.removeCustomerInfoUpdateListener(listener);
   };
 }
 
-/** Fetch latest CustomerInfo and return current pro status. */
 export async function refreshProEntitlement(): Promise<boolean> {
-  const customerInfo = await Purchases.getCustomerInfo();
-  return hasProEntitlement(customerInfo);
+  return hasProEntitlement(await Purchases.getCustomerInfo());
 }
 
-/**
- * Identify the user in RevenueCat via \`Purchases.logIn\` so purchases follow the
- * account across devices. Pass a stable auth user id. Returns pro status.
- */
+// Ties purchases to the signed-in user so they follow the account across devices
 export async function identifyUser(userId: string): Promise<boolean> {
   const { customerInfo } = await Purchases.logIn(userId);
   return hasProEntitlement(customerInfo);
 }
 
-/** Log out the current user from RevenueCat (resets to an anonymous id). */
 export async function logOutUser(): Promise<void> {
+  if (await Purchases.isAnonymous()) return;
   await Purchases.logOut();
 }
 
-/** Set user attributes for tracking in the RevenueCat dashboard. */
-export async function setUserAttributes(attributes: {
-  email?: string;
-  displayName?: string;
-}): Promise<void> {
-  if (attributes.email) {
-    await Purchases.setEmail(attributes.email);
-  }
-  if (attributes.displayName) {
-    await Purchases.setDisplayName(attributes.displayName);
-  }
-}
-
-async function getOffering(): Promise<PurchasesOffering | null> {
-  const offerings = await Purchases.getOfferings();
-
-  if (preferredOfferingId) {
-    const preferredOffering = offerings.all[preferredOfferingId];
-    if (hasPackages(preferredOffering)) {
-      return preferredOffering;
-    }
-
-    if (__DEV__) {
-      console.warn(
-        \`[RevenueCat] Offering '\${preferredOfferingId}' was configured but has no available packages; falling back to current offering.\`,
-      );
-    }
-  }
-
-  if (hasPackages(offerings.current)) {
-    return offerings.current;
-  }
-
-  const fallbackOffering = pickFirstOfferingWithPackages(offerings.all);
-  if (fallbackOffering) {
-    return fallbackOffering;
-  }
-
-  return offerings.current ?? null;
-}
-
-/** Get available subscription packages from the resolved offering. */
 export async function getPackages(): Promise<PurchasesPackage[]> {
-  const offering = await getOffering();
-  return offering?.availablePackages ?? [];
+  const offerings = await Purchases.getOfferings();
+  return offerings.current?.availablePackages ?? [];
 }
 
-/** Attempt a package purchase and return the resulting pro status. */
 export async function purchaseAndCheckPro(pack: PurchasesPackage): Promise<boolean> {
   const { customerInfo } = await Purchases.purchasePackage(pack);
   return hasProEntitlement(customerInfo);
 }
 
-/** Restore purchases from the App Store / Play Store. */
 export async function restoreAndCheckPro(): Promise<boolean> {
-  const customerInfo = await Purchases.restorePurchases();
-  return hasProEntitlement(customerInfo);
+  return hasProEntitlement(await Purchases.restorePurchases());
 }
 
-/** Force-sync local store state with RevenueCat servers. Debug / recovery only. */
-export async function syncAndCheckPro(): Promise<boolean> {
-  const { customerInfo } = await Purchases.syncPurchasesForResult();
-  return hasProEntitlement(customerInfo);
-}
-
-/** Check whether an error thrown during purchase is a user cancellation. */
 export function isPurchaseCancelledError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
+  return (error as PurchasesError | undefined)?.code === Purchases.PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR;
+}
 
-  return (error as RevenueCatPurchaseError).userCancelled === true;
+export function getRevenueCatSetupMessage(
+  reason: Extract<RevenueCatInitResult, { configured: false }>["reason"] | null,
+): string {
+  if (reason === "unsupported_platform") return "In-app purchases are only available on iOS and Android.";
+  if (reason === "init_failed") {
+    return "RevenueCat needs a development build. In Expo Go, use a RevenueCat Test Store key.";
+  }
+  return "RevenueCat is not configured yet. Add your API keys in apps/native/.env.";
 }
 `],
   ["payments/revenuecat/native/unistyles/components/paywall-example.tsx.hbs", `import { useState } from "react";
@@ -36542,7 +36363,7 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
@@ -36669,17 +36490,18 @@ const styles = StyleSheet.create((theme) => ({
   ["payments/revenuecat/native/unistyles/components/subscription-status-card.tsx.hbs", `import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
+import { getRevenueCatSetupMessage } from "@/lib/revenuecat";
 
 export function SubscriptionStatusCard() {
-  const { isPro, isConfigured } = useRevenueCat();
+  const { isPro, isConfigured, initError } = useRevenueCat();
 
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Subscription</Text>
       {!isConfigured ? (
         <Text style={styles.muted}>
-          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+          {getRevenueCatSetupMessage(initError)}
         </Text>
       ) : isPro ? (
         <Text style={styles.pro}>You're a Premium member 🎉</Text>
@@ -36718,7 +36540,7 @@ import { Alert, View } from "react-native";
 import { Button, Card, Spinner } from "heroui-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
@@ -36808,17 +36630,18 @@ export function PaywallExample() {
   ["payments/revenuecat/native/uniwind/components/subscription-status-card.tsx.hbs", `import { Text } from "react-native";
 import { Card } from "heroui-native";
 
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
+import { getRevenueCatSetupMessage } from "@/lib/revenuecat";
 
 export function SubscriptionStatusCard() {
-  const { isPro, isConfigured } = useRevenueCat();
+  const { isPro, isConfigured, initError } = useRevenueCat();
 
   return (
     <Card variant="secondary" className="mb-4 p-4">
       <Card.Title className="mb-2">Subscription</Card.Title>
       {!isConfigured ? (
         <Card.Description>
-          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+          {getRevenueCatSetupMessage(initError)}
         </Card.Description>
       ) : isPro ? (
         <Text className="text-success text-base font-medium">

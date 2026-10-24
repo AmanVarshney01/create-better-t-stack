@@ -3,12 +3,13 @@ import { StyleSheet, View } from "react-native";
 
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useRevenueCat } from "@/components/revenuecat-provider";
+import { getRevenueCatSetupMessage } from "@/lib/revenuecat";
 
 export function SubscriptionStatusCard() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
-  const { isPro, isConfigured } = useRevenueCat();
+  const { isPro, isConfigured, initError } = useRevenueCat();
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -19,7 +20,7 @@ export function SubscriptionStatusCard() {
           </ExpoUIText>
           {!isConfigured ? (
             <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
-              RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+              {getRevenueCatSetupMessage(initError)}
             </ExpoUIText>
           ) : isPro ? (
             <ExpoUIText textStyle=\{{ color: "#16a34a", fontSize: 14, fontWeight: "500" }}>

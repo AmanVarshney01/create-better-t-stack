@@ -447,9 +447,9 @@ ${needsConvexSiteUrl ? `# npx convex env set CONVEX_SITE_URL ${CONVEX_SITE_URL_P
 
   if (payments === "revenuecat") {
     commentBlocks += `# Set RevenueCat environment variables
-# npx convex env set REVENUECAT_WEBHOOK_AUTH your_webhook_secret_min_32_chars
+# npx convex env set REVENUECAT_WEBHOOK_AUTH=$(openssl rand -base64 32)
 # Create a RevenueCat webhook at https://<your-convex-site-url>/webhooks/revenuecat
-# Set the webhook Authorization header to the same REVENUECAT_WEBHOOK_AUTH value
+# Set its Authorization header to the value from: npx convex env get REVENUECAT_WEBHOOK_AUTH
 
 `;
   }
