@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/amanvarshney01-create-better-t-stack-badge.png)](https://mseep.ai/app/amanvarshney01-create-better-t-stack)
+
 # Better-T-Stack
 
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
