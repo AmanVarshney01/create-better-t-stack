@@ -98,6 +98,10 @@ function getAddonDisplay(addon: Addons): AddonDisplay {
       label = "WXT";
       hint = "Build browser extensions";
       break;
+    case "mockatoo":
+      label = "Mockatoo";
+      hint = "Mock GitHub social sign-in in development and tests";
+      break;
     case "skills":
       label = "Skills";
       hint = "AI coding agent skills for your stack";
@@ -127,6 +131,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
+  "Development & Testing": ["mockatoo"],
   Observability: ["evlog", "axiom"],
   "AI & Agent Tools": ["skills", "mcp"],
 };
