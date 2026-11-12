@@ -22,8 +22,8 @@ export type AuthConfig = {
   BETTER_AUTH_URL: string;
   BETTER_AUTH_SECRET: string;
 {{#if (includes addons "mockatoo")}}
-  GITHUB_CLIENT_ID: string;
-  GITHUB_CLIENT_SECRET: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
 {{/if}}
 {{#if (ne backend "self")}}
   CORS_ORIGIN: string;
@@ -37,8 +37,8 @@ export type AuthConfig = {
 export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database: Database{{/if}}{{#if (ne backend "self")}}, desktopOrigins: readonly string[] = []{{/if}}) {
 {{#if (includes addons "mockatoo")}}
   const github = {
-    clientId: env.GITHUB_CLIENT_ID,
-    clientSecret: env.GITHUB_CLIENT_SECRET,
+    clientId: env.GITHUB_CLIENT_ID ?? "",
+    clientSecret: env.GITHUB_CLIENT_SECRET ?? "",
   };
 {{/if}}
   return betterAuth({

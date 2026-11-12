@@ -523,7 +523,7 @@ function buildServerVars(
       value: "",
       condition: hasBetterAuth && addons.includes("mockatoo"),
       comment:
-        "Required for production GitHub sign-in; Mockatoo uses the same values in development",
+        "Leave blank in development and tests; Mockatoo ignores these values. Required in production.",
     },
     {
       key: "GITHUB_CLIENT_SECRET",
