@@ -249,6 +249,32 @@ const buildSamples: BuildSample[] = [
       examples: ["todo"],
     },
   },
+  ...(
+    [
+      ["tanstack-start", "vercel"],
+      ["nuxt", "none"],
+      ["svelte", "none"],
+    ] as const
+  ).map(
+    ([frontend, webDeploy]) =>
+      ({
+        name: `${frontend}-self-polar`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "orpc",
+          auth: "better-auth",
+          payments: "polar",
+          addons: ["none"],
+          examples: [],
+          webDeploy,
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "expo-orpc-auth-todo",
     config: {
@@ -969,6 +995,23 @@ const buildSamples: BuildSample[] = [
       addons: ["turborepo"],
       examples: [],
       dbSetup: "d1",
+      serverDeploy: "cloudflare",
+    },
+  },
+  {
+    name: "workers-postgres-js",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "workers",
+      database: "postgres",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
       serverDeploy: "cloudflare",
     },
   },

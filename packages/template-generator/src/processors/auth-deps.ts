@@ -3,10 +3,6 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
-// Intentional: @convex-dev/better-auth's AuthClient type rejects better-auth >=1.6.18
-// clients (get-convex/better-auth#420), so Convex projects pin the last compatible release.
-const CONVEX_BETTER_AUTH_VERSION = "1.6.17";
-
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
   if (!auth || auth === "none") return;
@@ -64,18 +60,12 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: backendPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
-        customDependencies: {
-          "better-auth": CONVEX_BETTER_AUTH_VERSION,
-        },
       });
       if (hasNative) {
         addPackageDependency({
           vfs,
           packagePath: backendPath,
           dependencies: ["@better-auth/expo"],
-          customDependencies: {
-            "@better-auth/expo": CONVEX_BETTER_AUTH_VERSION,
-          },
         });
       }
     }
@@ -85,9 +75,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: webPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
-        customDependencies: {
-          "better-auth": CONVEX_BETTER_AUTH_VERSION,
-        },
       });
 
       if (hasReactWebAuthForms) {
@@ -112,10 +99,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           "@convex-dev/better-auth",
           "@tanstack/react-form",
         ],
-        customDependencies: {
-          "better-auth": CONVEX_BETTER_AUTH_VERSION,
-          "@better-auth/expo": CONVEX_BETTER_AUTH_VERSION,
-        },
       });
     }
   }

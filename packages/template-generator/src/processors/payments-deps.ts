@@ -17,7 +17,10 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
         addPackageDependency({
           vfs,
           packagePath: backendPath,
-          dependencies: ["@convex-dev/polar", "@polar-sh/sdk"],
+          dependencies: ["@convex-dev/polar"],
+          // Intentional: @convex-dev/polar imports @polar-sh/sdk/core.js and funcs/*, which SDK 1.x
+          // no longer exports, so Convex stays on the last 0.x release.
+          customDependencies: { "@polar-sh/sdk": "^0.49.0" },
         });
       }
 

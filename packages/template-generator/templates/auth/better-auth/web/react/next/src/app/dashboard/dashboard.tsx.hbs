@@ -1,6 +1,6 @@
 "use client";
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+import type { models } from "@polar-sh/sdk/2026-10";
 {{/if}}
 
 {{#if (eq payments "polar")}}
@@ -23,7 +23,7 @@ export default function Dashboard({
 	session
 }: {
 	{{#if (eq payments "polar")}}
-	customerState: CustomerState | null | undefined;
+	customerState: models.CustomerState | null | undefined;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
@@ -36,7 +36,7 @@ export default function Dashboard({
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (

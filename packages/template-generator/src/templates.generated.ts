@@ -145,9 +145,9 @@ export default {
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@types/bun": "^1.4.3",
-    "concurrently": "^10.0.6",
-    "electrobun": "^2.0.2",
+    "@types/bun": "^1.4.4",
+    "concurrently": "^10.0.7",
+    "electrobun": "^2.0.6",
     "typescript": "^6.0.3"
   }
 }
@@ -6258,8 +6258,8 @@ const handlePolarCheckout = async () => {
 	const { data, error } = await authClient.checkout({
 		slug: "pro",
 		redirect: false,
-		successUrl: polarReturnUrl,
-		returnUrl: polarReturnUrl,
+		success_url: polarReturnUrl,
+		return_url: polarReturnUrl,
 	});
 
 	if (error || !data?.url) {
@@ -7042,8 +7042,8 @@ export default function Home() {
     const { data, error } = await authClient.checkout({
       slug: "pro",
       redirect: false,
-      successUrl: polarReturnUrl,
-      returnUrl: polarReturnUrl,
+      success_url: polarReturnUrl,
+      return_url: polarReturnUrl,
     });
 
     if (error || !data?.url) {
@@ -7787,8 +7787,8 @@ const handlePolarCheckout = async () => {
   const { data, error } = await authClient.checkout({
     slug: "pro",
     redirect: false,
-    successUrl: polarReturnUrl,
-    returnUrl: polarReturnUrl,
+    success_url: polarReturnUrl,
+    return_url: polarReturnUrl,
   });
 
   if (error || !data?.url) {
@@ -9428,7 +9428,7 @@ import Layout from "../layouts/Layout.astro";
       try {
         const { data: customerState } = await authClient.customer.state();
         const subscriptionInfo = document.getElementById("subscription-info")!;
-        if ((customerState?.activeSubscriptions?.length ?? 0) > 0) {
+        if ((customerState?.active_subscriptions?.length ?? 0) > 0) {
           subscriptionInfo.innerHTML = \`
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
             <button
@@ -9731,7 +9731,7 @@ const handleSignOut = async () => {
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+import type { models } from "@polar-sh/sdk/2026-10";
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9747,7 +9747,7 @@ definePageMeta({
 const { data: session } = await useAuthSession()
 
 {{#if (eq payments "polar")}}
-const customerState = ref<CustomerState | null>(null)
+const customerState = ref<models.CustomerState | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9770,7 +9770,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
+  (customerState.value?.active_subscriptions?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -9928,7 +9928,7 @@ export const authClient = createAuthClient({
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+import type { models } from "@polar-sh/sdk/2026-10";
 {{/if}}
 
 {{#if (eq payments "polar")}}
@@ -9951,7 +9951,7 @@ export default function Dashboard({
 	session
 }: {
 	{{#if (eq payments "polar")}}
-	customerState: CustomerState | null | undefined;
+	customerState: models.CustomerState | null | undefined;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
@@ -9964,7 +9964,7 @@ export default function Dashboard({
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -10874,7 +10874,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 {{/if}}
 
   {{#if (eq payments "polar")}}
-  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+  const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -11305,7 +11305,7 @@ function RouteComponent() {
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	const hasProSubscription = (customerState?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -11797,7 +11797,7 @@ export const Route = createFileRoute("/_auth/dashboard")({
 });
 
 function RouteComponent() {
-  const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
+  const { session{{#if (eq payments "polar") }}, hasProSubscription{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
@@ -11805,10 +11805,6 @@ function RouteComponent() {
   {{/if}}
   {{#if (eq api "orpc") }}
   const privateData = useQuery(orpc.privateData.queryOptions());
-  {{/if}}
-
-  {{#if (eq payments "polar") }}
-  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -11872,8 +11868,8 @@ export const Route = createFileRoute("/_auth")({
       });
     }
     {{#if (eq payments "polar") }}
-    const customerState = await getPayment();
-    return { session, customerState };
+    const hasProSubscription = await getPayment();
+    return { session, hasProSubscription };
     {{else}}
     return { session };
     {{/if}}
@@ -11886,7 +11882,8 @@ export const Route = createFileRoute("/_auth")({
     }
     {{#if (eq payments "polar") }}
     const { data: customerState } = await authClient.customer.state();
-    return { session, customerState };
+    const hasProSubscription = (customerState?.active_subscriptions.length ?? 0) > 0;
+    return { session, hasProSubscription };
     {{else}}
     return { session };
     {{/if}}
@@ -12218,7 +12215,7 @@ export default function Dashboard() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
+		(customerState()?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -12641,8 +12638,8 @@ export const authClient = createAuthClient({
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {(data.customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
-		{#if (data.customerState?.activeSubscriptions?.length ?? 0) > 0}
+		<p>Plan: {(data.customerState?.active_subscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (data.customerState?.active_subscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -14475,7 +14472,7 @@ export default defineSchema({
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^26.4.1"
+    "@types/node": "^26.6.6"
   },
   "dependencies": {}
 }
@@ -15429,10 +15426,10 @@ temp
   ],
 {{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
   "overrides": {
-    "solid-js": "2.0.0-rc.18",
-    "@solidjs/signals": "2.0.0-rc.18",
-    "@solidjs/compiler": "2.0.0-rc.18",
-    "@solidjs/babel-plugin": "2.0.0-rc.18"
+    "solid-js": "2.0.0-rc.21",
+    "@solidjs/signals": "2.0.0-rc.21",
+    "@solidjs/compiler": "2.0.0-rc.21",
+    "@solidjs/babel-plugin": "2.0.0-rc.21"
   },
 {{/if}}
   "scripts": {}
@@ -26196,12 +26193,12 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.3.1"
+    "astro": "^7.4.11"
   },
   "devDependencies": {
-		"@astrojs/check": "^0.9.10",
-    "@tailwindcss/vite": "^4.3.3",
-    "tailwindcss": "^4.3.3"
+		"@astrojs/check": "^0.9.12",
+    "@tailwindcss/vite": "^4.3.5",
+    "tailwindcss": "^4.3.5"
   }
 }
 `],
@@ -27591,33 +27588,33 @@ module.exports = withVarlockMetroConfig(config);
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
-    "@expo/ui": "~58.0.19",
+    "@expo/ui": "~58.0.28",
     "@expo/vector-icons": "^15.0.2",
-    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-query": "^5.107.1",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~58.0.12",
-    "expo-constants": "~58.0.12",
-    "expo-dev-client": "~58.0.13",
-    "expo-crypto": "~58.0.6",
-    "expo-font": "~58.0.8",
-    "expo-linking": "~58.0.13",
-    "expo-network": "~58.0.3",
-    "expo-router": "~58.0.21",
-    "expo-secure-store": "~58.0.2",
-    "expo-splash-screen": "~58.0.9",
-    "expo-status-bar": "~58.0.3",
-    "expo-system-ui": "~58.0.6",
-    "expo-web-browser": "~58.0.6",
+    "expo": "~58.0.24",
+    "expo-constants": "~58.0.16",
+    "expo-dev-client": "~58.0.19",
+    "expo-crypto": "~58.0.8",
+    "expo-font": "~58.0.12",
+    "expo-linking": "~58.0.17",
+    "expo-network": "~58.0.5",
+    "expo-router": "~58.0.31",
+    "expo-secure-store": "~58.0.3",
+    "expo-splash-screen": "~58.0.14",
+    "expo-status-bar": "~58.0.5",
+    "expo-system-ui": "~58.0.7",
+    "expo-web-browser": "~58.0.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-native": "0.88.0",
+    "react-native": "0.88.1",
     "react-native-gesture-handler": "~3.3.0",
     "react-native-reanimated": "4.7.1",
-    "react-native-safe-area-context": "~5.10.1",
-    "react-native-screens": "~4.30.0",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
     "react-native-web": "~0.21.4",
     "react-native-worklets": "0.13.0"
   },
@@ -28983,28 +28980,28 @@ module.exports = withVarlockMetroConfig(config);
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~58.0.12",
-    "expo-constants": "~58.0.12",
-    "expo-crypto": "~58.0.6",
-    "expo-dev-client": "~58.0.13",
-    "expo-font": "~58.0.8",
-    "expo-linking": "~58.0.13",
-    "expo-network": "~58.0.3",
-    "expo-router": "~58.0.21",
-    "expo-secure-store": "~58.0.2",
-    "expo-splash-screen": "~58.0.9",
-    "expo-status-bar": "~58.0.3",
-    "expo-system-ui": "~58.0.6",
-    "expo-web-browser": "~58.0.6",
+    "expo": "~58.0.24",
+    "expo-constants": "~58.0.16",
+    "expo-crypto": "~58.0.8",
+    "expo-dev-client": "~58.0.19",
+    "expo-font": "~58.0.12",
+    "expo-linking": "~58.0.17",
+    "expo-network": "~58.0.5",
+    "expo-router": "~58.0.31",
+    "expo-secure-store": "~58.0.3",
+    "expo-splash-screen": "~58.0.14",
+    "expo-status-bar": "~58.0.5",
+    "expo-system-ui": "~58.0.7",
+    "expo-web-browser": "~58.0.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-native": "0.88.0",
+    "react-native": "0.88.1",
     "react-native-gesture-handler": "~3.3.0",
-    "react-native-nitro-modules": "0.37.1",
+    "react-native-nitro-modules": "0.37.2",
     "react-native-reanimated": "4.7.1",
-    "react-native-safe-area-context": "~5.10.1",
-    "react-native-screens": "~4.30.0",
-    "react-native-unistyles": "^3.3.0",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
+    "react-native-unistyles": "^3.8.1",
     "react-native-web": "~0.21.4",
     "react-native-worklets": "0.13.0"
   },
@@ -30174,45 +30171,45 @@ module.exports = withVarlockMetroConfig(uniwindConfig);
     "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~58.0.14",
+    "@expo/metro-runtime": "~58.0.17",
     "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~58.0.12",
-    "expo-constants": "~58.0.12",
-    "expo-dev-client": "~58.0.13",
-    "expo-font": "~58.0.8",
-    "expo-haptics": "~58.0.6",
-    "expo-linking": "~58.0.13",
-    "expo-network": "~58.0.3",
-    "expo-router": "~58.0.21",
-    "expo-secure-store": "~58.0.2",
-    "expo-splash-screen": "~58.0.9",
-    "expo-status-bar": "~58.0.3",
-    "expo-system-ui": "~58.0.6",
-    "expo-web-browser": "~58.0.6",
-    "heroui-native": "^1.0.10",
+    "expo": "~58.0.24",
+    "expo-constants": "~58.0.16",
+    "expo-dev-client": "~58.0.19",
+    "expo-font": "~58.0.12",
+    "expo-haptics": "~58.0.8",
+    "expo-linking": "~58.0.17",
+    "expo-network": "~58.0.5",
+    "expo-router": "~58.0.31",
+    "expo-secure-store": "~58.0.3",
+    "expo-splash-screen": "~58.0.14",
+    "expo-status-bar": "~58.0.5",
+    "expo-system-ui": "~58.0.7",
+    "expo-web-browser": "~58.0.8",
+    "heroui-native": "^1.0.11",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-native": "0.88.0",
+    "react-native": "0.88.1",
     "react-native-gesture-handler": "~3.3.0",
     "react-native-keyboard-controller": "1.22.7",
     "react-native-reanimated": "4.7.1",
-    "react-native-safe-area-context": "~5.10.1",
-    "react-native-screens": "~4.30.0",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
     "react-native-svg": "15.16.0",
     "react-native-web": "~0.21.4",
     "react-native-worklets": "0.13.0",
-    "tailwind-merge": "^3.6.0",
+    "tailwind-merge": "^3.7.0",
     "tailwind-variants": "^3.3.1",
-    "tailwindcss": "^4.3.3",
-    "uniwind": "^1.12.2"
+    "tailwindcss": "^4.3.5",
+    "uniwind": "^1.13.2"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.6",
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   }
@@ -30631,15 +30628,15 @@ export default defineNuxtConfig({
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.11.0",
-    "nuxt": "^4.6.2",
-    "vue": "^3.5.44",
-    "vue-router": "^5.3.1"
+    "@nuxt/ui": "^4.12.0",
+    "nuxt": "^4.6.4",
+    "vue": "^3.5.45",
+    "vue-router": "^5.5.0"
   },
   "devDependencies": {
-    "tailwindcss": "^4.3.3",
-    "@iconify-json/lucide": "^1.2.129",
-    "vue-tsc": "^3.3.11"
+    "tailwindcss": "^4.3.5",
+    "@iconify-json/lucide": "^1.2.154",
+    "vue-tsc": "^3.3.14"
   },
   "engines": {
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
@@ -30688,7 +30685,15 @@ This block is written and re-added by \`next dev\` — verify at \`node_modules/
   ["frontend/react/next/next.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
 import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
 
+{{#if (eq webDeploy "docker")}}
+// The Docker image resolves the env at boot through varlock/auto-load
+const withVarlock = varlockNextConfigPlugin({ freezeIntoBundle: false });
+{{else if (eq webDeploy "prisma")}}
+// Prisma Compute has no varlock CLI, so the env is frozen (encrypted with _VARLOCK_ENV_KEY) into the build
+const withVarlock = varlockNextConfigPlugin({ freezeIntoBundle: true });
+{{else}}
 const withVarlock = varlockNextConfigPlugin();
+{{/if}}
 {{/unless}}
 {{#if (eq webDeploy "cloudflare")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
@@ -30706,8 +30711,11 @@ const nextConfig: NextConfig = {
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}
-	{{#if (and (eq backend "self") (eq dbSetup "turso"))}}
-	serverExternalPackages: ["libsql", "@libsql/client"],
+	{{#if (and (eq backend "self") (or (eq dbSetup "turso") (eq payments "polar")))}}
+	{{#if (eq payments "polar")}}
+	// @polar-sh/sdk lazily imports optional peers (ioredis, OpenTelemetry) that bundlers cannot resolve
+	{{/if}}
+	serverExternalPackages: [{{#if (eq dbSetup "turso")}}"libsql", "@libsql/client"{{#if (eq payments "polar")}}, {{/if}}{{/if}}{{#if (eq payments "polar")}}"@polar-sh/sdk"{{/if}}],
 	{{/if}}
 };
 
@@ -30729,21 +30737,21 @@ initOpenNextCloudflareForDev();
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@swc/helpers": "^0.5.23",
-    "lucide-react": "^1.41.0",
-    "next": "^16.3.4",
+    "@swc/helpers": "^0.5.24",
+    "lucide-react": "^1.72.0",
+    "next": "^16.4.6",
     "next-themes": "^0.4.6",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "sonner": "^2.0.8",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^26.4.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "tailwindcss": "^4.3.3"
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.5"
   }
 }
 `],
@@ -31147,25 +31155,25 @@ export function ThemeProvider({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@react-router/fs-routes": "^8.3.1",
-    "@react-router/node": "^8.3.1",
-    "@react-router/serve": "^8.3.1",
-    "isbot": "^5.2.2",
-    "lucide-react": "^1.41.0",
+    "@react-router/fs-routes": "^8.5.1",
+    "@react-router/node": "^8.5.1",
+    "@react-router/serve": "^8.5.1",
+    "isbot": "^5.2.3",
+    "lucide-react": "^1.72.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router": "^8.3.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router": "^8.5.1",
     "sonner": "^2.0.8"
   },
   "devDependencies": {
-    "@react-router/dev": "^8.3.1",
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.4.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "tailwindcss": "^4.3.3",
-    "vite": "^8.2.2"
+    "@react-router/dev": "^8.5.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8"
   }
 }
 `],
@@ -31733,24 +31741,24 @@ export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy
 	},
 	"dependencies": {
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.3.3",
-		"@tanstack/react-router": "^1.170.44",
-		"lucide-react": "^1.56.0",
+		"@tailwindcss/vite": "^4.3.5",
+		"@tanstack/react-router": "^1.170.46",
+		"lucide-react": "^1.72.0",
         "next-themes": "^0.4.6",
-		"react": "^19.3.0",
-		"react-dom": "^19.3.0",
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1",
         "sonner": "^2.0.8"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.167.2",
-		"@tanstack/router-plugin": "^1.168.45",
-		"@types/node": "^26.6.5",
+		"@tanstack/react-router-devtools": "^1.167.3",
+		"@tanstack/router-plugin": "^1.169.0",
+		"@types/node": "^26.6.6",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
-		"@vitejs/plugin-react": "^6.1.2",
-		"postcss": "^8.5.30",
-		"tailwindcss": "^4.3.3",
-		"vite": "^8.3.4"
+		"@vitejs/plugin-react": "^6.3.0",
+		"postcss": "^8.5.32",
+		"tailwindcss": "^4.3.5",
+		"vite": "^8.3.8"
 	}
 }
 `],
@@ -32186,26 +32194,26 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/react-query": "^5.104.2",
-    "@tanstack/react-router": "^1.170.44",
-    "@tanstack/react-start": "^1.169.1",
-    "lucide-react": "^1.56.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@tanstack/react-query": "^5.107.1",
+    "@tanstack/react-router": "^1.170.46",
+    "@tanstack/react-start": "^1.169.5",
+    "lucide-react": "^1.72.0",
     "next-themes": "^0.4.6",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "sonner": "^2.0.8",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.167.2",
+    "@tanstack/react-router-devtools": "^1.167.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "jsdom": "^30.1.2",
-    "vite": "^8.3.4",
+    "@vitejs/plugin-react": "^6.3.0",
+    "jsdom": "^31.0.0",
+    "vite": "^8.3.8",
     "web-vitals": "^6.2.3"
   }
 }
@@ -32780,11 +32788,20 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+{{#if (and (eq backend "self") (or (eq webDeploy "cloudflare") (eq payments "polar")))}}
   build: {
     rollupOptions: {
-      // resolved by workerd at runtime; node builds cannot bundle it
-      external: ["cloudflare:workers"],
+      external: [
+{{#if (eq webDeploy "cloudflare")}}
+        // resolved by workerd at runtime; node builds cannot bundle it
+        "cloudflare:workers",
+{{/if}}
+{{#if (eq payments "polar")}}
+        // optional @polar-sh/sdk peers, only imported by its unused metering outpost
+        /^ioredis$/,
+        /^@opentelemetry\\//,
+{{/if}}
+      ],
     },
   },
 {{/if}}
@@ -33030,17 +33047,17 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.42",
-    "@solidjs/web": "2.0.0-rc.18",
-    "solid-js": "2.0.0-rc.18"
+    "@solidjs/router": "2.0.0-next.44",
+    "@solidjs/web": "2.0.0-rc.21",
+    "solid-js": "2.0.0-rc.21"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.51",
-    "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.4.1",
-    "tailwindcss": "^4.3.3",
-    "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
-    "nitro": "3.0.260903-beta"{{/unless}}
+    "@solidjs/vite-plugin": "3.0.0-next.57",
+    "@tailwindcss/vite": "^4.3.5",
+    "filesystem-routing": "0.5.0",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8"{{#unless (eq webDeploy "cloudflare")}},
+    "nitro": "3.0.261103-rc"{{/unless}}
   },
   "engines": {
     "node": ">=24"
@@ -33335,10 +33352,19 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (or (eq webDeploy "cloudflare") (and (eq payments "polar") (eq backend "self")))}}
   build: {
     rollupOptions: {
-      external: ["cloudflare:workers"],
+      external: [
+{{#if (eq webDeploy "cloudflare")}}
+        "cloudflare:workers",
+{{/if}}
+{{#if (and (eq payments "polar") (eq backend "self"))}}
+        // optional @polar-sh/sdk peers, only imported by its unused metering outpost
+        /^ioredis$/,
+        /^@opentelemetry\\//,
+{{/if}}
+      ],
     },
   },
 {{/if}}
@@ -33408,19 +33434,19 @@ vite.config.ts.timestamp-*
 	},
 	"devDependencies": {
 		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/adapter-static": "^4.0.1",
 		{{else if (eq webDeploy "prisma")}}
-		"@sveltejs/adapter-node": "^6.0.0",
+		"@sveltejs/adapter-node": "^6.0.2",
 		{{else}}
-		"@sveltejs/adapter-auto": "^8.0.0",
+		"@sveltejs/adapter-auto": "^8.0.1",
 		{{/if}}
-		"@sveltejs/kit": "^3.1.0",
+		"@sveltejs/kit": "^3.2.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
-		"@tailwindcss/vite": "^4.3.3",
-		"svelte": "^5.57.1",
-		"svelte-check": "^4.7.6",
-		"tailwindcss": "^4.3.3",
-		"vite": "^8.2.2"
+		"@tailwindcss/vite": "^4.3.5",
+		"svelte": "^5.57.3",
+		"svelte-check": "^4.7.8",
+		"tailwindcss": "^4.3.5",
+		"vite": "^8.3.8"
 	},
 	"dependencies": {}
 }
@@ -33823,23 +33849,23 @@ export default defineConfig({
     "./postcss.config": "./postcss.config.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "@shadcn/react": "^0.3.1",
-    "shadcn": "^4.21.0",
+    "shadcn": "^4.23.0",
     "class-variance-authority": "^0.7.1",
-    "cn": "^0.5.0",
-    "lucide-react": "^1.41.0",
+    "cn": "^0.5.2",
+    "lucide-react": "^1.72.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "sonner": "^2.0.8",
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "tailwindcss": "^4.3.3"
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.5"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
@@ -35628,10 +35654,10 @@ export const syncProducts = action({
   },
 });
 `],
-  ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
+  ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { createPolarCore } from "@polar-sh/sdk/2026-10";
 
 export function createPolarClient(config: { POLAR_ACCESS_TOKEN: string }) {
-  return new Polar({ accessToken: config.POLAR_ACCESS_TOKEN, server: "sandbox" });
+  return createPolarCore({ accessToken: config.POLAR_ACCESS_TOKEN, environment: "sandbox" });
 }
 `],
   ["payments/polar/web/nuxt/app/pages/success.vue.hbs", `<script setup lang="ts">
@@ -35709,7 +35735,8 @@ export const getPayment = createServerFn({ method: "GET" })
                 headers: getRequestHeaders()
             }
         });
-        return customerState;
+        // Return only what the page needs; the full customer state is not serializable
+        return (customerState?.active_subscriptions.length ?? 0) > 0;
     });
 `],
   ["payments/polar/web/react/tanstack-start/src/routes/success.tsx.hbs", `import { createFileRoute, useSearch } from "@tanstack/react-router";

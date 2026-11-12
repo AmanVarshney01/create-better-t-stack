@@ -1,7 +1,15 @@
 {{#unless (eq webDeploy "cloudflare")}}
 import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
 
+{{#if (eq webDeploy "docker")}}
+// The Docker image resolves the env at boot through varlock/auto-load
+const withVarlock = varlockNextConfigPlugin({ freezeIntoBundle: false });
+{{else if (eq webDeploy "prisma")}}
+// Prisma Compute has no varlock CLI, so the env is frozen (encrypted with _VARLOCK_ENV_KEY) into the build
+const withVarlock = varlockNextConfigPlugin({ freezeIntoBundle: true });
+{{else}}
 const withVarlock = varlockNextConfigPlugin();
+{{/if}}
 {{/unless}}
 {{#if (eq webDeploy "cloudflare")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
@@ -19,8 +27,11 @@ const nextConfig: NextConfig = {
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}
-	{{#if (and (eq backend "self") (eq dbSetup "turso"))}}
-	serverExternalPackages: ["libsql", "@libsql/client"],
+	{{#if (and (eq backend "self") (or (eq dbSetup "turso") (eq payments "polar")))}}
+	{{#if (eq payments "polar")}}
+	// @polar-sh/sdk lazily imports optional peers (ioredis, OpenTelemetry) that bundlers cannot resolve
+	{{/if}}
+	serverExternalPackages: [{{#if (eq dbSetup "turso")}}"libsql", "@libsql/client"{{#if (eq payments "polar")}}, {{/if}}{{/if}}{{#if (eq payments "polar")}}"@polar-sh/sdk"{{/if}}],
 	{{/if}}
 };
 

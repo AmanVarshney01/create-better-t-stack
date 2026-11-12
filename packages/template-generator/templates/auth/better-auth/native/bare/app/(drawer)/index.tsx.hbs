@@ -54,8 +54,8 @@ const handlePolarCheckout = async () => {
 	const { data, error } = await authClient.checkout({
 		slug: "pro",
 		redirect: false,
-		successUrl: polarReturnUrl,
-		returnUrl: polarReturnUrl,
+		success_url: polarReturnUrl,
+		return_url: polarReturnUrl,
 	});
 
 	if (error || !data?.url) {
