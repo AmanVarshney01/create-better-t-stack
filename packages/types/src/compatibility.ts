@@ -91,6 +91,7 @@ export const ADDON_COMPATIBILITY = {
   opentui: [],
   wxt: [],
   skills: [],
+  mockatoo: ["next"],
   evlog: [],
   axiom: [],
   none: [],
@@ -195,6 +196,13 @@ export function validateAddonCompatibility(
   backend?: Backend,
   runtime?: Runtime,
 ): AddonCompatibility {
+  if (addon === "mockatoo" && (auth !== "better-auth" || backend === "convex")) {
+    return {
+      isCompatible: false,
+      reason: "mockatoo addon requires Better Auth with a non-Convex backend",
+    };
+  }
+
   if (
     OBSERVABILITY_ADDONS.some((value) => value === addon) &&
     !supportsEvlogAddon(frontend, backend, runtime)

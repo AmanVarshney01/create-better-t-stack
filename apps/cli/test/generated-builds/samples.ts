@@ -48,6 +48,23 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  {
+    name: "next-better-auth-mockatoo",
+    checks: ["scaffold-types-only"],
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "trpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["mockatoo"],
+      examples: [],
+    },
+  },
   ...(["tanstack-router", "svelte"] as const).map(
     (frontend) =>
       ({

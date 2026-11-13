@@ -20,6 +20,7 @@ export const dependencyVersionMap = {
   "@better-auth/core": "1.7.12",
   "@better-auth/drizzle-adapter": "1.7.12",
   "@better-auth/expo": "1.7.12",
+  "@mockatoo/connect-better-auth": "^0.1.2",
 
   "@clerk/backend": "^3.23.2",
   "@clerk/express": "^2.1.78",

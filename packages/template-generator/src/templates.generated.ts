@@ -8350,6 +8350,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "devDependencies": {}
 }`],
   ["auth/better-auth/server/base/src/index.ts.hbs", `import { betterAuth } from "better-auth";
+{{#if (includes addons "mockatoo")}}
+import { mockGitHub } from "@mockatoo/connect-better-auth";
+{{/if}}
 {{#if (eq orm "prisma")}}
 import { prismaAdapter } from "better-auth/adapters/prisma";
 {{else if (eq orm "drizzle")}}
@@ -8369,6 +8372,10 @@ import { createPolarClient } from "./lib/payments";
 export type AuthConfig = {
   BETTER_AUTH_URL: string;
   BETTER_AUTH_SECRET: string;
+{{#if (includes addons "mockatoo")}}
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+{{/if}}
 {{#if (ne backend "self")}}
   CORS_ORIGIN: string;
 {{/if}}
@@ -8379,6 +8386,12 @@ export type AuthConfig = {
 };
 
 export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database: Database{{/if}}{{#if (ne backend "self")}}, desktopOrigins: readonly string[] = []{{/if}}) {
+{{#if (includes addons "mockatoo")}}
+  const github = {
+    clientId: env.GITHUB_CLIENT_ID ?? "",
+    clientSecret: env.GITHUB_CLIENT_SECRET ?? "",
+  };
+{{/if}}
   return betterAuth({
 {{#if (eq orm "prisma")}}
     database: prismaAdapter(database, {
@@ -8402,6 +8415,12 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
 {{/if}}
     ],
     emailAndPassword: { enabled: true },
+{{#if (includes addons "mockatoo")}}
+    socialProviders:
+      process.env.NODE_ENV === "production"
+        ? { github }
+        : {},
+{{/if}}
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
@@ -8414,6 +8433,9 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
     },
 {{/if}}
     plugins: [
+{{#if (includes addons "mockatoo")}}
+      ...(process.env.NODE_ENV === "production" ? [] : [mockGitHub(github)]),
+{{/if}}
 {{#if (eq payments "polar")}}
       polar({
         client: createPolarClient(env),
@@ -10222,6 +10244,17 @@ export default function SignInForm({
           )}
         </form.Subscribe>
       </form>
+
+{{#if (includes addons "mockatoo")}}
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-4 w-full"
+        onClick={() => authClient.signIn.social({ provider: "github", callbackURL: \`\${window.location.origin}/dashboard\` })}
+      >
+        Continue with GitHub
+      </Button>
+{{/if}}
 
       <div className="mt-4 text-center">
         <Button

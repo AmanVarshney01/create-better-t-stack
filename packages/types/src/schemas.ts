@@ -52,6 +52,7 @@ export const AddonsSchema = z
     "opentui",
     "wxt",
     "skills",
+    "mockatoo",
     "evlog",
     "axiom",
     "none",

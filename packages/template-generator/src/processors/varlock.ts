@@ -93,6 +93,11 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
       /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key) ||
       key === "CLERK_PUBLISHABLE_KEY" ||
       isAuthOrigin;
+    const isMockatooGithubKey =
+      config.addons.includes("mockatoo") &&
+      (key === "GITHUB_CLIENT_ID" || key === "GITHUB_CLIENT_SECRET");
+    const required = isMockatooGithubKey ? "@required=forEnv(production) " : "";
+    const sensitivity = key === "GITHUB_CLIENT_ID" ? "@sensitive=false " : "";
     let type = "string(minLength=1)";
     if (key === "BETTER_AUTH_SECRET") type = "string(minLength=32)";
     else if ((key.endsWith("URL") && key !== "DATABASE_URL") || key === "CORS_ORIGIN") type = "url";
@@ -119,7 +124,7 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
     // Auth origins are visible in browser requests and must still resolve at runtime.
     lines.push(
-      `# ${isPublic ? "@public " : ""}${isAuthOrigin ? "@dynamic " : ""}@type=${type}`,
+      `# ${isPublic ? "@public " : ""}${isAuthOrigin ? "@dynamic " : ""}${sensitivity}${required}@type=${type}`,
       `${key}=${value}`,
       "",
     );

@@ -212,6 +212,9 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       if (orm === "mongoose") {
         authDependencies.push("mongodb");
       }
+      if (config.addons.includes("mockatoo")) {
+        authDependencies.push("@mockatoo/connect-better-auth");
+      }
       addPackageDependency({ vfs, packagePath: authPath, dependencies: authDependencies });
       if (hasNative) {
         addPackageDependency({ vfs, packagePath: authPath, dependencies: ["@better-auth/expo"] });

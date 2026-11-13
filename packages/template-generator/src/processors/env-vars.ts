@@ -431,6 +431,7 @@ function buildServerVars(
   serverDeploy: ProjectConfig["serverDeploy"],
   payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
+  addons: ProjectConfig["addons"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -516,6 +517,18 @@ function buildServerVars(
       key: "BETTER_AUTH_URL",
       value: betterAuthUrl,
       condition: hasBetterAuth,
+    },
+    {
+      key: "GITHUB_CLIENT_ID",
+      value: "",
+      condition: hasBetterAuth && addons.includes("mockatoo"),
+      comment:
+        "Leave blank in development and tests; Mockatoo ignores these values. Required in production.",
+    },
+    {
+      key: "GITHUB_CLIENT_SECRET",
+      value: "",
+      condition: hasBetterAuth && addons.includes("mockatoo"),
     },
     {
       key: "CLERK_SECRET_KEY",
@@ -694,6 +707,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     serverDeploy,
     payments,
     examples,
+    config.addons,
   );
 
   if (backend === "self") {
