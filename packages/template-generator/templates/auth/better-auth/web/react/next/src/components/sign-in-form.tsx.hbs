@@ -126,7 +126,7 @@ export default function SignInForm({
         type="button"
         variant="outline"
         className="mt-4 w-full"
-        onClick={() => authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })}
+        onClick={() => authClient.signIn.social({ provider: "github", callbackURL: `${window.location.origin}/dashboard` })}
       >
         Continue with GitHub
       </Button>
