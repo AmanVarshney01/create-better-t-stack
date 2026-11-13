@@ -15443,7 +15443,7 @@ temp
 
 services:
   mongodb:
-    image: mongo:8
+    image: mongo:9
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -15466,7 +15466,7 @@ volumes:
 
 services:
   mysql:
-    image: mysql:8.4
+    image: mysql:9.7
     container_name: {{projectName}}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
@@ -16622,7 +16622,7 @@ services:
 {{/if}}
 {{#if (eq database "mysql")}}
   mysql:
-    image: mysql:8.4
+    image: mysql:9.7
     container_name: {{projectName}}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD:-password}
@@ -16642,7 +16642,7 @@ services:
 {{/if}}
 {{#if (eq database "mongodb")}}
   mongodb:
-    image: mongo:8
+    image: mongo:9
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -16678,10 +16678,10 @@ secrets:
   ["deploy/docker/server/Dockerfile.hbs", `{{#if (eq packageManager "bun")}}
 FROM oven/bun:1 AS builder
 {{else}}
-FROM node:24-slim AS builder
+FROM node:26-slim AS builder
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -16700,7 +16700,7 @@ RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=
 {{#if (eq runtime "bun")}}
 FROM oven/bun:1 AS runner
 {{else}}
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
@@ -16709,18 +16709,24 @@ COPY --from=builder /app /app
 EXPOSE 3000
 
 WORKDIR /app/apps/server
+# Run as the image's unprivileged user
+{{#if (eq runtime "bun")}}
+USER bun
+{{else}}
+USER node
+{{/if}}
 {{#if (eq runtime "bun")}}
 CMD ["bun", "dist/index.mjs"]
 {{else}}
 CMD ["node", "dist/index.mjs"]
 {{/if}}
 `],
-  ["deploy/docker/web/astro/Dockerfile.hbs", `FROM node:24-slim AS base
+  ["deploy/docker/web/astro/Dockerfile.hbs", `FROM node:26-slim AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -16752,14 +16758,16 @@ ENV PORT=3001
 EXPOSE 3001
 
 WORKDIR /app/apps/web
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["node", "dist/server/entry.mjs"]
 `],
-  ["deploy/docker/web/nuxt/Dockerfile.hbs", `FROM node:24-slim AS builder
+  ["deploy/docker/web/nuxt/Dockerfile.hbs", `FROM node:26-slim AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
@@ -16779,7 +16787,7 @@ RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -16791,14 +16799,16 @@ ENV HOST=0.0.0.0
 ENV PORT=3001
 EXPOSE 3001
 
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["node", "server/index.mjs"]
 `],
-  ["deploy/docker/web/react/next/Dockerfile.hbs", `FROM node:24-slim AS builder
+  ["deploy/docker/web/react/next/Dockerfile.hbs", `FROM node:26-slim AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -16824,16 +16834,20 @@ ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
 {{/if}}
 ENV NODE_ENV=production
+{{#if (and (eq database "sqlite") (eq dbSetup "none") (eq backend "self"))}}
+# next build loads route modules, which open the local SQLite file; .data stays out of the build context
+RUN mkdir -p .data
+{{/if}}
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build && rm -f .next/standalone/.env* .next/standalone/apps/web/.env*
 # standalone output excludes public/; ensure it exists so the runner copy never fails
 RUN mkdir -p apps/web/public
 
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/public ./apps/web/public
 # auto-load needs the Varlock CLI and its installed dependencies.
 COPY --from=builder /app/node_modules ./node_modules
@@ -16844,14 +16858,16 @@ ENV PORT=3001
 EXPOSE 3001
 
 WORKDIR /app/apps/web
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["node", "--import", "varlock/auto-load", "server.js"]
 `],
-  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -16879,21 +16895,23 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 WORKDIR /app
 COPY --from=builder /app .
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV HOST=0.0.0.0
 EXPOSE 3001
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["sh", "-c", "cd apps/web && npm run start"]
 `],
-  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -16949,13 +16967,13 @@ CMD ["nginx", "-g", "daemon off;"]
   ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (eq runtime "bun") (not (includes addons "vite-plus")))}}
 FROM oven/bun:1 AS builder
 {{else}}
-FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -16989,7 +17007,7 @@ ENV DATABASE_URL=
 {{#if (eq runtime "bun")}}
 FROM oven/bun:1 AS runner
 {{else}}
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
@@ -17001,13 +17019,19 @@ EXPOSE 3001
 
 # SSR chunks require workspace dependencies at runtime
 WORKDIR /app/apps/web
+# Run as the image's unprivileged user
+{{#if (eq runtime "bun")}}
+USER bun
+{{else}}
+USER node
+{{/if}}
 {{#if (eq runtime "bun")}}
 CMD ["bun", ".output/server/index.mjs"]
 {{else}}
 CMD ["node", ".output/server/index.mjs"]
 {{/if}}
 `],
-  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (and (eq orm "prisma") (not (includes addons "vite-plus")))}}
 RUN apt-get update -y \\
   && apt-get install -y --no-install-recommends openssl \\
@@ -17017,7 +17041,7 @@ RUN apt-get update -y \\
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -17044,7 +17068,7 @@ RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=
 ENV DATABASE_URL=
 {{/if}}
 
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 {{#if (eq orm "prisma")}}
 RUN apt-get update -y \\
   && apt-get install -y --no-install-recommends openssl \\
@@ -17061,14 +17085,16 @@ ENV HOST=0.0.0.0
 ENV PORT=3001
 EXPOSE 3001
 
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["node", ".output/server/index.mjs"]
 `],
-  ["deploy/docker/web/svelte/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
+  ["deploy/docker/web/svelte/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -17107,6 +17133,8 @@ ENV PORT=3001
 EXPOSE 3001
 
 WORKDIR /app/apps/web
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["node", "build/index.js"]
 `],
   ["deploy/prisma/web/react/react-router/prisma.server.ts", `import path from "node:path";
@@ -17152,6 +17180,9 @@ local.db-*
 .alchemy/
 `],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
+{{#if (and (eq webDeploy "vercel") (includes frontend "next"))}}
+import { randomBytes } from "node:crypto";
+{{/if}}
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseEnv } from "node:util";
@@ -17252,6 +17283,12 @@ if (emptyKeys.length > 0) {
 	);
 }
 
+{{#if (and (eq webDeploy "vercel") (includes frontend "next"))}}
+// Varlock freezes the env into Next.js builds on Vercel, encrypted with this key. Vercel snapshots
+// env vars per deployment, so a fresh key on every sync never breaks a running deployment.
+env.set("_VARLOCK_ENV_KEY", randomBytes(32).toString("hex"));
+
+{{/if}}
 {{#if (includes addons "axiom")}}
 for (const key of ["AXIOM_API_KEY", "AXIOM_DATASET", "AXIOM_EDGE_URL"] as const) {
 	const value = process.env[key];

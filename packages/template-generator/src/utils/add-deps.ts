@@ -61,7 +61,6 @@ export const dependencyVersionMap = {
   "@prisma/adapter-planetscale": "^7.10.1",
 
   mongoose: "^9.12.1",
-  mongodb: "^7.8.0",
 
   "vite-plugin-pwa": "^2.0.0",
   "@vite-pwa/assets-generator": "^2.0.0",
@@ -180,13 +179,13 @@ export const dependencyVersionMap = {
   "@effect/platform-bun": "4.1.4",
 
   "babel-preset-expo": "~58.0.25",
-  varlock: "1.24.0",
-  "@varlock/vite-integration": "1.5.5",
-  "@varlock/nextjs-integration": "2.0.0",
-  "@varlock/nuxt-integration": "0.1.5",
-  "@varlock/astro-integration": "1.4.5",
+  varlock: "1.25.0",
+  "@varlock/vite-integration": "1.5.6",
+  "@varlock/nextjs-integration": "2.0.1",
+  "@varlock/nuxt-integration": "0.1.6",
+  "@varlock/astro-integration": "1.4.6",
   "@varlock/expo-integration": "1.2.2",
-  "@varlock/cloudflare-integration": "1.6.3",
+  "@varlock/cloudflare-integration": "1.6.4",
   tsdown: "^0.23.7",
   zod: "^4.6.7",
 

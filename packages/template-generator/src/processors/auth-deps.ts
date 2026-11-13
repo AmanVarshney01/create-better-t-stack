@@ -192,9 +192,6 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         // The adapter peers on ^core; pin it to Better Auth so npm cannot install incompatible types.
         authDependencies.push("@better-auth/core", "@better-auth/drizzle-adapter", "drizzle-orm");
       }
-      if (orm === "mongoose") {
-        authDependencies.push("mongodb");
-      }
       addPackageDependency({ vfs, packagePath: authPath, dependencies: authDependencies });
       if (hasNative) {
         addPackageDependency({ vfs, packagePath: authPath, dependencies: ["@better-auth/expo"] });

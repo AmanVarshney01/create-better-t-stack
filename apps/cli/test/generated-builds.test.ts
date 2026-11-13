@@ -15,6 +15,7 @@ import {
   bootAndValidateAxiomRuntime,
   bootAndValidateNuxtAuthRuntime,
   bootAndValidatePrismaWebArtifact,
+  prismaNextEnvKey,
   bootAndValidateSolidDevRuntime,
   bootAndValidateSolidRuntime,
   bootAndValidateStartAuthRuntime,
@@ -96,7 +97,13 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             await restoreSvelteHookTypes?.();
           }
           const build = getPackageManagerCommand(sample.packageManager, "build");
-          await runCommand(sample.name, projectDir, build.command, build.args);
+          const envKey = prismaNextEnvKey(sample);
+          if (envKey) process.env._VARLOCK_ENV_KEY = envKey;
+          try {
+            await runCommand(sample.name, projectDir, build.command, build.args);
+          } finally {
+            delete process.env._VARLOCK_ENV_KEY;
+          }
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAstroWebsite(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);

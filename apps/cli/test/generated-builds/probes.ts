@@ -365,6 +365,29 @@ export async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, p
   }
 }
 
+/** Next.js on Prisma Compute freezes its env into the build, encrypted with this key. */
+export function prismaNextEnvKey(sample: SelectedBuildSample): string | undefined {
+  if (sample.config.webDeploy !== "prisma" || !sample.config.frontend?.includes("next")) return;
+  return "0".repeat(64);
+}
+
+// Standalone output mirrors the app's path below Next's tracing root, which is the
+// enclosing workspace when samples are generated inside this repository.
+async function findNextStandaloneServer(webDir: string) {
+  const standalone = path.join(webDir, ".next/standalone");
+  const queue = [standalone];
+  for (let dir = queue.shift(); dir; dir = queue.shift()) {
+    if (await fs.pathExists(path.join(dir, "apps/web/server.js"))) {
+      return path.relative(webDir, path.join(dir, "apps/web/server.js"));
+    }
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      if (entry.isDirectory() && entry.name !== "node_modules")
+        queue.push(path.join(dir, entry.name));
+    }
+  }
+  throw new Error(`No Next.js standalone server under ${standalone}`);
+}
+
 export async function bootAndValidatePrismaWebArtifact(
   sample: SelectedBuildSample,
   projectDir: string,
@@ -372,19 +395,26 @@ export async function bootAndValidatePrismaWebArtifact(
   if (sample.config.webDeploy !== "prisma") return;
 
   const frontend = sample.config.frontend ?? [];
-  const entrypoint = frontend.includes("react-router")
-    ? "build/server/index.js"
-    : frontend.includes("svelte")
-      ? "build/index.js"
-      : frontend.includes("solid") || frontend.includes("tanstack-start")
-        ? ".output/server/index.mjs"
-        : undefined;
+  const webDir = path.join(projectDir, "apps/web");
+  const entrypoint = frontend.includes("next")
+    ? await findNextStandaloneServer(webDir)
+    : frontend.includes("react-router")
+      ? "build/server/index.js"
+      : frontend.includes("svelte")
+        ? "build/index.js"
+        : frontend.includes("solid") || frontend.includes("tanstack-start")
+          ? ".output/server/index.mjs"
+          : undefined;
   if (!entrypoint) return;
 
-  const webDir = path.join(projectDir, "apps/web");
   const runtimeRoot = await fs.mkdtemp(path.join(tmpdir(), "bts-prisma-artifact-"));
   const artifactDirectory = entrypoint.split("/")[0]!;
   await fs.copy(path.join(webDir, artifactDirectory), path.join(runtimeRoot, artifactDirectory));
+  // Next copies .env files into standalone output; the server must boot from the frozen env alone.
+  const entryDir = path.join(runtimeRoot, path.dirname(entrypoint));
+  for (const file of await fs.readdir(entryDir)) {
+    if (file.startsWith(".env")) await fs.remove(path.join(entryDir, file));
+  }
   const runtimes = frontend.includes("svelte") ? ["bun", "node"] : ["bun"];
   try {
     for (const command of runtimes) {
@@ -398,6 +428,7 @@ export async function bootAndValidatePrismaWebArtifact(
           HOST: "127.0.0.1",
           NODE_ENV: "production",
           PORT: String(port),
+          _VARLOCK_ENV_KEY: prismaNextEnvKey(sample),
         },
       });
 
@@ -406,7 +437,8 @@ export async function bootAndValidatePrismaWebArtifact(
         const response = await fetchWhenReady(`http://127.0.0.1:${port}/`);
         expect(response?.status).toBe(200);
         if (sample.config.backend === "self" && sample.config.api === "orpc") {
-          const prefix = frontend.includes("tanstack-start") ? "/api/rpc" : "/rpc";
+          const prefix =
+            frontend.includes("tanstack-start") || frontend.includes("next") ? "/api/rpc" : "/rpc";
           const health = await fetchWhenReady(`http://127.0.0.1:${port}${prefix}/healthCheck`, {
             method: "POST",
             headers: { "content-type": "application/json" },

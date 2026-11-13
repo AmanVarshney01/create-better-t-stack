@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+{{#if (and (eq webDeploy "vercel") (includes frontend "next"))}}
+import { randomBytes } from "node:crypto";
+{{/if}}
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseEnv } from "node:util";
@@ -99,6 +102,12 @@ if (emptyKeys.length > 0) {
 	);
 }
 
+{{#if (and (eq webDeploy "vercel") (includes frontend "next"))}}
+// Varlock freezes the env into Next.js builds on Vercel, encrypted with this key. Vercel snapshots
+// env vars per deployment, so a fresh key on every sync never breaks a running deployment.
+env.set("_VARLOCK_ENV_KEY", randomBytes(32).toString("hex"));
+
+{{/if}}
 {{#if (includes addons "axiom")}}
 for (const key of ["AXIOM_API_KEY", "AXIOM_DATASET", "AXIOM_EDGE_URL"] as const) {
 	const value = process.env[key];

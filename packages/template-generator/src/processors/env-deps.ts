@@ -2,7 +2,11 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import { parse, stringify } from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import {
+  addPackageDependency,
+  dependencyVersionMap,
+  type AvailableDependencies,
+} from "../utils/add-deps";
 
 export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["varlock"] });
@@ -32,7 +36,8 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     addPackageDependency({ vfs, packagePath: `apps/${app}/package.json`, dependencies });
   }
   if (config.frontend.includes("next") && config.webDeploy !== "cloudflare") {
-    const version = "npm:@varlock/nextjs-integration@1.2.2";
+    // Next loads .env files through @next/env; it must be the same build as the config plugin.
+    const version = `npm:@varlock/nextjs-integration@${dependencyVersionMap["@varlock/nextjs-integration"]}`;
     if (config.packageManager === "pnpm") {
       const path = "pnpm-workspace.yaml";
       const workspace = parse(vfs.readFile(path) ?? "") ?? {};

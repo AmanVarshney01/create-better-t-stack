@@ -493,6 +493,25 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "next-prisma-compute-artifact",
+    checks: ["scaffold-types-only"],
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      webDeploy: "prisma",
+      auth: "none",
+      api: "orpc",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
     name: "astro-prisma-compute-artifact",
     checks: ["scaffold-types-only", "astro-website"],
     packageManagers: ["bun"],
@@ -582,7 +601,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-v2-express-node-mongoose",
+    name: "solid-v2-express-node-mongoose-auth",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -591,7 +610,7 @@ const buildSamples: BuildSample[] = [
       database: "mongodb",
       orm: "mongoose",
       api: "orpc",
-      auth: "none",
+      auth: "better-auth",
       payments: "none",
       addons: ["turborepo"],
       examples: [],
