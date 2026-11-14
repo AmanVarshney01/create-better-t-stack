@@ -16676,26 +16676,29 @@ secrets:
 {{/if}}
 `],
   ["deploy/docker/server/Dockerfile.hbs", `{{#if (eq packageManager "bun")}}
-FROM oven/bun:1 AS builder
+FROM oven/bun:1 AS base
 {{else}}
-FROM node:26-slim AS builder
+FROM node:26-slim AS base
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
 RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="server"}}
 
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/server && {{packageManager}} run build
+
+# Production dependencies only; workspace packages are bundled into dist
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
 
 {{#if (eq runtime "bun")}}
 FROM oven/bun:1 AS runner
@@ -16704,7 +16707,8 @@ FROM node:26-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app /app
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/server/dist ./apps/server/dist
 
 EXPOSE 3000
 
@@ -16712,12 +16716,9 @@ WORKDIR /app/apps/server
 # Run as the image's unprivileged user
 {{#if (eq runtime "bun")}}
 USER bun
-{{else}}
-USER node
-{{/if}}
-{{#if (eq runtime "bun")}}
 CMD ["bun", "dist/index.mjs"]
 {{else}}
+USER node
 CMD ["node", "dist/index.mjs"]
 {{/if}}
 `],
@@ -16730,14 +16731,13 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG PUBLIC_SERVER_URL
@@ -16749,9 +16749,17 @@ ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
-{{/if}}
+
+# Production dependencies only
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
+
+FROM node:26-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/web/dist ./apps/web/dist
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
@@ -16762,7 +16770,7 @@ WORKDIR /app/apps/web
 USER node
 CMD ["node", "dist/server/entry.mjs"]
 `],
-  ["deploy/docker/web/nuxt/Dockerfile.hbs", `FROM node:26-slim AS builder
+  ["deploy/docker/web/nuxt/Dockerfile.hbs", `FROM node:26-slim AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16770,29 +16778,29 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
+
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+{{> dockerVarlockCli}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
+
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG NUXT_PUBLIC_SERVER_URL
 ENV NUXT_PUBLIC_SERVER_URL=\${NUXT_PUBLIC_SERVER_URL}
 {{/if}}
-
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
-
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 
 FROM node:26-slim AS runner
-WORKDIR /app
+WORKDIR /app/apps/web
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/web/.output ./
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /varlock/node_modules /app/node_modules
+COPY --from=builder /app/apps/web/.output ./.output
 COPY --from=builder /app/apps/web/.env.schema ./.env.schema
 
 ENV HOST=0.0.0.0
@@ -16801,9 +16809,9 @@ EXPOSE 3001
 
 # Run as the image's unprivileged user, as the official Node.js images recommend
 USER node
-CMD ["node", "server/index.mjs"]
+CMD ["node", ".output/server/index.mjs"]
 `],
-  ["deploy/docker/web/react/next/Dockerfile.hbs", `FROM node:26-slim AS builder
+  ["deploy/docker/web/react/next/Dockerfile.hbs", `FROM node:26-slim AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16812,14 +16820,14 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+{{> dockerVarlockCli}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG NEXT_PUBLIC_SERVER_URL
@@ -16846,11 +16854,10 @@ FROM node:26-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+COPY --from=builder /varlock/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/public ./apps/web/public
-# auto-load needs the Varlock CLI and its installed dependencies.
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/web/.env.schema ./apps/web/.env.schema
 
 ENV HOSTNAME=0.0.0.0
@@ -16862,7 +16869,7 @@ WORKDIR /app/apps/web
 USER node
 CMD ["node", "--import", "varlock/auto-load", "server.js"]
 `],
-  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16871,14 +16878,13 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG VITE_SERVER_URL
@@ -16895,9 +16901,15 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 
+# Production dependencies only
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
+
 FROM node:26-slim AS runner
 WORKDIR /app
-COPY --from=builder /app .
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/web/build ./apps/web/build
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV HOST=0.0.0.0
@@ -16906,7 +16918,7 @@ EXPOSE 3001
 USER node
 CMD ["sh", "-c", "cd apps/web && npm run start"]
 `],
-  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16915,14 +16927,13 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG VITE_SERVER_URL
@@ -16965,9 +16976,9 @@ CMD ["nginx", "-g", "daemon off;"]
 }
 `],
   ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (eq runtime "bun") (not (includes addons "vite-plus")))}}
-FROM oven/bun:1 AS builder
+FROM oven/bun:1 AS base
 {{else}}
-FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16977,14 +16988,13 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG VITE_SERVER_URL
@@ -17000,9 +17010,11 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 {{/if}}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
-{{/if}}
+
+# Production dependencies only; SSR chunks import them at runtime
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
 
 {{#if (eq runtime "bun")}}
 FROM oven/bun:1 AS runner
@@ -17011,27 +17023,24 @@ FROM node:26-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app /app
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/web/.output ./apps/web/.output
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
 EXPOSE 3001
 
-# SSR chunks require workspace dependencies at runtime
 WORKDIR /app/apps/web
 # Run as the image's unprivileged user
 {{#if (eq runtime "bun")}}
 USER bun
-{{else}}
-USER node
-{{/if}}
-{{#if (eq runtime "bun")}}
 CMD ["bun", ".output/server/index.mjs"]
 {{else}}
+USER node
 CMD ["node", ".output/server/index.mjs"]
 {{/if}}
 `],
-  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (and (eq orm "prisma") (not (includes addons "vite-plus")))}}
 RUN apt-get update -y \\
   && apt-get install -y --no-install-recommends openssl \\
@@ -17045,14 +17054,14 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+{{> dockerVarlockCli}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG VITE_SERVER_URL
@@ -17064,9 +17073,6 @@ ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
-{{/if}}
 
 FROM node:26-slim AS runner
 {{#if (eq orm "prisma")}}
@@ -17077,8 +17083,8 @@ RUN apt-get update -y \\
 WORKDIR /app/apps/web
 ENV NODE_ENV=production
 
+COPY --from=builder /varlock/node_modules /app/node_modules
 COPY --from=builder /app/apps/web/.output ./.output
-COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/apps/web/.env.schema ./.env.schema
 
 ENV HOST=0.0.0.0
@@ -17098,14 +17104,13 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG PUBLIC_SERVER_URL
@@ -17124,9 +17129,17 @@ ENV NODE_ENV=production
 RUN mkdir -p /app/.data
 {{/if}}
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
-{{/if}}
+
+# Production dependencies only
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
+
+FROM node:26-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/web/build ./apps/web/build
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
