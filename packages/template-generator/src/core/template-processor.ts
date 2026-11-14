@@ -146,6 +146,67 @@ function getServerUrl(url: string) {
 }
 {{/if}}`;
 
+const dockerEnvSecrets =
+  "--mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local";
+
+// `{{> dockerPrune target="web"}}`: a stage holding `out/json` (manifests and the pruned
+// lockfile) and `out/full` (sources) for one app and the workspace packages it uses.
+Handlebars.registerPartial(
+  "dockerPrune",
+  `# Keep only {{target}} and the workspace packages it uses, so dependency installs stay
+# cached until one of their package.json files or the lockfile changes.
+FROM node:26-slim AS prune
+WORKDIR /app
+COPY . .
+# Installing runs \`varlock codegen\`, which reads the app schemas, so they ship with the manifests.
+RUN --mount=type=cache,target=/root/.npm npx --yes turbo@2 prune {{target}} --docker \\
+  && find . -mindepth 3 -maxdepth 3 -name .env.schema -not -path "./out/*" -exec cp --parents {} out/json/ \\;
+`,
+);
+
+Handlebars.registerPartial(
+  "dockerInstall",
+  `{{#if (eq packageManager "bun")}}
+RUN ${dockerEnvSecrets} --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
+{{else if (eq packageManager "pnpm")}}
+RUN ${dockerEnvSecrets} --mount=type=cache,target=/pnpm-store pnpm install --frozen-lockfile --store-dir /pnpm-store
+{{else}}
+RUN ${dockerEnvSecrets} --mount=type=cache,target=/root/.npm npm ci
+{{/if}}
+`,
+);
+
+Handlebars.registerPartial(
+  "dockerProdInstall",
+  `{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --production --frozen-lockfile --ignore-scripts
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --prod --frozen-lockfile --ignore-scripts --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --ignore-scripts
+{{/if}}
+`,
+);
+
+// For bundled server output (Next standalone, Nitro): the runtime only needs the Varlock CLI,
+// installed alone at the version the lockfile resolved for the web app.
+Handlebars.registerPartial(
+  "dockerVarlockCli",
+  `# The server bundle carries its own dependencies; startup only needs the Varlock CLI
+RUN --mount=type=cache,target=/root/.npm cd apps/web && npm install --prefix /varlock --omit=dev --no-save --no-package-lock \\
+  "varlock@$(node -p 'require(require("fs").existsSync("node_modules/varlock") ? "./node_modules/varlock/package.json" : "../../node_modules/varlock/package.json").version')"
+`,
+);
+
+// The Prisma client is gitignored, so the pruned sources never include it.
+Handlebars.registerPartial(
+  "dockerPrismaGenerate",
+  `{{#if (eq orm "prisma")}}
+RUN ${dockerEnvSecrets} if [ -d packages/db ]; then cd packages/db && {{packageManager}} run db:generate; fi
+{{/if}}
+`,
+);
+
 Handlebars.registerPartial("getServerUrl", getServerUrlSource);
 Handlebars.registerPartial("getServerUrlSpaces", getServerUrlSource.replaceAll("\t", "  "));
 

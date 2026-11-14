@@ -1,4 +1,4 @@
-FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (and (eq orm "prisma") (not (includes addons "vite-plus")))}}
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends openssl \
@@ -12,14 +12,14 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+{{> dockerVarlockCli}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG VITE_SERVER_URL
@@ -31,9 +31,6 @@ ENV VITE_CONVEX_URL=${VITE_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
-{{/if}}
 
 FROM node:26-slim AS runner
 {{#if (eq orm "prisma")}}
@@ -44,8 +41,8 @@ RUN apt-get update -y \
 WORKDIR /app/apps/web
 ENV NODE_ENV=production
 
+COPY --from=builder /varlock/node_modules /app/node_modules
 COPY --from=builder /app/apps/web/.output ./.output
-COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/apps/web/.env.schema ./.env.schema
 
 ENV HOST=0.0.0.0

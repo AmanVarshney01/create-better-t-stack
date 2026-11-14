@@ -7,14 +7,13 @@ RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG PUBLIC_SERVER_URL
@@ -33,9 +32,17 @@ ENV NODE_ENV=production
 RUN mkdir -p /app/.data
 {{/if}}
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
-{{/if}}
+
+# Production dependencies only
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
+
+FROM node:26-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/web/build ./apps/web/build
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
