@@ -61,8 +61,7 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
     addPackageDependency({
       vfs,
       packagePath: convexBackendPkgPath,
-      dependencies: ["@convex-dev/agent"],
-      customDependencies: { ai: "^6.0.237", "@ai-sdk/google": "^3.0.102" },
+      dependencies: ["@convex-dev/agent", "ai", "@ai-sdk/google"],
     });
   } else if (backend === "self" && webExists) {
     addPackageDependency({

@@ -1,5 +1,5 @@
-import { Polar } from "@polar-sh/sdk";
+import { createPolarCore } from "@polar-sh/sdk/2026-10";
 
 export function createPolarClient(config: { POLAR_ACCESS_TOKEN: string }) {
-  return new Polar({ accessToken: config.POLAR_ACCESS_TOKEN, server: "sandbox" });
+  return createPolarCore({ accessToken: config.POLAR_ACCESS_TOKEN, environment: "sandbox" });
 }

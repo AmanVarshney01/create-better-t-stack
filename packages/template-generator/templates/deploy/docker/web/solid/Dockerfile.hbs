@@ -1,4 +1,4 @@
-FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (and (eq orm "prisma") (not (includes addons "vite-plus")))}}
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends openssl \
@@ -8,7 +8,7 @@ RUN apt-get update -y \
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -35,7 +35,7 @@ RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=
 ENV DATABASE_URL=
 {{/if}}
 
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 {{#if (eq orm "prisma")}}
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends openssl \
@@ -52,4 +52,6 @@ ENV HOST=0.0.0.0
 ENV PORT=3001
 EXPOSE 3001
 
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["node", ".output/server/index.mjs"]

@@ -224,7 +224,10 @@ export function prismaWebEnvEntries(
 ): string[] {
   const { api, auth, dbSetup, payments } = plan.config;
   const entries: string[] = [
-    "...(process.env._VARLOCK_ENV_KEY ? { _VARLOCK_ENV_KEY: Redacted.make(process.env._VARLOCK_ENV_KEY) } : {}),",
+    // Next.js builds freeze the env, encrypted with this key; Alchemy keeps the generated key in state.
+    framework === "next"
+      ? '_VARLOCK_ENV_KEY: yield* Alchemy.makeRandom("varlock-env-key"),'
+      : "...(process.env._VARLOCK_ENV_KEY ? { _VARLOCK_ENV_KEY: Redacted.make(process.env._VARLOCK_ENV_KEY) } : {}),",
   ];
 
   if (plan.web.target !== "none" && plan.web.topology === "self") {

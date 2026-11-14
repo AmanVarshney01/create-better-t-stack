@@ -22,8 +22,8 @@ export const Route = createFileRoute("/_auth")({
       });
     }
     {{#if (eq payments "polar") }}
-    const customerState = await getPayment();
-    return { session, customerState };
+    const hasProSubscription = await getPayment();
+    return { session, hasProSubscription };
     {{else}}
     return { session };
     {{/if}}
@@ -36,7 +36,8 @@ export const Route = createFileRoute("/_auth")({
     }
     {{#if (eq payments "polar") }}
     const { data: customerState } = await authClient.customer.state();
-    return { session, customerState };
+    const hasProSubscription = (customerState?.active_subscriptions.length ?? 0) > 0;
+    return { session, hasProSubscription };
     {{else}}
     return { session };
     {{/if}}

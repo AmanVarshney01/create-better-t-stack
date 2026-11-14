@@ -58,7 +58,8 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string, app: 
     "# @defaultRequired=true",
     "# @defaultSensitive=true",
     "# @currentEnv=$NODE_ENV",
-    `# @generateTsTypes(path=./src/${envFile}, exposeEnv=local${readOnlyRuntime ? ", auto=false" : ""})`,
+    // Production servers load the schema at boot from read-only images; postinstall runs codegen.
+    `# @generateTsTypes(path=./src/${envFile}, exposeEnv=local, auto=${readOnlyRuntime ? "false" : "not(forEnv(production))"})`,
     "# ---",
     "",
     "# @public @type=enum(development, production, test)",
@@ -254,7 +255,7 @@ export function processVarlock(
     const keys = config.dbSetup === "d1" ? ["NODE_ENV"] : ["NODE_ENV", "DATABASE_*"];
     vfs.writeFile(
       "packages/db/.env.schema",
-      `# @import(../../${server}/, pick=[${keys.join(", ")}])\n# @generateTsTypes(path=./src/env.ts, exposeEnv=local)\n# ---\n`,
+      `# @import(../../${server}/, pick=[${keys.join(", ")}])\n# @generateTsTypes(path=./src/env.ts, exposeEnv=local, auto=not(forEnv(production)))\n# ---\n`,
     );
     addPackageDependency({
       vfs,
@@ -302,7 +303,10 @@ export function processVarlock(
     addPackageDependency({
       vfs,
       packagePath: `${server}/package.json`,
-      dependencies: ["better-auth"],
+      // The server bundle keeps declared dependencies external. Mongoose must stay external with
+      // Better Auth's Mongo adapter, or the bundle carries a second MongoDB driver whose ObjectId
+      // fails the adapter's instanceof checks.
+      dependencies: config.orm === "mongoose" ? ["better-auth", "mongoose"] : ["better-auth"],
     });
   }
   if (config.backend !== "none" && config.backend !== "convex") {

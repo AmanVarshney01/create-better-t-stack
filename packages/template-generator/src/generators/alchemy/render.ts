@@ -41,10 +41,14 @@ function usesOutput(plan: AlchemyDeploymentPlan): boolean {
 function usesRedacted(plan: AlchemyDeploymentPlan): boolean {
   const database = plan.managedDatabase;
   return (
-    plan.web.target === "prisma" ||
+    (plan.web.target === "prisma" && plan.web.framework !== "next") ||
     database.kind === "neon" ||
     (database.kind === "planetscale-mysql" && database.orm === "prisma")
   );
+}
+
+function usesRandom(plan: AlchemyDeploymentPlan): boolean {
+  return plan.web.target === "prisma" && plan.web.framework === "next";
 }
 
 function providerLayers(plan: AlchemyDeploymentPlan): string[] {
@@ -52,6 +56,7 @@ function providerLayers(plan: AlchemyDeploymentPlan): string[] {
   if (plan.hasCloudflare) layers.push("Cloudflare.providers()");
   if (plan.hasAlchemyManagedDatabase || plan.hasPrismaDeploy) layers.push("databaseProviders");
   if (plan.hasAxiom) layers.push("Axiom.providers()");
+  if (usesRandom(plan)) layers.push("Alchemy.RandomProvider()");
   if (
     (plan.needsStandaloneServerDev || plan.needsStandaloneWebDev || plan.hasAxiomVercelRuntime) &&
     !databaseProvidersUseCommand(plan)

@@ -33,7 +33,7 @@ export default function Dashboard() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
+		(customerState()?.active_subscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (

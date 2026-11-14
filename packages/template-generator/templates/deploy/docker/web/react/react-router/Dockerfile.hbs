@@ -1,9 +1,9 @@
-FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+FROM node:26{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm@11
+RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
@@ -31,11 +31,13 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 WORKDIR /app
 COPY --from=builder /app .
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV HOST=0.0.0.0
 EXPOSE 3001
+# Run as the image's unprivileged user, as the official Node.js images recommend
+USER node
 CMD ["sh", "-c", "cd apps/web && npm run start"]

@@ -1062,6 +1062,13 @@ function generateDeploymentCommands(
     lines.push(
       "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
       `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} ${vercelNames.envProduction} --scope your-team\`.`,
+    );
+    if (webDeploy === "vercel" && frontend.includes("next")) {
+      lines.push(
+        "Next.js builds on Vercel freeze the env into the bundle, encrypted with `_VARLOCK_ENV_KEY`. The env sync command sets a fresh key for that environment, so run it before deploying.",
+      );
+    }
+    lines.push(
       "",
       "For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).",
     );

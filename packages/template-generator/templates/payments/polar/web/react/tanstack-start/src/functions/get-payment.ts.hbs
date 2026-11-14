@@ -11,5 +11,6 @@ export const getPayment = createServerFn({ method: "GET" })
                 headers: getRequestHeaders()
             }
         });
-        return customerState;
+        // Return only what the page needs; the full customer state is not serializable
+        return (customerState?.active_subscriptions.length ?? 0) > 0;
     });

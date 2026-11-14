@@ -249,6 +249,32 @@ const buildSamples: BuildSample[] = [
       examples: ["todo"],
     },
   },
+  ...(
+    [
+      ["tanstack-start", "vercel"],
+      ["nuxt", "none"],
+      ["svelte", "none"],
+    ] as const
+  ).map(
+    ([frontend, webDeploy]) =>
+      ({
+        name: `${frontend}-self-polar`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "orpc",
+          auth: "better-auth",
+          payments: "polar",
+          addons: ["none"],
+          examples: [],
+          webDeploy,
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "expo-orpc-auth-todo",
     config: {
@@ -467,6 +493,25 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "next-prisma-compute-artifact",
+    checks: ["scaffold-types-only"],
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      webDeploy: "prisma",
+      auth: "none",
+      api: "orpc",
+      payments: "none",
+      addons: [],
+      examples: [],
+    },
+  },
+  {
     name: "astro-prisma-compute-artifact",
     checks: ["scaffold-types-only", "astro-website"],
     packageManagers: ["bun"],
@@ -556,7 +601,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-v2-express-node-mongoose",
+    name: "solid-v2-express-node-mongoose-auth",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -565,7 +610,7 @@ const buildSamples: BuildSample[] = [
       database: "mongodb",
       orm: "mongoose",
       api: "orpc",
-      auth: "none",
+      auth: "better-auth",
       payments: "none",
       addons: ["turborepo"],
       examples: [],
@@ -969,6 +1014,23 @@ const buildSamples: BuildSample[] = [
       addons: ["turborepo"],
       examples: [],
       dbSetup: "d1",
+      serverDeploy: "cloudflare",
+    },
+  },
+  {
+    name: "workers-postgres-js",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "workers",
+      database: "postgres",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
       serverDeploy: "cloudflare",
     },
   },

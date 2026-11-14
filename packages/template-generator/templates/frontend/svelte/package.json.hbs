@@ -19,19 +19,19 @@
 	},
 	"devDependencies": {
 		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/adapter-static": "^4.0.1",
 		{{else if (eq webDeploy "prisma")}}
-		"@sveltejs/adapter-node": "^6.0.0",
+		"@sveltejs/adapter-node": "^6.0.2",
 		{{else}}
-		"@sveltejs/adapter-auto": "^8.0.0",
+		"@sveltejs/adapter-auto": "^8.0.1",
 		{{/if}}
-		"@sveltejs/kit": "^3.1.0",
+		"@sveltejs/kit": "^3.2.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
-		"@tailwindcss/vite": "^4.3.3",
-		"svelte": "^5.57.1",
-		"svelte-check": "^4.7.6",
-		"tailwindcss": "^4.3.3",
-		"vite": "^8.2.2"
+		"@tailwindcss/vite": "^4.3.5",
+		"svelte": "^5.57.3",
+		"svelte-check": "^4.7.8",
+		"tailwindcss": "^4.3.5",
+		"vite": "^8.3.8"
 	},
 	"dependencies": {}
 }

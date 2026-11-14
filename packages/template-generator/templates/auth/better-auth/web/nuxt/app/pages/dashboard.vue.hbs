@@ -1,6 +1,6 @@
 <script setup lang="ts">
 {{#if (eq payments "polar")}}
-import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+import type { models } from "@polar-sh/sdk/2026-10";
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -16,7 +16,7 @@ definePageMeta({
 const { data: session } = await useAuthSession()
 
 {{#if (eq payments "polar")}}
-const customerState = ref<CustomerState | null>(null)
+const customerState = ref<models.CustomerState | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -39,7 +39,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
+  (customerState.value?.active_subscriptions?.length ?? 0) > 0
 )
 {{/if}}
 </script>

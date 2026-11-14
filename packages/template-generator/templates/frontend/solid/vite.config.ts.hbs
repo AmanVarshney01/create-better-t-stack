@@ -61,10 +61,19 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (or (eq webDeploy "cloudflare") (and (eq payments "polar") (eq backend "self")))}}
   build: {
     rollupOptions: {
-      external: ["cloudflare:workers"],
+      external: [
+{{#if (eq webDeploy "cloudflare")}}
+        "cloudflare:workers",
+{{/if}}
+{{#if (and (eq payments "polar") (eq backend "self"))}}
+        // optional @polar-sh/sdk peers, only imported by its unused metering outpost
+        /^ioredis$/,
+        /^@opentelemetry\//,
+{{/if}}
+      ],
     },
   },
 {{/if}}

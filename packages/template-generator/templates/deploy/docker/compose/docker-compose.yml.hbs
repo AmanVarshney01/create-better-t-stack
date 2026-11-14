@@ -227,7 +227,7 @@ services:
 {{/if}}
 {{#if (eq database "mysql")}}
   mysql:
-    image: mysql:8.4
+    image: mysql:9.7
     container_name: {{projectName}}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
@@ -247,7 +247,7 @@ services:
 {{/if}}
 {{#if (eq database "mongodb")}}
   mongodb:
-    image: mongo:8
+    image: mongo:9
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
