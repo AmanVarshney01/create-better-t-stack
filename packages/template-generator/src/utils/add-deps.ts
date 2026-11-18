@@ -152,8 +152,8 @@ export const dependencyVersionMap = {
   "@tanstack/svelte-form": "^1.33.5",
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).
-  "@tanstack/solid-query": "6.0.0-rc.5",
-  "@tanstack/query-core": "5.101.4",
+  "@tanstack/solid-query": "6.0.0-rc.6",
+  "@tanstack/query-core": "5.107.1",
 
   wrangler: "^4.161.0",
   "@cloudflare/vite-plugin": "1.69.1",

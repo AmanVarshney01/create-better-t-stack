@@ -56,25 +56,18 @@ export function processPnpmWorkspaceConfig(vfs: VirtualFileSystem, config: Proje
     };
   }
   if (config.frontend.includes("solid")) {
-    workspace.overrides = {
-      "solid-js": "2.0.0-rc.21",
-      "@solidjs/signals": "2.0.0-rc.21",
-      "@solidjs/compiler": "2.0.0-rc.21",
-      "@solidjs/babel-plugin": "2.0.0-rc.21",
-      ...workspace.overrides,
-    };
     workspace.minimumReleaseAgeExclude = [
       ...new Set([
         ...(workspace.minimumReleaseAgeExclude ?? []),
-        "@solidjs/babel-plugin@2.0.0-rc.21",
-        "@solidjs/compiler@2.0.0-rc.21",
-        "@solidjs/meta@1.0.0-next.2",
-        "@solidjs/router@2.0.0-next.44",
-        "@solidjs/signals@2.0.0-rc.21",
-        "@solidjs/vite-plugin@3.0.0-next.57",
-        "@solidjs/web@2.0.0-rc.21",
-        "@tanstack/solid-query@6.0.0-rc.5",
-        "solid-js@2.0.0-rc.21",
+        "@solidjs/babel-plugin@2.0.0",
+        "@solidjs/compiler@2.0.0",
+        "@solidjs/meta@2.0.0",
+        "@solidjs/router@2.0.0",
+        "@solidjs/signals@2.0.0",
+        "@solidjs/vite-plugin@3.0.1",
+        "@solidjs/web@2.0.0",
+        "@tanstack/solid-query@6.0.0-rc.6",
+        "solid-js@2.0.0",
       ]),
     ];
   }
