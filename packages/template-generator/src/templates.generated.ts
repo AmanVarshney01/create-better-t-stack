@@ -15424,14 +15424,6 @@ temp
     "apps/*",
     "packages/*"
   ],
-{{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
-  "overrides": {
-    "solid-js": "2.0.0-rc.21",
-    "@solidjs/signals": "2.0.0-rc.21",
-    "@solidjs/compiler": "2.0.0-rc.21",
-    "@solidjs/babel-plugin": "2.0.0-rc.21"
-  },
-{{/if}}
   "scripts": {}
 }
 `],
@@ -33083,13 +33075,13 @@ dist
     "preview": "vite preview"
   },
   "dependencies": {
-    "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.44",
-    "@solidjs/web": "2.0.0-rc.21",
-    "solid-js": "2.0.0-rc.21"
+    "@solidjs/meta": "^2.0.0",
+    "@solidjs/router": "^2.0.0",
+    "@solidjs/web": "^2.0.0",
+    "solid-js": "^2.0.0"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.57",
+    "@solidjs/vite-plugin": "^3.0.1",
     "@tailwindcss/vite": "^4.3.5",
     "filesystem-routing": "0.5.0",
     "tailwindcss": "^4.3.5",
