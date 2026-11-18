@@ -15424,6 +15424,11 @@ temp
     "apps/*",
     "packages/*"
   ],
+{{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
+  "overrides": {
+    "solid-js": "^2.0.0"
+  },
+{{/if}}
   "scripts": {}
 }
 `],
