@@ -1,4 +1,4 @@
-FROM node:26-slim AS builder
+FROM node:26-slim AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -6,29 +6,29 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
+
+{{> dockerPrune target="web"}}
+
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+{{> dockerVarlockCli}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
+
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 ARG NUXT_PUBLIC_SERVER_URL
 ENV NUXT_PUBLIC_SERVER_URL=${NUXT_PUBLIC_SERVER_URL}
 {{/if}}
-
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
-
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/web && {{packageManager}} run build
 
 FROM node:26-slim AS runner
-WORKDIR /app
+WORKDIR /app/apps/web
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/web/.output ./
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /varlock/node_modules /app/node_modules
+COPY --from=builder /app/apps/web/.output ./.output
 COPY --from=builder /app/apps/web/.env.schema ./.env.schema
 
 ENV HOST=0.0.0.0
@@ -37,4 +37,4 @@ EXPOSE 3001
 
 # Run as the image's unprivileged user, as the official Node.js images recommend
 USER node
-CMD ["node", "server/index.mjs"]
+CMD ["node", ".output/server/index.mjs"]

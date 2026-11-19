@@ -1,24 +1,27 @@
 {{#if (eq packageManager "bun")}}
-FROM oven/bun:1 AS builder
+FROM oven/bun:1 AS base
 {{else}}
-FROM node:26-slim AS builder
+FROM node:26-slim AS base
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
 RUN npm install -g pnpm@12
 {{/if}}
 WORKDIR /app
 
-COPY . .
-{{#if (eq packageManager "bun")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.bun/install/cache bun install
-{{else if (eq packageManager "pnpm")}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
-{{else}}
-RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local --mount=type=cache,target=/root/.npm npm install
-{{/if}}
+{{> dockerPrune target="server"}}
 
+FROM base AS builder
+COPY --from=prune /app/out/json/ .
+{{> dockerInstall}}
+COPY --from=prune /app/out/full/ .
+{{> dockerPrismaGenerate}}
 ENV NODE_ENV=production
 RUN --mount=type=secret,id=web_env,target=/app/apps/web/.env.local --mount=type=secret,id=server_env,target=/app/apps/server/.env.local cd apps/server && {{packageManager}} run build
+
+# Production dependencies only; workspace packages are bundled into dist
+FROM base AS deps
+COPY --from=prune /app/out/json/ .
+{{> dockerProdInstall}}
 
 {{#if (eq runtime "bun")}}
 FROM oven/bun:1 AS runner
@@ -27,7 +30,8 @@ FROM node:26-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app /app
+COPY --from=deps /app ./
+COPY --from=builder /app/apps/server/dist ./apps/server/dist
 
 EXPOSE 3000
 
@@ -35,11 +39,8 @@ WORKDIR /app/apps/server
 # Run as the image's unprivileged user
 {{#if (eq runtime "bun")}}
 USER bun
-{{else}}
-USER node
-{{/if}}
-{{#if (eq runtime "bun")}}
 CMD ["bun", "dist/index.mjs"]
 {{else}}
+USER node
 CMD ["node", "dist/index.mjs"]
 {{/if}}

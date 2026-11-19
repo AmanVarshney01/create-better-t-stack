@@ -1010,6 +1010,8 @@ function generateDeploymentCommands(
       `- Stop: ${packageManagerRunCmd} docker:down`,
       "",
       "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+      "",
+      "Images install from your lockfile (each Dockerfile runs `turbo prune` and a frozen install), so install dependencies once before your first build.",
     );
 
     if (

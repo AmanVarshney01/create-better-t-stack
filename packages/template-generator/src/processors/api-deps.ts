@@ -217,8 +217,8 @@ function addQueryDeps(vfs: VirtualFileSystem, frontend: Frontend[], backend: Bac
     addPackageDependency({
       vfs,
       packagePath: webPath,
-      dependencies: ["@tanstack/react-query"],
-      devDependencies: ["@tanstack/react-query-devtools"],
+      // Route modules import the devtools, so SSR builds resolve them at runtime.
+      dependencies: ["@tanstack/react-query", "@tanstack/react-query-devtools"],
     });
   }
 

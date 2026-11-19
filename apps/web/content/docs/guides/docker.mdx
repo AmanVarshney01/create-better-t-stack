@@ -107,9 +107,10 @@ bun db:watch   # docker compose up postgres      (with logs in the foreground)
 
 Each Dockerfile is a multi-stage build with the monorepo root as build context:
 
-1. A base stage installs the workspace with your package manager (with a mounted dependency cache, so rebuilds are fast).
-2. Compose supplies the generated app env files as BuildKit secrets during installation and builds. Varlock validates the app schema, including database configuration needed by Prisma tooling. Public web variables also use build arguments. Fill required configuration before building; validation is not bypassed.
-3. Runtime images retain the built output and the schema/Varlock CLI dependencies needed for startup. Next standalone preloads `varlock/auto-load` with Node. SPA frontends use nginx; SSR frontends and servers use Bun or Node (current LTS) images and run as the image's unprivileged `node` or `bun` user.
+1. A prune stage runs [`turbo prune <app> --docker`](https://turborepo.com/docs/guides/tools/docker), which keeps only that app, the workspace packages it imports, and a trimmed lockfile. This works whether or not you chose the Turborepo add-on, but it needs a lockfile, so install dependencies once before your first `docker:build`.
+2. The build stage installs from the pruned `package.json` files with a frozen lockfile and a mounted dependency cache. Source changes don't invalidate that install layer; only dependency changes do. It then copies the app's source, generates the Prisma client when you use Prisma, and builds.
+3. Compose supplies the generated app env files as BuildKit secrets during installation and builds. Varlock validates the app schema, including database configuration needed by Prisma tooling. Public web variables also use build arguments. Fill required configuration before building; validation is not bypassed.
+4. Runtime images get a separate production-only install (no dev dependencies, no other apps' dependencies) plus the build output and the Varlock schema needed for startup. Next standalone preloads `varlock/auto-load` with Node. SPA frontends use nginx; SSR frontends and servers use Bun or Node (current LTS) images and run as the image's unprivileged `node` or `bun` user.
 
 Database services use `postgres:18`, `mysql:9.7` (the current MySQL LTS), and `mongo:9`.
 
