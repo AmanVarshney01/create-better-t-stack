@@ -100,10 +100,10 @@ Please read the Contribution Guide first and open an issue before starting new f
 
 ## Star History
 
-<a href="https://www.star-history.com/#AmanVarshney01/create-better-t-stack&Date">
+<a href="https://star-history.dera.page/#AmanVarshney01/create-better-t-stack&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=AmanVarshney01/create-better-t-stack&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
  </picture>
 </a>
