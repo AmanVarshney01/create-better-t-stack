@@ -1,0 +1,15 @@
+{
+  "name": "Better-T-Stack",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "web",
+      "command": "export NVM_DIR=\"$HOME/.nvm\"; . \"$NVM_DIR/nvm.sh\" >/dev/null 2>&1; nvm use 24 >/dev/null 2>&1; export PATH=\"$HOME/.bun/bin:$PATH\"; export NEXT_PUBLIC_CONVEX_URL=\"${NEXT_PUBLIC_CONVEX_URL:-https://placeholder.convex.cloud}\"; bun dev:web"
+    },
+    {
+      "name": "cli",
+      "command": "export NVM_DIR=\"$HOME/.nvm\"; . \"$NVM_DIR/nvm.sh\" >/dev/null 2>&1; nvm use 24 >/dev/null 2>&1; export PATH=\"$HOME/.bun/bin:$PATH\"; bun dev:cli"
+    }
+  ],
+  "ports": [3333]
+}
